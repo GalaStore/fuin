@@ -1,0 +1,21 @@
+# build trees
+/build*/
+/_build/
+/cmake-build-*/
+CMakeLists.txt.user*
+compile_commands.json
+.cache/
+# packaging artefacts
+/packaging/pkg/
+/packaging/src/
+/packaging/*.pkg.tar.*
+/packaging/*.tar.gz
+# editors / OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+# local secrets never belong here
+.env
+.env.*

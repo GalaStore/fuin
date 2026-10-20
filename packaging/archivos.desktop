@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Name=Archivos
+GenericName=File Manager
+GenericName[es]=Gestor de archivos
+Comment=Keyboard-first, AI-aware file manager
+Comment[es]=Gestor de archivos rápido, con teclado y funciones para IA
+Exec=archivos %U
+Icon=archivos
+Terminal=false
+StartupWMClass=archivos
+Categories=Qt;KDE;System;FileTools;FileManager;
+MimeType=inode/directory;
+Keywords=files;folders;explorer;manager;archivos;carpetas;explorador;
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=New window
+Name[es]=Ventana nueva
+Exec=archivos --new-window
