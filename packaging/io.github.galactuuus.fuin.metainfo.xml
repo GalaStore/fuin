@@ -21,8 +21,8 @@
     <category>FileManager</category>
     <category>Qt</category>
   </categories>
-  <url type="homepage">https://github.com/Galactuuus/fuin</url>
-  <url type="bugtracker">https://github.com/Galactuuus/fuin/issues</url>
+  <url type="homepage">https://github.com/GalaStore/fuin</url>
+  <url type="bugtracker">https://github.com/GalaStore/fuin/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
     <release version="0.1.0" date="2026-10-20"/>
