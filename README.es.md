@@ -60,6 +60,11 @@ claude mcp add --scope user fuin -- fuin --mcp   # conectar Claude Code
 Configuración en `~/.config/fuin/fuin.conf` (terminal, editor, archivo de colores, animaciones,
 carpetas de proyectos, raíces y escritura MCP); ver el [README en inglés](README.md#configuration).
 
+**Ajustes** (menú ⋮ o Ctrl+,) incluye *Aplicaciones por defecto*: la aplicación por defecto de cada tipo de
+archivo y todas las instaladas que lo admiten. Se guarda en `~/.config/mimeapps.list` (estándar XDG, común a
+todo el escritorio). Fuera de Plasma, Fūin indica a KIO qué terminal usar para apps como vim en
+`~/.config/fuinrc` (nunca en `kdeglobals`).
+
 ## Licencia
 
 [MIT](LICENSE).

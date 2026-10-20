@@ -138,7 +138,7 @@ pre-release name are migrated automatically on first start):
 
 ```ini
 [apps]
-terminal=kitty          ; default: first found of kitty, foot, alacritty, wezterm, konsole, gnome-terminal
+terminal=kitty          ; default: $TERMINAL, then first found of xdg-terminal-exec, kitty, foot, alacritty, wezterm, konsole, gnome-terminal
 editor=cursor           ; default: first found of cursor, code, codium, zed, kate
 [theme]
 colorsFile=~/.cache/matugen/colors.json   ; optional Material 3 colours (matugen JSON); watched live
@@ -153,6 +153,15 @@ extra="Wallpapers|~/Pictures/Wallpapers|wallpaper"
 roots=~
 allowWrite=false
 ```
+
+**Ajustes** (⋮ menu or Ctrl+,) has an *Aplicaciones por defecto* page: the default application for each
+file type, with every installed candidate. Changes go to `~/.config/mimeapps.list` (the XDG standard, shared
+with every desktop app) and KSycoca is rebuilt. The file context menu's *Cambiar app por defecto…* opens it on
+that file's type.
+
+Outside Plasma, KIO's `TerminalApplication` (used for `Terminal=true` apps such as vim) is usually unset and
+defaults to Konsole. On start, if it is missing or not installed, Fūin writes its own terminal to
+`~/.config/fuinrc` (never `kdeglobals`).
 
 The colours file may also be given with `FUIN_COLORS=/path/colors.json`. Both flat role maps
 (`{"primary": "#…", "surface": "#…"}`, snake_case or camelCase) and matugen's `{"colors": {"dark": {…}}}` work.
