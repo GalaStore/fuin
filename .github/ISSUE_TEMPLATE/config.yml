@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Wiki
+    url: https://github.com/GalaStore/fuin/wiki
+    about: Installation, usage, configuration and troubleshooting.
+  - name: Roadmap
+    url: https://github.com/GalaStore/fuin/issues/1
+    about: What is planned for the next releases.
+  - name: Report a security vulnerability
+    url: https://github.com/GalaStore/fuin/security/advisories/new
+    about: Please report vulnerabilities privately, not as public issues.

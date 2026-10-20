@@ -1,0 +1,53 @@
+name: Feature request
+description: Suggest a new feature or an improvement
+title: "[Feature]: "
+labels: ["type: feature", "status: needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Please check the [Roadmap](https://github.com/GalaStore/fuin/issues/1) first; it may already be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what makes it hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should it work? Keyboard shortcuts, UI, CLI flags or MCP tools you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use today, or how other file managers solve it.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - "ui: QML interface, theming, keyboard"
+        - "fs/kio: listing, file operations, KIO, drives, thumbnails"
+        - "preview: code, Markdown, data and model previews"
+        - "ai/mcp: MCP server and its tools"
+        - "context-pack: Context for AI"
+        - "secrets: secret guard"
+        - "packaging: PKGBUILD, AUR, desktop integration"
+        - "ci: GitHub Actions and tests"
+        - "i18n: translations and UI language"
+        - "settings: Ajustes, fuin.conf, default applications"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues and the Roadmap and this is not a duplicate.
+          required: true

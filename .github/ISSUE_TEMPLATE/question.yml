@@ -1,0 +1,26 @@
+name: Question
+description: Ask how to use or configure Fūin
+title: "[Question]: "
+labels: ["type: question", "status: needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the [wiki](https://github.com/GalaStore/fuin/wiki) first, especially *Troubleshooting* and *Configuration*.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What do you want to know? Include what you already tried.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Fūin version
+      description: Output of `fuin --version`.
+  - type: input
+    id: desktop
+    attributes:
+      label: Distribution and desktop / compositor
+      placeholder: Arch Linux, Hyprland
