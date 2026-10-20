@@ -13,6 +13,11 @@
 #include "preview/CodeHighlighter.h"
 #include "preview/Previewer.h"
 
+#include <KConfig>
+#include <KConfigGroup>
+#include <KService>
+#include <KSharedConfig>
+
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
@@ -22,6 +27,8 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QProcess>
+#include <QStandardPaths>
 #include <QUrl>
 
 #include <iostream>
@@ -40,6 +47,34 @@ static QString argToUrl(const QString &arg)
     if (!u.scheme().isEmpty() && u.scheme().size() > 1)
         return u.toString();
     return QUrl::fromLocalFile(QFileInfo(Config::expand(arg)).absoluteFilePath()).toString();
+}
+
+// KIO runs Terminal=true applications (vim, htop, ...) through [General] TerminalApplication of
+// the application's cascading config (fuinrc -> kdeglobals), defaulting to "konsole". Outside
+// Plasma that key is usually unset or names a terminal that is not installed, so opening a text
+// file whose default app is vim fails. Point KIO at the terminal Fūin already resolves. The write
+// goes to Fūin's own ~/.config/fuinrc and never to kdeglobals, which belongs to the desktop.
+static void ensureKioTerminal()
+{
+    const KConfigGroup effective(KSharedConfig::openConfig(), u"General"_s);
+    const QString configured = QProcess::splitCommand(effective.readPathEntry("TerminalApplication", QString())).value(0);
+    if (!configured.isEmpty() && !QStandardPaths::findExecutable(configured).isEmpty())
+        return;
+    const QString terminal = Config::instance()->terminal();
+    if (terminal.isEmpty())
+        return;
+
+    KConfig local(u"fuinrc"_s, KConfig::SimpleConfig); // app-local file only, no kdeglobals cascade
+    KConfigGroup general(&local, u"General"_s);
+    general.writePathEntry("TerminalApplication", terminal);
+    // KTerminalLauncherJob prefers TerminalService (a desktop file id) when it is set.
+    const KService::Ptr service = KService::serviceByDesktopName(QFileInfo(terminal).fileName());
+    if (service && service->isApplication())
+        general.writeEntry("TerminalService", service->storageId());
+    else
+        general.deleteEntry("TerminalService");
+    local.sync();
+    KSharedConfig::openConfig()->reparseConfiguration();
 }
 
 static int runHeadless(int argc, char **argv)
@@ -98,6 +133,8 @@ int main(int argc, char **argv)
     p.addOption({u"context"_s, u"Print a Markdown/XML context pack of the given paths to stdout."_s});
     p.addPositionalArgument(u"url"_s, u"Folder, file or KIO URL to open."_s, u"[url]"_s);
     p.process(app);
+
+    ensureKioTerminal();
 
     const QString start = argToUrl(p.positionalArguments().value(0));
     const QString revealUrl = p.isSet(reveal) ? argToUrl(p.value(reveal)) : p.isSet(preview) ? argToUrl(p.value(preview)) : QString();

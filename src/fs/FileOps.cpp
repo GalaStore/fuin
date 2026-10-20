@@ -3,6 +3,7 @@
 #include "../app/Config.h"
 
 #include <KApplicationTrader>
+#include <KConfigGroup>
 #include <KFileItem>
 #include <KIO/ApplicationLauncherJob>
 #include <KIO/CopyJob>
@@ -18,6 +19,7 @@
 #include <KIO/SimpleJob>
 #include <KIO/StoredTransferJob>
 #include <KService>
+#include <KSharedConfig>
 #include <KUrlMimeData>
 
 #include <QApplication>
@@ -28,6 +30,8 @@
 #include <QProcess>
 #include <QStandardPaths>
 #include <QStorageInfo>
+
+#include <memory>
 
 FileOps::FileOps(QObject *parent)
     : QObject(parent)
@@ -351,15 +355,37 @@ void FileOps::drop(const QStringList &urls, const QString &destDir, const QStrin
 
 // ---------------------------------------------------------------- launching
 
+// Human-readable reason for a failed open: names the file and the application, and spells out
+// the common "Terminal=true app but no usable terminal" case instead of KIO's generic text.
+static QString openErrorText(const QUrl &url, const QString &mimeType, const QString &kioError)
+{
+    const QString file = url.fileName().isEmpty() ? url.toDisplayString(QUrl::PreferLocalFile) : url.fileName();
+    const KService::Ptr app = mimeType.isEmpty() ? KService::Ptr() : KApplicationTrader::preferredService(mimeType);
+    if (!app)
+        return QStringLiteral("No se pudo abrir «%1»: %2").arg(file, kioError);
+    if (app->terminal()) {
+        const KConfigGroup general(KSharedConfig::openConfig(), QStringLiteral("General"));
+        const QString terminal = QProcess::splitCommand(general.readPathEntry("TerminalApplication", QStringLiteral("konsole"))).value(0);
+        if (terminal.isEmpty() || QStandardPaths::findExecutable(terminal).isEmpty())
+            return QStringLiteral("No se pudo abrir «%1» con %2: se ejecuta en un terminal y «%3» no está instalado. "
+                                  "Define TerminalApplication en ~/.config/fuinrc o elige otra aplicación por defecto.")
+                .arg(file, app->name(), terminal.isEmpty() ? QStringLiteral("(ninguno)") : terminal);
+    }
+    return QStringLiteral("No se pudo abrir «%1» con %2: %3").arg(file, app->name(), kioError);
+}
+
 void FileOps::open(const QString &url)
 {
-    auto *job = new KIO::OpenUrlJob(toUrl(url));
+    const QUrl target = toUrl(url);
+    auto *job = new KIO::OpenUrlJob(target);
     job->setUiDelegate(KIO::createDefaultJobUiDelegate(KJobUiDelegate::AutoHandlingEnabled, nullptr));
     job->setRunExecutables(false);
     job->setShowOpenOrExecuteDialog(true);
-    connect(job, &KJob::result, this, [this, job] {
+    auto mimeType = std::make_shared<QString>();
+    connect(job, &KIO::OpenUrlJob::mimeTypeFound, this, [mimeType](const QString &mime) { *mimeType = mime; });
+    connect(job, &KJob::result, this, [this, job, target, mimeType] {
         if (job->error() && job->error() != KJob::KilledJobError)
-            Q_EMIT notify(job->errorString(), QStringLiteral("error"), false);
+            Q_EMIT notify(openErrorText(target, *mimeType, job->errorString()), QStringLiteral("error"), false);
     });
     job->start();
 }
@@ -426,10 +452,11 @@ void FileOps::openTerminal(const QString &dir, const QString &command)
         args << QStringLiteral("start") << QStringLiteral("--cwd") << d;
     else if (bin == QLatin1String("gnome-terminal"))
         args << QStringLiteral("--working-directory=") + d;
+    // xdg-terminal-exec: the working directory is inherited and the command follows directly.
     if (!command.isEmpty()) {
         if (bin == QLatin1String("gnome-terminal"))
             args << QStringLiteral("--");
-        else if (bin != QLatin1String("wezterm"))
+        else if (bin != QLatin1String("wezterm") && bin != QLatin1String("xdg-terminal-exec"))
             args << QStringLiteral("-e");
         args << QStringLiteral("sh") << QStringLiteral("-c") << command;
     }

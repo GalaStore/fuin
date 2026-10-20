@@ -24,6 +24,7 @@ find_package(KF6KIO 6.0 REQUIRED)
 find_package(KF6Solid 6.0 REQUIRED)
 find_package(KF6CoreAddons 6.0 REQUIRED)
 find_package(KF6Service 6.0 REQUIRED)
+find_package(KF6Config 6.0 REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.6)
 
@@ -39,7 +40,7 @@ target_compile_definitions(fuin PRIVATE FUIN_VERSION="${PROJECT_VERSION}" QT_NO_
 target_compile_options(fuin PRIVATE -Wall -Wextra -Wpedantic)
 target_link_libraries(fuin PRIVATE
   Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Concurrent Qt6::Network
-  KF6::KIOCore KF6::KIOGui KF6::KIOWidgets KF6::Solid KF6::CoreAddons KF6::Service)
+  KF6::KIOCore KF6::KIOGui KF6::KIOWidgets KF6::Solid KF6::CoreAddons KF6::Service KF6::ConfigCore)
 
 if(FUIN_WITH_SYNTAX)
   find_package(KF6SyntaxHighlighting 6.0)

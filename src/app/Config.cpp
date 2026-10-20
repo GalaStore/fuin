@@ -191,7 +191,10 @@ QString Config::terminal() const
     const QString set = value(QStringLiteral("apps/terminal"), QString()).toString();
     if (!set.isEmpty())
         return set;
-    return firstInPath({shellApp(QStringLiteral("terminal")), qEnvironmentVariable("TERMINAL"), QStringLiteral("kitty"), QStringLiteral("foot"),
+    // Explicit choices first (desktop-shell settings, $TERMINAL), then the desktop-agnostic
+    // xdg-terminal-exec launcher, then well-known terminals.
+    return firstInPath({shellApp(QStringLiteral("terminal")), qEnvironmentVariable("TERMINAL"), QStringLiteral("xdg-terminal-exec"),
+                        QStringLiteral("kitty"), QStringLiteral("foot"),
                         QStringLiteral("alacritty"), QStringLiteral("wezterm"), QStringLiteral("konsole"), QStringLiteral("gnome-terminal")});
 }
 
