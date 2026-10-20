@@ -34,7 +34,7 @@ para que los agentes de programación vean (y, con tu permiso, modifiquen) la ca
 ```sh
 sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-declarative qt6-svg \
   kio kio-extras solid kcoreaddons kservice syntax-highlighting ttf-material-symbols-variable
-sudo pacman -S --needed arrow fd ripgrep git duckdb kdegraphics-thumbnailers ffmpegthumbs kimageformats  # opcional
+sudo pacman -S --needed arrow fd ripgrep git duckdb kdegraphics-thumbnailers ffmpegthumbs kimageformats plasma-activities-stats  # opcional
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/.local
 cmake --build build && cmake --install build
 ```

@@ -17,6 +17,7 @@ optdepends=('arrow: Parquet previews (schema, statistics, rows)'
             'ripgrep: content search for agents'
             'duckdb: «Abrir en DuckDB» for CSV/Parquet/JSON'
             'git: repository badges'
+            'plasma-activities-stats: «Recientes» (recentlyused:/) place'
             'kitty: default terminal (any terminal works)')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('SKIP')
