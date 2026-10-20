@@ -10,6 +10,9 @@ jobs:
     name: Arch Linux (Qt 6 + KF6)
     runs-on: ubuntu-latest
     container: archlinux:latest
+    env:
+      # Headless runner: no display server, so Qt must use the offscreen platform plugin.
+      QT_QPA_PLATFORM: offscreen
     strategy:
       fail-fast: false
       matrix:
@@ -18,9 +21,9 @@ jobs:
       - name: Install dependencies
         run: |
           pacman -Syu --noconfirm --needed base-devel git cmake ninja extra-cmake-modules \
-            qt6-base qt6-declarative qt6-svg kio kio-extras solid kcoreaddons kservice syntax-highlighting \
+            qt6-base qt6-declarative qt6-svg kio solid kcoreaddons kservice syntax-highlighting \
             $([ "${{ matrix.parquet }}" = ON ] && echo arrow)
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DFUIN_WITH_PARQUET=${{ matrix.parquet }}
       - name: Build
