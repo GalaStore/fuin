@@ -20,7 +20,7 @@ optdepends=('arrow: Parquet previews (schema, statistics, rows)'
             'plasma-activities-stats: «Recientes» (recentlyused:/) place'
             'kitty: default terminal (any terminal works)')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('7635fd95d72e288adcacb844716b9ff7f320d3990c189ecc19bfdb4e33cd6b15')
 
 build() {
   cmake -S "$pkgname-$pkgver" -B build -G Ninja \
