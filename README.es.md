@@ -65,6 +65,10 @@ archivo y todas las instaladas que lo admiten. Se guarda en `~/.config/mimeapps.
 todo el escritorio). Fuera de Plasma, Fūin indica a KIO qué terminal usar para apps como vim en
 `~/.config/fuinrc` (nunca en `kdeglobals`).
 
+## Hoja de ruta
+
+Consulta [ROADMAP.md](ROADMAP.md) y el [issue fijado «Roadmap»](https://github.com/GalaStore/fuin/issues/1).
+
 ## Licencia
 
 [MIT](LICENSE).

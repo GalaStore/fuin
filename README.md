@@ -180,9 +180,14 @@ src/ipc      single-instance socket (CLI --reveal, MCP ↔ GUI confirmations)
 qml/         the interface
 ```
 
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) and the pinned [Roadmap issue](https://github.com/GalaStore/fuin/issues/1).
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and pull requests are welcome.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and pull requests are welcome. More documentation is in the
+[wiki](https://github.com/GalaStore/fuin/wiki); security issues: [SECURITY.md](SECURITY.md).
 
 ## License
 
