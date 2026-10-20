@@ -9,9 +9,40 @@
 #include <QStandardPaths>
 
 namespace {
+// One-time migration from the project's pre-release name ("archivos"): move the settings file
+// and the optional colours file, and drop Qt's regenerable per-app caches under the old name.
+void migrateLegacyState()
+{
+    static bool done = false;
+    if (done)
+        return;
+    done = true;
+    const QString legacy = QStringLiteral("archivos"); // former name, only used here
+    const QString cfg = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+    const QString oldConf = cfg + u'/' + legacy + u'/' + legacy + QStringLiteral(".conf");
+    const QString newConf = cfg + QStringLiteral("/fuin/fuin.conf");
+    if (QFile::exists(oldConf) && !QFile::exists(newConf) && QDir().mkpath(cfg + QStringLiteral("/fuin")) && QFile::rename(oldConf, newConf))
+        QDir().rmdir(cfg + u'/' + legacy);
+
+    const QString cache = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
+    const QString oldColors = cache + u'/' + legacy + QStringLiteral("/colors.json");
+    const QString newColors = cache + QStringLiteral("/fuin/colors.json");
+    if (QFile::exists(oldColors) && !QFile::exists(newColors) && QDir().mkpath(cache + QStringLiteral("/fuin")))
+        QFile::rename(oldColors, newColors);
+    QDir oldCache(cache + u'/' + legacy);
+    if (oldCache.exists()) {
+        const QStringList qtCaches = oldCache.entryList({QStringLiteral("qmlcache"), QStringLiteral("qtpipelinecache-*"), QStringLiteral("qtshadercache-*")},
+                                                        QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const QString &d : qtCaches)
+            QDir(oldCache.filePath(d)).removeRecursively();
+        QDir().rmdir(oldCache.absolutePath()); // only succeeds if nothing else is left
+    }
+}
+
 QString configPath()
 {
-    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/archivos/archivos.conf");
+    migrateLegacyState();
+    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/fuin/fuin.conf");
 }
 }
 
@@ -49,7 +80,7 @@ QString Config::socketPath()
     QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
     if (dir.isEmpty())
         dir = QDir::tempPath();
-    return dir + QStringLiteral("/archivos.sock");
+    return dir + QStringLiteral("/fuin.sock");
 }
 
 QVariant Config::value(const QString &key, const QVariant &def) const
@@ -120,11 +151,11 @@ QString Config::colorsFile() const
     const QString set = value(QStringLiteral("theme/colorsFile"), QString()).toString();
     if (!set.isEmpty())
         return expand(set);
-    const QString env = qEnvironmentVariable("ARCHIVOS_COLORS");
+    const QString env = qEnvironmentVariable("FUIN_COLORS");
     if (!env.isEmpty())
         return expand(env);
     const QString cache = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation);
-    const QString own = cache + QStringLiteral("/archivos/colors.json");
+    const QString own = cache + QStringLiteral("/fuin/colors.json");
     if (QFileInfo::exists(own))
         return own;
     return cache + QStringLiteral("/qs/colors.json");

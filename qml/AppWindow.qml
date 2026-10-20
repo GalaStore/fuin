@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
-import Archivos
+import Fuin
 import "Glyphs.js" as G
 
 // One top-level window: sidebar · tabs + toolbar · split panes · right panel (preview | IA) · status bar.
@@ -15,7 +15,7 @@ ApplicationWindow {
   width: 1320; height: 820
   minimumWidth: 720; minimumHeight: 460
   visible: true
-  title: (pane ? pane.model.title : "") + " — Archivos"
+  title: (pane ? pane.model.title : "") + " — Fūin"
   color: Theme.surface
 
   property var tabs: []
@@ -61,7 +61,7 @@ ApplicationWindow {
     rightPanel = rightPanel === which ? "" : which
     if (which === "preview" || rightPanel === "") Config.showPreview = rightPanel === "preview"
   }
-  // ARCHIVOS_DEV=1 automation: {"cmd":"dev","panel":"ai","view":"list","split":true,"select":url,"grab":"/tmp/x.png"}
+  // FUIN_DEV=1 automation: {"cmd":"dev","panel":"ai","view":"list","split":true,"select":url,"grab":"/tmp/x.png"}
   function dev(a) {
     if (a.navigate) pane.navigate(a.navigate)
     if (a.view) Config.viewMode = a.view
@@ -106,7 +106,7 @@ ApplicationWindow {
 
   ContextPack {
     id: packer
-    onCopied: s => appWin.toast("Contexto copiado · ≈ " + G.count(s.tokens) + " tokens · " + s.files + " archivos" + (s.secretsBlocked ? " · " + s.secretsBlocked + (s.secretsBlocked === 1 ? " secreto bloqueado" : " secretos bloqueados") : ""), "ok")
+    onCopied: s => appWin.toast("Contexto copiado · ≈ " + G.count(s.tokens) + " tokens · " + s.files + " ficheros" + (s.secretsBlocked ? " · " + s.secretsBlocked + (s.secretsBlocked === 1 ? " secreto bloqueado" : " secretos bloqueados") : ""), "ok")
   }
   Connections {
     target: FileOps
@@ -114,7 +114,7 @@ ApplicationWindow {
     function onCreated(url) { if (appWin.active && appWin.pane) appWin.pane.model.selectUrl(url) }
   }
 
-  // publish state for agents (MCP archivos_get_current_view)
+  // publish state for agents (MCP fuin_get_current_view)
   Timer {
     id: publish
     interval: 400
@@ -211,7 +211,7 @@ ApplicationWindow {
             IconBtn { size: 30; icon: "view_column"; tip: "Columnas (Ctrl+3)"; checked: Config.viewMode === "columns"; onClicked: Config.viewMode = "columns" } }
         }
         Item { width: 6; height: 1 }
-        IconBtn { icon: Config.showHidden ? "visibility" : "visibility_off"; tip: "Archivos ocultos (Ctrl+H)"; checked: Config.showHidden; onClicked: Config.showHidden = !Config.showHidden }
+        IconBtn { icon: Config.showHidden ? "visibility" : "visibility_off"; tip: "Ficheros ocultos (Ctrl+H)"; checked: Config.showHidden; onClicked: Config.showHidden = !Config.showHidden }
         IconBtn { icon: "vertical_split"; tip: "Vista dividida (F3)"; checked: tab && tab.split; onClicked: tab.toggleSplit() }
         IconBtn { icon: "right_panel_open"; tip: "Vista previa (F9 · Espacio)"; checked: appWin.rightPanel === "preview"; onClicked: appWin.toggleRightPanel("preview") }
         IconBtn { icon: "auto_awesome"; tip: "IA y agentes (Ctrl+I)"; checked: appWin.rightPanel === "ai"; onClicked: appWin.toggleRightPanel("ai") }
@@ -296,7 +296,7 @@ ApplicationWindow {
       { label: FileOps.canUndo ? "Deshacer: " + FileOps.undoText : "Nada que deshacer", icon: "undo", enabled: FileOps.canUndo, shortcut: "Ctrl+Z", run: () => FileOps.undo() },
       { label: "Atajos de teclado", icon: "keyboard", shortcut: "F1", run: () => keysDlg.open() },
       { label: "Ajustes (" + Config.configFile.split("/").pop() + ")", icon: "settings", run: () => FileOps.openInEditor(Config.configFile) },
-      { label: "Acerca de Archivos " + AppInfo.version, icon: "info", run: () => aboutDlg.open() }
+      { label: "Acerca de Fūin " + AppInfo.version, icon: "info", run: () => aboutDlg.open() }
     ]
   }
 
@@ -421,8 +421,8 @@ ApplicationWindow {
   }
   Modal {
     id: aboutDlg
-    title: "Archivos " + AppInfo.version; icon: "folder_special"
-    Txt { width: parent.width; wrapMode: Text.Wrap; text: "Gestor de archivos nativo (Qt 6 + KDE Frameworks / KIO) con vista previa de datos y modelos, contexto para IA y servidor MCP. Licencia MIT." }
+    title: "Fūin " + AppInfo.version; icon: "folder_special"
+    Txt { width: parent.width; wrapMode: Text.Wrap; text: "Gestor de ficheros nativo (Qt 6 + KDE Frameworks / KIO) con vista previa de datos y modelos, contexto para IA y servidor MCP. Licencia MIT." }
     Txt { width: parent.width; wrapMode: Text.Wrap; dim: true; font.pointSize: 9
           text: "Colores: " + (Theme.colorsSource || "tema integrado") + "\nAjustes: " + Config.configFile }
     buttons: [ Btn { kind: "tonal"; text: "Cerrar"; onClicked: aboutDlg.close() } ]

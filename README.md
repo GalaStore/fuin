@@ -1,10 +1,12 @@
-# Archivos
+# Fūin
 
 **A fast, keyboard-first file manager for Linux, built on Qt 6 Quick and KDE's KIO — with
 first-class previews for data and ML files, one-key context packs for LLM chats, and an MCP
 server so coding agents can see (and, with your permission, act on) the folder you are looking at.**
 
 > 🇪🇸 [Leer en español](README.es.md)
+
+*Fūin* (封印, "seal") is the sealing jutsu from Naruto used to store things inside scrolls — here, your files.
 
 ![Main view](docs/screenshots/main.png)
 
@@ -34,8 +36,8 @@ server so coding agents can see (and, with your permission, act on) the folder y
 **AI features**
 - **Context for AI** (Ctrl+Shift+I): bundles the selection or current folder into one Markdown or XML document
   (tree + files) and copies it. Respects `.gitignore`, skips lockfiles/binaries, includes **schemas instead of raw
-  data** for Parquet/large CSV/model files, and shows the token estimate. Also available as `archivos --context`.
-- **MCP server** (`archivos --mcp`): agents can get your current view and selection, list, read, search (names or
+  data** for Parquet/large CSV/model files, and shows the token estimate. Also available as `fuin --context`.
+- **MCP server** (`fuin --mcp`): agents can get your current view and selection, list, read, search (names or
   contents), inspect data/model files, build context packs and reveal files in the window. Writes (create folder,
   copy, move, trash) are **off by default**; when enabled, every change asks you in the GUI and is undoable.
 - **Secret guard**: `.env`, keys, tokens, credentials, and files whose content looks like a secret get a 🔑 badge
@@ -75,18 +77,23 @@ cmake --install build
 
 | CMake option | Default | Effect |
 |---|---|---|
-| `ARCHIVOS_WITH_PARQUET` | `ON` | Parquet previews if Arrow/Parquet C++ is found |
-| `ARCHIVOS_WITH_SYNTAX` | `ON` | Syntax highlighting if KSyntaxHighlighting is found |
+| `FUIN_WITH_PARQUET` | `ON` | Parquet previews if Arrow/Parquet C++ is found |
+| `FUIN_WITH_SYNTAX` | `ON` | Syntax highlighting if KSyntaxHighlighting is found |
+
+> **Arch Linux and Arrow updates:** Fūin links against Apache Arrow/Parquet, whose soname changes with every major
+> release (e.g. `libarrow.so.2500` → `libarrow.so.2600`). After such a `pacman -Syu` the binary fails with
+> *"cannot open shared object file"* — rebuild and reinstall (the three commands above, or `makepkg -si` for the
+> package). Build with `-DFUIN_WITH_PARQUET=OFF` if you prefer not to depend on Arrow.
 
 ## Usage
 
 ```sh
-archivos [folder|file|url]        # open (reuses the running instance, new window)
-archivos --reveal ~/file.csv      # open its folder and select it
-archivos --preview ~/data.parquet # …and show the preview
-archivos --new-window
-archivos --context [--format markdown|xml] paths… | wl-copy   # context pack to stdout
-archivos --mcp                    # MCP server on stdio
+fuin [folder|file|url]        # open (reuses the running instance, new window)
+fuin --reveal ~/file.csv      # open its folder and select it
+fuin --preview ~/data.parquet # …and show the preview
+fuin --new-window
+fuin --context [--format markdown|xml] paths… | wl-copy   # context pack to stdout
+fuin --mcp                    # MCP server on stdio
 ```
 
 ### Connect an agent (MCP)
@@ -94,18 +101,18 @@ archivos --mcp                    # MCP server on stdio
 Claude Code:
 
 ```sh
-claude mcp add --scope user archivos -- archivos --mcp
+claude mcp add --scope user fuin -- fuin --mcp
 ```
 
 Cursor (`~/.cursor/mcp.json`) and other clients:
 
 ```json
-{ "mcpServers": { "archivos": { "command": "archivos", "args": ["--mcp"] } } }
+{ "mcpServers": { "fuin": { "command": "fuin", "args": ["--mcp"] } } }
 ```
 
-Tools: `archivos_get_current_view`, `archivos_list_directory`, `archivos_read_file`, `archivos_search`,
-`archivos_inspect`, `archivos_context_pack`, `archivos_reveal`, and (write, confirmation required)
-`archivos_create_folder`, `archivos_copy`, `archivos_move`, `archivos_move_to_trash`.
+Tools: `fuin_get_current_view`, `fuin_list_directory`, `fuin_read_file`, `fuin_search`,
+`fuin_inspect`, `fuin_context_pack`, `fuin_reveal`, and (write, confirmation required)
+`fuin_create_folder`, `fuin_copy`, `fuin_move`, `fuin_move_to_trash`.
 Agents only see paths under `mcp/roots` (default: your home folder).
 
 ### Keyboard
@@ -126,7 +133,8 @@ Agents only see paths under `mcp/roots` (default: your home folder).
 
 ## Configuration
 
-`$XDG_CONFIG_HOME/archivos/archivos.conf` (INI, created on first change):
+`$XDG_CONFIG_HOME/fuin/fuin.conf` (INI, created on first change; settings saved under the
+pre-release name are migrated automatically on first start):
 
 ```ini
 [apps]
@@ -146,7 +154,7 @@ roots=~
 allowWrite=false
 ```
 
-The colours file may also be given with `ARCHIVOS_COLORS=/path/colors.json`. Both flat role maps
+The colours file may also be given with `FUIN_COLORS=/path/colors.json`. Both flat role maps
 (`{"primary": "#…", "surface": "#…"}`, snake_case or camelCase) and matugen's `{"colors": {"dark": {…}}}` work.
 
 ## Architecture

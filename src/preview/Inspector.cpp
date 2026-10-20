@@ -18,7 +18,7 @@
 #include <cstring>
 #include <map>
 
-#ifdef ARCHIVOS_HAVE_PARQUET
+#ifdef FUIN_HAVE_PARQUET
 #include <arrow/api.h>
 #include <arrow/io/file.h>
 #include <arrow/util/compression.h>
@@ -359,7 +359,7 @@ QString Inspector::humanCount(double n)
 
 bool Inspector::hasParquet()
 {
-#ifdef ARCHIVOS_HAVE_PARQUET
+#ifdef FUIN_HAVE_PARQUET
     return true;
 #else
     return false;
@@ -545,7 +545,7 @@ QVariantMap Inspector::inspectJsonLines(const QString &path, const Options &opts
 
 QVariantMap Inspector::inspectParquet(const QString &path, const Options &opts)
 {
-#ifndef ARCHIVOS_HAVE_PARQUET
+#ifndef FUIN_HAVE_PARQUET
     Q_UNUSED(path)
     Q_UNUSED(opts)
     return error(u"Compilado sin soporte Parquet (Apache Arrow)."_s);

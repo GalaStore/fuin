@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 // Round icon button with tooltip.
 Rectangle {
   id: root

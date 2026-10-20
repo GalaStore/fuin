@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Body text (rounded Google Sans Flex when installed, system sans otherwise).
 Text {
   property bool dim: false

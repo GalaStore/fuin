@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 import "Glyphs.js" as G
 
 // Preview pane: images, video/PDF posters, code (KSyntaxHighlighting), Markdown, tables with
@@ -192,7 +192,7 @@ Item {
       emblem: kind === "folder" ? "konoha" : "tomoe"
       title: kind === "error" ? "Sin vista previa" : kind === "binary" ? "Archivo binario" : kind === "folder" ? (entry ? "Carpeta" : "Selecciona un archivo")
            : kind === "video" || kind === "pdf" ? "Sin miniatura" : kind === "audio" ? "Audio" : ""
-      hint: kind === "error" ? (r.msg || "") : kind === "folder" ? (r.dirs + " carpetas · " + r.files + " archivos") : (kind === "video" || kind === "pdf") ? "Instala ffmpegthumbs / kdegraphics-thumbnailers para miniaturas" : ""
+      hint: kind === "error" ? (r.msg || "") : kind === "folder" ? (r.dirs + " carpetas · " + r.files + " ficheros") : (kind === "video" || kind === "pdf") ? "Instala ffmpegthumbs / kdegraphics-thumbnailers para miniaturas" : ""
     }
     Spinner { anchors.centerIn: parent; visible: pv.busy }
   }

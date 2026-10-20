@@ -29,7 +29,7 @@ const QString kMetaVersion = u"io.modelcontextprotocol/protocolVersion"_s;
 
 QJsonObject serverInfo()
 {
-    return {{u"name"_s, u"archivos"_s}, {u"title"_s, u"Archivos"_s}, {u"version"_s, QCoreApplication::applicationVersion()}};
+    return {{u"name"_s, u"fuin"_s}, {u"title"_s, u"Fūin"_s}, {u"version"_s, QCoreApplication::applicationVersion()}};
 }
 
 QJsonObject capabilities()
@@ -38,9 +38,9 @@ QJsonObject capabilities()
 }
 
 const char *kInstructions =
-    "Archivos is the user's file manager. Use these tools to look at the folder and selection the user has open "
-    "(archivos_get_current_view), inspect files (schemas of CSV/Parquet/JSONL, ML model metadata), build context packs, and "
-    "point the user at files (archivos_reveal). Writes are disabled unless the user enabled them and are confirmed in the UI.";
+    "Fūin is the user's file manager. Use these tools to look at the folder and selection the user has open "
+    "(fuin_get_current_view), inspect files (schemas of CSV/Parquet/JSONL, ML model metadata), build context packs, and "
+    "point the user at files (fuin_reveal). Writes are disabled unless the user enabled them and are confirmed in the UI.";
 
 QJsonObject schema(const QJsonObject &props, const QStringList &required = {})
 {
@@ -111,54 +111,54 @@ bool ensureGui()
 QJsonArray McpServer::toolDefinitions()
 {
     return {
-        tool(u"archivos_get_current_view"_s, u"Vista actual"_s,
-             u"Returns what the user is looking at in Archivos right now: the active folder, selected files, open tabs and the "
+        tool(u"fuin_get_current_view"_s, u"Vista actual"_s,
+             u"Returns what the user is looking at in Fūin right now: the active folder, selected files, open tabs and the "
              "previewed file. Use it to resolve 'this folder' or 'these files'."_s,
              schema({}), true),
-        tool(u"archivos_list_directory"_s, u"Listar carpeta"_s,
+        tool(u"fuin_list_directory"_s, u"Listar carpeta"_s,
              u"Lists a directory (name, type, size, modified time, git branch for repos). Paths may use ~."_s,
              schema({{u"path"_s, str(u"Directory path"_s)}, {u"show_hidden"_s, boolean(u"Include dotfiles (default false)"_s)},
                      {u"limit"_s, integer(u"Max entries (default 500)"_s)}},
                     {u"path"_s}),
              true),
-        tool(u"archivos_read_file"_s, u"Leer archivo"_s,
+        tool(u"fuin_read_file"_s, u"Leer archivo"_s,
              u"Reads a UTF-8 text file. Refuses binaries and files that look like secrets (.env, keys, tokens)."_s,
              schema({{u"path"_s, str(u"File path"_s)}, {u"offset"_s, integer(u"Byte offset (default 0)"_s)},
                      {u"max_bytes"_s, integer(u"Max bytes to return (default 65536, max 1048576)"_s)}},
                     {u"path"_s}),
              true),
-        tool(u"archivos_search"_s, u"Buscar"_s,
+        tool(u"fuin_search"_s, u"Buscar"_s,
              u"Finds files by name (fd) or, with content=true, by text inside files (ripgrep). Respects .gitignore."_s,
              schema({{u"query"_s, str(u"Text to search for"_s)}, {u"path"_s, str(u"Folder to search in (default: current view or ~)"_s)},
                      {u"content"_s, boolean(u"Search file contents instead of names"_s)}, {u"limit"_s, integer(u"Max results (default 100)"_s)}},
                     {u"query"_s}),
              true),
-        tool(u"archivos_inspect"_s, u"Inspeccionar"_s,
+        tool(u"fuin_inspect"_s, u"Inspeccionar"_s,
              u"Structured metadata for a file: schema, row count, null counts and min/max for CSV/TSV/JSON/JSONL/Parquet; "
              "tensors, parameter count, dtype and quantization for .safetensors/.gguf/.onnx; dimensions for images; project type "
              "and README for folders."_s,
              schema({{u"path"_s, str(u"File or folder path"_s)}, {u"sample_rows"_s, integer(u"Rows to include for tables (default 10)"_s)}},
                     {u"path"_s}),
              true),
-        tool(u"archivos_context_pack"_s, u"Contexto para IA"_s,
+        tool(u"fuin_context_pack"_s, u"Contexto para IA"_s,
              u"Bundles files/folders into one Markdown or XML document (tree + contents). Respects .gitignore and skips binaries, "
              "lockfiles and secrets. Returns the document and a token estimate."_s,
              schema({{u"paths"_s, strArray(u"Files or folders"_s)}, {u"format"_s, QJsonObject{{u"type"_s, u"string"_s}, {u"enum"_s, QJsonArray{u"markdown"_s, u"xml"_s}}}}},
                     {u"paths"_s}),
              true),
-        tool(u"archivos_reveal"_s, u"Mostrar en Archivos"_s,
-             u"Opens Archivos at a file or folder and selects it so the user can see it (starts Archivos if needed)."_s,
+        tool(u"fuin_reveal"_s, u"Mostrar en Fūin"_s,
+             u"Opens Fūin at a file or folder and selects it so the user can see it (starts Fūin if needed)."_s,
              schema({{u"path"_s, str(u"File or folder path"_s)}, {u"preview"_s, boolean(u"Also open the preview pane"_s)}}, {u"path"_s}), true),
-        tool(u"archivos_create_folder"_s, u"Crear carpeta"_s,
-             u"Creates a folder. Requires 'Permitir escritura a agentes' in Archivos; the user must approve it in the UI. Undoable."_s,
+        tool(u"fuin_create_folder"_s, u"Crear carpeta"_s,
+             u"Creates a folder. Requires 'Permitir escritura a agentes' in Fūin; the user must approve it in the UI. Undoable."_s,
              schema({{u"path"_s, str(u"New folder path"_s)}}, {u"path"_s}), false),
-        tool(u"archivos_move_to_trash"_s, u"Mover a la papelera"_s,
+        tool(u"fuin_move_to_trash"_s, u"Mover a la papelera"_s,
              u"Moves files to the trash (recoverable, undoable). Requires write permission and user approval in the UI."_s,
              schema({{u"paths"_s, strArray(u"Paths to trash"_s)}}, {u"paths"_s}), false, true),
-        tool(u"archivos_copy"_s, u"Copiar"_s, u"Copies files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
+        tool(u"fuin_copy"_s, u"Copiar"_s, u"Copies files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
              schema({{u"sources"_s, strArray(u"Files/folders to copy"_s)}, {u"destination"_s, str(u"Destination folder"_s)}}, {u"sources"_s, u"destination"_s}),
              false),
-        tool(u"archivos_move"_s, u"Mover"_s, u"Moves files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
+        tool(u"fuin_move"_s, u"Mover"_s, u"Moves files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
              schema({{u"sources"_s, strArray(u"Files/folders to move"_s)}, {u"destination"_s, str(u"Destination folder"_s)}}, {u"sources"_s, u"destination"_s}),
              false, true),
     };
@@ -273,15 +273,15 @@ QString McpServer::resolvePath(const QString &p, bool mustExist, QString *err) c
 QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
 {
     QString err;
-    if (name == "archivos_get_current_view"_L1) {
+    if (name == "fuin_get_current_view"_L1) {
         const QJsonObject st = gui({{u"cmd"_s, u"state"_s}});
         if (st.isEmpty())
-            return textResult(u"Archivos is not open. Call archivos_reveal to open it."_s, true);
+            return textResult(u"Fūin is not open. Call fuin_reveal to open it."_s, true);
         QJsonObject o = st;
         o.remove(u"ok"_s);
         return jsonResult(o);
     }
-    if (name == "archivos_list_directory"_L1) {
+    if (name == "fuin_list_directory"_L1) {
         const QString dir = resolvePath(args.value(u"path"_s).toString(), true, &err);
         if (dir.isEmpty())
             return textResult(err, true);
@@ -306,13 +306,13 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
         }
         return jsonResult({{u"path"_s, dir}, {u"total"_s, int(list.size())}, {u"entries"_s, entries}});
     }
-    if (name == "archivos_read_file"_L1) {
+    if (name == "fuin_read_file"_L1) {
         const QString path = resolvePath(args.value(u"path"_s).toString(), true, &err);
         if (path.isEmpty())
             return textResult(err, true);
         const QFileInfo fi(path);
         if (fi.isDir())
-            return textResult(u"This is a folder; use archivos_list_directory."_s, true);
+            return textResult(u"This is a folder; use fuin_list_directory."_s, true);
         if (SecretGuard::isSecretName(fi.fileName()))
             return textResult(u"Blocked: the file name looks like a secret (keys, tokens, .env)."_s, true);
         QFile f(path);
@@ -322,7 +322,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
         const qint64 max = qBound<qint64>(1, args.value(u"max_bytes"_s).toInteger(65536), qint64(1024 * 1024));
         const QByteArray probe = f.read(8192);
         if (SecretGuard::looksBinary(probe))
-            return textResult(u"Binary file; use archivos_inspect to read its metadata/schema."_s, true);
+            return textResult(u"Binary file; use fuin_inspect to read its metadata/schema."_s, true);
         f.seek(offset);
         const QByteArray data = f.read(max);
         const QString why = SecretGuard::scanContent(data);
@@ -333,7 +333,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
             text += u"\n\n[truncated: %1 of %2 bytes, continue with offset=%3]"_s.arg(offset + data.size()).arg(fi.size()).arg(offset + data.size());
         return textResult(text);
     }
-    if (name == "archivos_search"_L1) {
+    if (name == "fuin_search"_L1) {
         QString base = args.value(u"path"_s).toString();
         if (base.isEmpty()) {
             const QJsonObject st = gui({{u"cmd"_s, u"state"_s}}, 800);
@@ -365,7 +365,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
         return jsonResult({{u"root"_s, dir}, {u"mode"_s, content ? u"content"_s : u"name"_s}, {u"results"_s, QJsonArray::fromStringList(lines)},
                            {u"truncated"_s, more}});
     }
-    if (name == "archivos_inspect"_L1) {
+    if (name == "fuin_inspect"_L1) {
         const QString path = resolvePath(args.value(u"path"_s).toString(), true, &err);
         if (path.isEmpty())
             return textResult(err, true);
@@ -385,7 +385,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
             m.insert(u"readme"_s, m.value(u"readme"_s).toString().left(4000));
         return jsonResult(QJsonObject::fromVariantMap(m));
     }
-    if (name == "archivos_context_pack"_L1) {
+    if (name == "fuin_context_pack"_L1) {
         QStringList paths;
         for (const QJsonValue &v : args.value(u"paths"_s).toArray()) {
             const QString p = resolvePath(v.toString(), true, &err);
@@ -402,23 +402,23 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
                                           QJsonObject{{u"type"_s, u"text"_s}, {u"text"_s, QString::fromUtf8(QJsonDocument(summary).toJson(QJsonDocument::Compact))}}}},
                 {u"isError"_s, false}};
     }
-    if (name == "archivos_reveal"_L1) {
+    if (name == "fuin_reveal"_L1) {
         const QString path = resolvePath(args.value(u"path"_s).toString(), true, &err);
         if (path.isEmpty())
             return textResult(err, true);
         if (!ensureGui())
-            return textResult(u"Could not start Archivos"_s, true);
+            return textResult(u"Could not start Fūin"_s, true);
         gui({{u"cmd"_s, args.value(u"preview"_s).toBool() ? u"preview"_s : u"reveal"_s}, {u"path"_s, path}});
-        return textResult(u"Shown in Archivos: "_s + path);
+        return textResult(u"Shown in Fūin: "_s + path);
     }
 
     // ---- writes: opt-in + explicit approval in the GUI
     if (!Config::instance()->mcpAllowWrite())
-        return textResult(u"Writes are disabled. Ask the user to enable them in Archivos → IA panel → «Permitir escritura a agentes»."_s, true);
+        return textResult(u"Writes are disabled. Ask the user to enable them in Fūin → IA panel → «Permitir escritura a agentes»."_s, true);
     if (!IpcClient::isRunning())
-        return textResult(u"Archivos must be open so the user can approve changes. Call archivos_reveal first."_s, true);
+        return textResult(u"Fūin must be open so the user can approve changes. Call fuin_reveal first."_s, true);
     QJsonObject req{{u"cmd"_s, u"confirm"_s}};
-    if (name == "archivos_create_folder"_L1) {
+    if (name == "fuin_create_folder"_L1) {
         const QString path = resolvePath(args.value(u"path"_s).toString(), false, &err);
         if (path.isEmpty())
             return textResult(err, true);
@@ -427,7 +427,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
         req.insert(u"detail"_s, path);
         req.insert(u"args"_s, QJsonObject{{u"path"_s, path}});
     } else {
-        const bool trash = name == "archivos_move_to_trash"_L1;
+        const bool trash = name == "fuin_move_to_trash"_L1;
         QStringList srcs;
         for (const QJsonValue &v : args.value(trash ? u"paths"_s : u"sources"_s).toArray()) {
             const QString p = resolvePath(v.toString(), true, &err);
@@ -446,9 +446,9 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
             const QString dest = resolvePath(args.value(u"destination"_s).toString(), true, &err);
             if (dest.isEmpty())
                 return textResult(err, true);
-            const bool move = name == "archivos_move"_L1;
+            const bool move = name == "fuin_move"_L1;
             req.insert(u"action"_s, move ? u"move"_s : u"copy"_s);
-            req.insert(u"title"_s, move ? u"Mover archivos"_s : u"Copiar archivos"_s);
+            req.insert(u"title"_s, move ? u"Mover ficheros"_s : u"Copiar ficheros"_s);
             req.insert(u"args"_s, QJsonObject{{u"sources"_s, QJsonArray::fromStringList(srcs)}, {u"destination"_s, dest}});
             req.insert(u"detail"_s, srcs.join(u'\n') + u"\n→ "_s + dest);
         }
@@ -457,6 +457,6 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
     if (r.isEmpty())
         return textResult(u"No answer from the user (timed out)."_s, true);
     if (!r.value(u"approved"_s).toBool())
-        return textResult(u"The user rejected this operation in Archivos."_s, true);
-    return textResult(u"Approved and running (the user can undo it with Ctrl+Z in Archivos)."_s);
+        return textResult(u"The user rejected this operation in Fūin."_s, true);
+    return textResult(u"Approved and running (the user can undo it with Ctrl+Z in Fūin)."_s);
 }

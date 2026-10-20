@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 
 // A tab: one pane, or two side-by-side panes (split view, F3). The active pane wears the chakra ring.
 Item {

@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Rounded card with a thin chakra-gradient ring (primary → tertiary → secondary).
 Item {
   id: root

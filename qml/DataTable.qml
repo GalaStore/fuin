@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 import "Glyphs.js" as G
 
 // Table preview with a schema strip (type, nulls, min/max) for CSV/TSV/JSON/JSONL/Parquet.

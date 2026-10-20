@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Toggle: the knob is a tomoe that spins when switched; "on" track = chakra gradient.
 Item {
   id: root

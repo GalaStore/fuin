@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Bottom-centre toast. show(text, kind, actionText, actionFn, ms); kind: ok | error | info
 Item {
   id: root

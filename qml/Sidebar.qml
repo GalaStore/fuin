@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 
 // Places · Proyectos · Discos (Solid, with usage bars) · Red · Papelera. Every entry is a drop target.
 Rectangle {
@@ -90,7 +90,7 @@ Rectangle {
     spacing: 8
     opacity: 0.55
     Tomoe { width: 14; height: 14; anchors.verticalCenter: parent.verticalCenter }
-    Txt { text: "Archivos"; font.pointSize: 9.5; font.weight: Font.DemiBold; dim: true; anchors.verticalCenter: parent.verticalCenter }
+    Txt { text: "Fūin"; font.pointSize: 9.5; font.weight: Font.DemiBold; dim: true; anchors.verticalCenter: parent.verticalCenter }
   }
   Watermark { kind: "leaf"; width: 120; height: 120; anchors.bottom: parent.bottom; anchors.right: parent.right; anchors.margins: -20; rotation: -30; opacity: 0.04 }
   Connections { target: Places; function onMounted(url) { root.win.pane.navigate(url) } function onMessage(text, kind) { root.win.toast(text, kind) } }

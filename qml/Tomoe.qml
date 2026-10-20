@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Effects
-import Archivos
+import Fuin
 // Tinted tomoe glyph.
 Image {
   id: root

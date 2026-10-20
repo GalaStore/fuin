@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Material Symbols glyph (ligature name as text).
 Text {
   property real fill: 0

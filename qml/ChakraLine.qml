@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Chakra gradient accent (selected nav item, active tab, progress).
 Rectangle {
   property bool vertical: false

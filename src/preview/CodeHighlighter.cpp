@@ -4,7 +4,7 @@
 #include <QSyntaxHighlighter>
 #include <QTextDocument>
 
-#ifdef ARCHIVOS_HAVE_KSYNTAX
+#ifdef FUIN_HAVE_KSYNTAX
 #include <KSyntaxHighlighting/Definition>
 #include <KSyntaxHighlighting/Repository>
 #include <KSyntaxHighlighting/SyntaxHighlighter>
@@ -58,7 +58,7 @@ void CodeHighlighter::setDark(bool d)
 
 void CodeHighlighter::apply()
 {
-#ifdef ARCHIVOS_HAVE_KSYNTAX
+#ifdef FUIN_HAVE_KSYNTAX
     if (!m_doc || !m_doc->textDocument())
         return;
     if (!m_hl)

@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 
 // Root object: owns the windows and routes IPC requests (CLI --reveal, MCP agents) to them.
 QtObject {

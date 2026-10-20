@@ -1,4 +1,4 @@
-# Contributing to Archivos
+# Contributing to Fūin
 
 Thanks for helping! A few guidelines keep the project easy to work on.
 
@@ -6,11 +6,17 @@ Thanks for helping! A few guidelines keep the project easy to work on.
 
 ```sh
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
-cmake --build build && ./build/archivos
+cmake --build build && ./build/fuin
 ```
 
 The build must stay warning-free (`-Wall -Wextra -Wpedantic`); CI builds with warnings as errors on Arch Linux,
 with and without Arrow/Parquet.
+
+### Arrow soname bumps (Arch Linux)
+
+Arch ships Arrow/Parquet as shared libraries whose soname changes with each major version (`libarrow.so.2500` →
+`libarrow.so.2600`). A `pacman -Syu` that updates `arrow` breaks an existing `fuin` binary; rebuild it
+(`cmake --build build && cmake --install build`) and bump `pkgrel` in `packaging/PKGBUILD` for AUR users.
 
 ## Code style
 
@@ -26,11 +32,11 @@ with and without Arrow/Parquet.
 
 ## Developer automation
 
-Set `ARCHIVOS_DEV=1` to enable the `dev` IPC command, used to script the UI and take screenshots:
+Set `FUIN_DEV=1` to enable the `dev` IPC command, used to script the UI and take screenshots:
 
 ```sh
-ARCHIVOS_DEV=1 QT_QPA_PLATFORM=offscreen archivos ~/some/folder &
-echo '{"cmd":"dev","view":"list","panel":"ai","grab":"/tmp/shot.png"}' | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/archivos.sock
+FUIN_DEV=1 QT_QPA_PLATFORM=offscreen fuin ~/some/folder &
+echo '{"cmd":"dev","view":"list","panel":"ai","grab":"/tmp/shot.png"}' | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/fuin.sock
 ```
 
 Screenshots in `docs/screenshots/` must not contain personal data — use a throwaway folder such as the

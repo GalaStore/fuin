@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 
 // Breadcrumbs that turn into an editable path (click empty space or Ctrl+L). Tab completes.
 Rectangle {

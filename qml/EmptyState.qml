@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Friendly empty / error / no-results state with a faint emblem.
 Column {
   id: root

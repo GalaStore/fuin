@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Segmented control. options: [{ value, label, icon }]
 Rectangle {
   id: root

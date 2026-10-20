@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Archivos — a keyboard-first, AI-aware file manager built on KDE Frameworks KIO and Qt Quick.
+// Fūin — a keyboard-first, AI-aware file manager built on KDE Frameworks KIO and Qt Quick.
 #include "ai/ContextPacker.h"
 #include "ai/McpServer.h"
 #include "app/AppInfo.h"
@@ -26,8 +26,8 @@
 
 #include <iostream>
 
-#ifndef ARCHIVOS_VERSION
-#define ARCHIVOS_VERSION "0.1.0"
+#ifndef FUIN_VERSION
+#define FUIN_VERSION "0.1.0"
 #endif
 
 using namespace Qt::StringLiterals;
@@ -45,8 +45,8 @@ static QString argToUrl(const QString &arg)
 static int runHeadless(int argc, char **argv)
 {
     QCoreApplication app(argc, argv);
-    app.setApplicationName(u"archivos"_s);
-    app.setApplicationVersion(QString::fromLatin1(ARCHIVOS_VERSION));
+    app.setApplicationName(u"fuin"_s);
+    app.setApplicationVersion(QString::fromLatin1(FUIN_VERSION));
     QCommandLineParser p;
     p.addOption({u"mcp"_s, u"Run the MCP server on stdio."_s});
     p.addOption({u"context"_s, u"Print a context pack for the given paths."_s});
@@ -62,7 +62,7 @@ static int runHeadless(int argc, char **argv)
         paths << QDir::currentPath();
     const auto r = ContextPacker::build(paths, p.value(u"format"_s));
     std::cout << r.text.toStdString();
-    std::cerr << "≈ " << r.tokens << " tokens · " << r.included.size() << " archivos (" << r.summarized << " como esquema) · " << r.skipped.size()
+    std::cerr << "≈ " << r.tokens << " tokens · " << r.included.size() << " ficheros (" << r.summarized << " como esquema) · " << r.skipped.size()
               << " omitidos · " << r.secretsBlocked << " secretos bloqueados" << std::endl;
     return 0;
 }
@@ -75,17 +75,17 @@ int main(int argc, char **argv)
             return runHeadless(argc, argv);
     }
 
-    QApplication::setApplicationName(u"archivos"_s);
-    QApplication::setApplicationDisplayName(u"Archivos"_s);
-    QApplication::setApplicationVersion(QString::fromLatin1(ARCHIVOS_VERSION));
-    QApplication::setOrganizationDomain(u"archivos.app"_s);
-    QApplication::setDesktopFileName(u"archivos"_s); // Wayland app_id / X11 class
+    QApplication::setApplicationName(u"fuin"_s);
+    QApplication::setApplicationDisplayName(u"Fūin"_s);
+    QApplication::setApplicationVersion(QString::fromLatin1(FUIN_VERSION));
+    QApplication::setOrganizationDomain(u"galactuuus.github.io"_s);
+    QApplication::setDesktopFileName(u"fuin"_s); // Wayland app_id / X11 class
     QApplication app(argc, argv);
-    app.setWindowIcon(QIcon::fromTheme(u"archivos"_s, QIcon(u":/assets/archivos.svg"_s)));
+    app.setWindowIcon(QIcon::fromTheme(u"fuin"_s, QIcon(u":/assets/fuin.svg"_s)));
     QQuickStyle::setStyle(u"Basic"_s);
 
     QCommandLineParser p;
-    p.setApplicationDescription(u"Archivos — gestor de archivos con KIO y funciones para IA"_s);
+    p.setApplicationDescription(u"Fūin — gestor de ficheros con KIO y funciones para IA"_s);
     p.addHelpOption();
     p.addVersionOption();
     QCommandLineOption reveal(u"reveal"_s, u"Open the folder of <path> and select it."_s, u"path"_s);
@@ -119,16 +119,16 @@ int main(int argc, char **argv)
     auto *ipc = new IpcServer(ops, &app);
     ipc->listen();
 
-    qmlRegisterSingletonInstance("Archivos", 1, 0, "Theme", theme);
-    qmlRegisterSingletonInstance("Archivos", 1, 0, "Config", config);
-    qmlRegisterSingletonInstance("Archivos", 1, 0, "FileOps", ops);
-    qmlRegisterSingletonInstance("Archivos", 1, 0, "Places", places);
-    qmlRegisterSingletonInstance("Archivos", 1, 0, "AppInfo", info);
-    qmlRegisterSingletonInstance("Archivos", 1, 0, "Ipc", ipc);
-    qmlRegisterType<FolderModel>("Archivos", 1, 0, "FolderModel");
-    qmlRegisterType<Previewer>("Archivos", 1, 0, "Previewer");
-    qmlRegisterType<CodeHighlighter>("Archivos", 1, 0, "CodeHighlighter");
-    qmlRegisterType<ContextPack>("Archivos", 1, 0, "ContextPack");
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Theme", theme);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Config", config);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "FileOps", ops);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Places", places);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "AppInfo", info);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Ipc", ipc);
+    qmlRegisterType<FolderModel>("Fuin", 1, 0, "FolderModel");
+    qmlRegisterType<Previewer>("Fuin", 1, 0, "Previewer");
+    qmlRegisterType<CodeHighlighter>("Fuin", 1, 0, "CodeHighlighter");
+    qmlRegisterType<ContextPack>("Fuin", 1, 0, "ContextPack");
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(u"thumb"_s, new ThumbnailProvider);

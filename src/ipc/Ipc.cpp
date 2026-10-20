@@ -114,7 +114,7 @@ void IpcServer::handle(QLocalSocket *sock, const QJsonObject &req)
         m_pending.insert(id, {sock, req});
         Q_EMIT pendingChanged();
         Q_EMIT confirmRequested(id, req.value(u"title"_s).toString(), req.value(u"detail"_s).toString(), client);
-    } else if (cmd == "dev"_L1 && qEnvironmentVariableIntValue("ARCHIVOS_DEV") == 1) {
+    } else if (cmd == "dev"_L1 && qEnvironmentVariableIntValue("FUIN_DEV") == 1) {
         Q_EMIT devRequested(req.toVariantMap());
         reply(sock, {{u"ok"_s, true}});
     } else {

@@ -18,8 +18,8 @@ QString AppInfo::version() const { return QCoreApplication::applicationVersion()
 QString AppInfo::executable() const
 {
     // Prefer the name on $PATH so snippets survive reinstalls.
-    const QString onPath = QStandardPaths::findExecutable(QStringLiteral("archivos"));
-    return onPath.isEmpty() ? QCoreApplication::applicationFilePath() : QStringLiteral("archivos");
+    const QString onPath = QStandardPaths::findExecutable(QStringLiteral("fuin"));
+    return onPath.isEmpty() ? QCoreApplication::applicationFilePath() : QStringLiteral("fuin");
 }
 bool AppInfo::hasFd() const { return has("fd"); }
 bool AppInfo::hasRipgrep() const { return has("rg"); }
@@ -31,12 +31,12 @@ QString AppInfo::homePath() const { return QDir::homePath(); }
 
 QString AppInfo::claudeCommand() const
 {
-    return QStringLiteral("claude mcp add --scope user archivos -- %1 --mcp").arg(executable());
+    return QStringLiteral("claude mcp add --scope user fuin -- %1 --mcp").arg(executable());
 }
 
 QString AppInfo::mcpJson() const
 {
-    return QStringLiteral("{\n  \"mcpServers\": {\n    \"archivos\": {\n      \"command\": \"%1\",\n      \"args\": [\"--mcp\"]\n    }\n  }\n}").arg(executable());
+    return QStringLiteral("{\n  \"mcpServers\": {\n    \"fuin\": {\n      \"command\": \"%1\",\n      \"args\": [\"--mcp\"]\n    }\n  }\n}").arg(executable());
 }
 
 QString AppInfo::prettyPath(const QString &urlOrPath) const

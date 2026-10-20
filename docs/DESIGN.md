@@ -1,4 +1,4 @@
-# Archivos — design notes
+# Fūin — design notes
 
 ## Goals
 
@@ -25,10 +25,10 @@
  McpServer (stdio, headless) ──IPC socket──► IpcServer (GUI): state, reveal, confirmations
 ```
 
-- **One process per user session.** The GUI listens on `$XDG_RUNTIME_DIR/archivos.sock` (user-only). A second
-  `archivos …` forwards its request (open / reveal / preview) and exits.
-- **`archivos --mcp`** is a separate headless process started by the agent. Read-only tools work even when the GUI
-  is closed (they use the same `Inspector` and `ContextPacker` code). `archivos_get_current_view` and all write
+- **One process per user session.** The GUI listens on `$XDG_RUNTIME_DIR/fuin.sock` (user-only). A second
+  `fuin …` forwards its request (open / reveal / preview) and exits.
+- **`fuin --mcp`** is a separate headless process started by the agent. Read-only tools work even when the GUI
+  is closed (they use the same `Inspector` and `ContextPacker` code). `fuin_get_current_view` and all write
   tools talk to the GUI over the socket; writes are executed *by the GUI* through `FileOps`, so they show progress
   and land in the same undo history as the user's own actions.
 - **Theme** exposes 30 Material 3 roles as properties. It reads an optional matugen-style JSON (path configurable),
@@ -60,33 +60,33 @@
 ### MCP security model
 
 - Paths are canonicalised and must be inside `mcp/roots` (default `~`). Symlinks out of the roots are refused.
-- `archivos_read_file` refuses binaries and anything the secret guard flags.
+- `fuin_read_file` refuses binaries and anything the secret guard flags.
 - Write tools are rejected unless `mcp/allowWrite=true` (toggle in the AI panel). Then each request opens a dialog
   in the GUI showing the client name and the exact operation; no answer in 120 s = rejected.
 - Supports MCP protocol versions 2024-11-05 → 2025-11-25 (`initialize`) and the stateless 2026 draft
   (`server/discover`, per-result `ttlMs`/`cacheScope`).
 
-## Semantic search ("Pregunta a tus archivos") — design, disabled
+## Semantic search ("Pregunta a tus ficheros") — design, disabled
 
 - **Embeddings**: local Ollama (`ai/ollamaUrl`, default `http://127.0.0.1:11434`) with `nomic-embed-text`
   (768-d) — nothing leaves the machine. Detected at start-up; the card in the AI panel explains what is missing.
 - **What gets indexed**: only folders the user opts in (per-folder toggle), text-like files ≤ 256 KB, respecting
   `.gitignore` and the secret guard. Data/model files are indexed through their schema summary.
 - **Chunking**: ~1 200 characters with 200 overlap, split on headings / blank lines / function boundaries.
-- **Storage**: `$XDG_CACHE_HOME/archivos/index.sqlite` — tables `files(path, mtime, size, hash)` and
+- **Storage**: `$XDG_CACHE_HOME/fuin/index.sqlite` — tables `files(path, mtime, size, hash)` and
   `chunks(file_id, ord, text, vec BLOB)`; vectors stored as float16; brute-force cosine search in a worker thread
   (fine up to ~200 k chunks), sqlite-vec later if needed.
 - **Freshness**: `KDirWatch` on opted-in folders + mtime/hash check on start; indexing at idle priority, paused on
   battery.
 - **UI**: query box → ranked files with the best-matching snippet; Enter reveals the file; "Add to context" button.
-- **MCP**: `archivos_semantic_search(query, k)` with the same results.
+- **MCP**: `fuin_semantic_search(query, k)` with the same results.
 - Why it is off: needs Ollama and an index, and the indexing UX (opt-in, progress, disk use) deserves its own
   release.
 
 ## Sample data for screenshots/tests
 
 ```sh
-mkdir -p /tmp/archivos-demo && cd /tmp/archivos-demo
+mkdir -p /tmp/fuin-demo && cd /tmp/fuin-demo
 python3 - <<'PY'
 import pyarrow as pa, pyarrow.parquet as pq, random, datetime
 n = 5000

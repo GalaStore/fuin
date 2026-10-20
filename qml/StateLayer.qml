@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // M3 hover/press tint.
 MouseArea {
   id: root

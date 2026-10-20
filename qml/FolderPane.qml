@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 import "Glyphs.js" as G
 
 // One browsing pane: FolderModel + grid / list / columns views, keyboard navigation,
@@ -188,7 +188,7 @@ FocusScope {
         items.push({ label: "Pegar", icon: "content_paste", shortcut: "Ctrl+V", enabled: FileOps.clipboardCount > 0, run: () => pasteHere() })
         items.push({ sep: true })
         items.push({ label: "Seleccionar todo", icon: "select_all", shortcut: "Ctrl+A", run: () => fm.selectAll() })
-        items.push({ label: Config.showHidden ? "Ocultar archivos ocultos" : "Mostrar archivos ocultos", icon: "visibility", shortcut: "Ctrl+H", run: () => Config.showHidden = !Config.showHidden })
+        items.push({ label: Config.showHidden ? "Ocultar ficheros ocultos" : "Mostrar ficheros ocultos", icon: "visibility", shortcut: "Ctrl+H", run: () => Config.showHidden = !Config.showHidden })
         items.push({ sep: true })
         items.push({ label: "Contexto de esta carpeta para IA", icon: "auto_awesome", run: () => win.copyContext([fm.url]) })
         items.push({ label: "Abrir terminal aquí", icon: "terminal", shortcut: "Ctrl+Alt+T", run: () => FileOps.openTerminal(fm.url) })
@@ -348,7 +348,7 @@ FocusScope {
         : fm.searching ? (fm.searchBusy ? "" : "La búsqueda incluye subcarpetas y respeta .gitignore")
         : fm.filter !== "" ? "Retroceso borra el filtro · Esc lo quita"
         : fm.isTrash ? "Lo que borres con Supr aparecerá aquí (y se puede deshacer)"
-        : "Arrastra archivos aquí o pulsa Ctrl+Mayús+N para crear una carpeta"
+        : "Arrastra ficheros aquí o pulsa Ctrl+Mayús+N para crear una carpeta"
   }
   Rectangle {
     visible: fm.filter !== ""

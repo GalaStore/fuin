@@ -54,7 +54,7 @@ QString schemaSummary(const QString &path, int sampleRows)
     QString out;
     if (kind == "table"_L1) {
         const QVariantList cols = r.value(u"columns"_s).toList();
-        out += u"Resumen generado por Archivos (no es el contenido literal).\n"_s;
+        out += u"Resumen generado por Fūin (no es el contenido literal).\n"_s;
         if (r.contains(u"totalRows"_s))
             out += u"Filas: %1 · "_s.arg(r.value(u"totalRows"_s).toLongLong());
         out += u"Columnas: %1 · Motor: %2\n\n| columna | tipo | nulos | min | max |\n|---|---|---|---|---|\n"_s.arg(cols.size()).arg(
@@ -274,7 +274,7 @@ ContextPacker::Result ContextPacker::build(const QStringList &inputPaths, const 
             continue;
         }
         if (docs.size() >= limits.maxFiles) {
-            skip(p, u"límite de archivos"_s);
+            skip(p, u"límite de ficheros"_s);
             continue;
         }
         if (res.bytes + fi.size() > limits.maxTotalBytes) {
@@ -303,18 +303,18 @@ ContextPacker::Result ContextPacker::build(const QStringList &inputPaths, const 
     }
 
     // 3. render
-    const QString title = res.root.isEmpty() ? u"archivos"_s : QFileInfo(res.root).fileName();
+    const QString title = res.root.isEmpty() ? u"ficheros"_s : QFileInfo(res.root).fileName();
     const QString tree = renderTree(res.included);
     QString out;
     if (format == "xml"_L1) {
-        out += u"<context source=\"Archivos\" root=\"%1\">\n<tree><![CDATA[\n%2]]></tree>\n<documents>\n"_s.arg(title.toHtmlEscaped(), tree);
+        out += u"<context source=\"Fūin\" root=\"%1\">\n<tree><![CDATA[\n%2]]></tree>\n<documents>\n"_s.arg(title.toHtmlEscaped(), tree);
         int i = 1;
         for (const Doc &d : std::as_const(docs))
             out += u"<document index=\"%1\">\n<source>%2</source>\n<document_content><![CDATA[\n%3\n]]></document_content>\n</document>\n"_s.arg(i++).arg(
                 d.rel.toHtmlEscaped(), xmlEscape(d.content));
         out += u"</documents>\n</context>\n"_s;
     } else {
-        out += u"# Contexto: %1\n\n%2 archivos · generado con Archivos\n\n## Estructura\n\n```\n%3```\n"_s.arg(title).arg(docs.size()).arg(tree);
+        out += u"# Contexto: %1\n\n%2 ficheros · generado con Fūin\n\n## Estructura\n\n```\n%3```\n"_s.arg(title).arg(docs.size()).arg(tree);
         for (const Doc &d : std::as_const(docs)) {
             QString fence = u"```"_s;
             while (d.content.contains(fence))

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Local IPC between the running GUI and other Archivos processes (CLI `--reveal`, the MCP
-// server). Unix socket at $XDG_RUNTIME_DIR/archivos.sock (user-only), one JSON line per request.
+// Local IPC between the running GUI and other Fūin processes (CLI `--reveal`, the MCP
+// server). Unix socket at $XDG_RUNTIME_DIR/fuin.sock (user-only), one JSON line per request.
 #pragma once
 
 #include <QHash>
@@ -45,7 +45,7 @@ Q_SIGNALS:
     void confirmRequested(const QString &id, const QString &title, const QString &detail, const QString &client);
     void pendingChanged();
     void agentActivity(const QString &text);
-    // Developer automation (only when ARCHIVOS_DEV=1): drive the UI and grab screenshots for docs/tests.
+    // Developer automation (only when FUIN_DEV=1): drive the UI and grab screenshots for docs/tests.
     void devRequested(const QVariantMap &args);
 
 private:

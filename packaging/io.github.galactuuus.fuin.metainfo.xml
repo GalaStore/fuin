@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- SPDX-License-Identifier: MIT -->
 <component type="desktop-application">
-  <id>io.github.galactuuus.archivos</id>
-  <name>Archivos</name>
+  <id>io.github.galactuuus.fuin</id>
+  <name>Fūin</name>
   <summary>Keyboard-first file manager with data previews and AI context tools</summary>
-  <summary xml:lang="es">Gestor de archivos rápido con vista previa de datos y herramientas de contexto para IA</summary>
+  <summary xml:lang="es">Gestor de ficheros rápido con vista previa de datos y herramientas de contexto para IA</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
-  <launchable type="desktop-id">archivos.desktop</launchable>
+  <launchable type="desktop-id">fuin.desktop</launchable>
   <description>
     <p>
-      Archivos is a native Qt 6 / KDE Frameworks file manager built on KIO. It previews code,
+      Fūin is a native Qt 6 / KDE Frameworks file manager built on KIO. It previews code,
       Markdown, images, CSV/JSON/Parquet tables (schema and statistics) and ML model headers
       (safetensors, GGUF, ONNX), builds context packs for LLM chats and exposes an MCP server
       so coding agents can see and safely act on the folder you are looking at.
@@ -21,8 +21,8 @@
     <category>FileManager</category>
     <category>Qt</category>
   </categories>
-  <url type="homepage">https://github.com/Galactuuus/archivos</url>
-  <url type="bugtracker">https://github.com/Galactuuus/archivos/issues</url>
+  <url type="homepage">https://github.com/Galactuuus/fuin</url>
+  <url type="bugtracker">https://github.com/Galactuuus/fuin/issues</url>
   <content_rating type="oars-1.1"/>
   <releases>
     <release version="0.1.0" date="2026-10-20"/>

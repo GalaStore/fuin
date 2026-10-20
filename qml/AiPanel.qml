@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 import "Glyphs.js" as G
 
 // IA panel: context packs for chats, MCP connection for agents, semantic search (feature-flagged).
@@ -60,7 +60,7 @@ Item {
           spacing: 8
           Btn { kind: "filled"; icon: "content_copy"; text: win && win.contextPack.busy ? "Preparando…" : "Copiar contexto"; enabled2: root.targets.length > 0 && !(win && win.contextPack.busy)
                 onClicked: win.copyContext(root.targets) }
-          Btn { kind: "text"; icon: "terminal"; text: "CLI"; onClicked: FileOps.copyText("archivos --context " + root.targets.map(u => "'" + AppInfo.toLocal(u) + "'").join(" ") + " | wl-copy") }
+          Btn { kind: "text"; icon: "terminal"; text: "CLI"; onClicked: FileOps.copyText("fuin --context " + root.targets.map(u => "'" + AppInfo.toLocal(u) + "'").join(" ") + " | wl-copy") }
         }
         // result
         Column {
@@ -71,7 +71,7 @@ Item {
             Repeater {
               model: [
                 { t: "≈ " + G.count(root.pack.tokens) + " tokens", i: "token", c: Theme.primaryContainer, f: Theme.textOnPrimaryContainer },
-                { t: (root.pack.files || 0) + " archivos · " + G.size(root.pack.bytes), i: "description", c: Theme.secondaryContainer, f: Theme.textOnSecondaryContainer },
+                { t: (root.pack.files || 0) + " ficheros · " + G.size(root.pack.bytes), i: "description", c: Theme.secondaryContainer, f: Theme.textOnSecondaryContainer },
                 { t: (root.pack.skipped || []).length + " omitidos", i: "block", c: Theme.containerHighest, f: Theme.textMain },
                 { t: (root.pack.secretsBlocked || 0) + (root.pack.secretsBlocked === 1 ? " secreto bloqueado" : " secretos bloqueados"), i: "key", c: Theme.errorContainer, f: Theme.textOnErrorContainer, hide: !root.pack.secretsBlocked }
               ].filter(x => !x.hide)
@@ -85,7 +85,7 @@ Item {
             }
           }
           Txt { visible: (root.pack.tokens || 0) > 150000; width: parent.width; wrapMode: Text.Wrap; font.pointSize: 8.5; color: Theme.error
-                text: "Ojo: supera ~150 K tokens; puede no caber en el contexto del modelo. Selecciona menos archivos." }
+                text: "Ojo: supera ~150 K tokens; puede no caber en el contexto del modelo. Selecciona menos ficheros." }
           Repeater {
             model: (root.pack.skipped || []).slice(0, 6)
             Txt { required property var modelData; width: col.width - 28; elide: Text.ElideMiddle; dim: true; mono: true; font.pointSize: 8
@@ -103,7 +103,7 @@ Item {
           Txt { width: parent.parent.width - 16; wrapMode: Text.Wrap; text: Ipc.listening ? "Conectado: los agentes ven tu carpeta y selección actuales" : "Socket local no disponible"; font.pointSize: 9; anchors.verticalCenter: parent.verticalCenter }
         }
         Txt { width: parent.width; wrapMode: Text.Wrap; dim: true; font.pointSize: 9
-              text: "Claude Code, Cursor y otros agentes pueden listar, leer (sin secretos), buscar, inspeccionar esquemas de datos y modelos, crear paquetes de contexto y mostrarte archivos aquí." }
+              text: "Claude Code, Cursor y otros agentes pueden listar, leer (sin secretos), buscar, inspeccionar esquemas de datos y modelos, crear paquetes de contexto y mostrarte ficheros aquí." }
         Txt { text: "Claude Code"; font.pointSize: 9; font.weight: Font.DemiBold }
         Code { code: AppInfo.claudeCommand() }
         Txt { text: "Cursor (~/.cursor/mcp.json) y otros clientes"; font.pointSize: 9; font.weight: Font.DemiBold }
@@ -122,7 +122,7 @@ Item {
 
       // ---------- 3. semantic search (flagged)
       Card {
-        title: "Pregunta a tus archivos"; icon: "travel_explore"
+        title: "Pregunta a tus ficheros"; icon: "travel_explore"
         opacity: AppInfo.semanticSearchEnabled ? 1 : 0.75
         Field { width: parent.width; icon: "search"; enabled: AppInfo.semanticSearchEnabled; placeholderText: "¿Dónde está el DAG que carga ventas en BigQuery?" }
         Txt { width: parent.width; wrapMode: Text.Wrap; font.pointSize: 8.5; dim: true
@@ -131,7 +131,7 @@ Item {
       }
 
       Txt { width: parent.width; wrapMode: Text.Wrap; dim: true; font.pointSize: 8; horizontalAlignment: Text.AlignHCenter
-            text: "Los archivos con 🔑 (.env, claves, tokens) nunca se envían a la IA." }
+            text: "Los ficheros con 🔑 (.env, claves, tokens) nunca se envían a la IA." }
     }
   }
   Connections { target: Ipc; function onAgentActivity(text) { root.activity = text } }

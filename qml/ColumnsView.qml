@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 import "Glyphs.js" as G
 
 // Miller columns: up to two ancestor folders (read-only navigation) + the pane's folder.

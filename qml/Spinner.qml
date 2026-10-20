@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Loading indicator: a spinning tomoe (static when animations are off).
 Tomoe {
   id: root

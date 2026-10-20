@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Effects
-import Archivos
+import Fuin
 // Faint static emblem (konoha | leaf | tomoe).
 Image {
   id: root

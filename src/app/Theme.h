@@ -3,7 +3,7 @@
 //
 // Colours come from an optional matugen-style JSON file (watched; the whole UI cross-fades to a
 // new palette when it changes). Without that file a built-in dark palette is used.
-// Animation on/off and speed come from Archivos' own config or, optionally, a desktop-shell
+// Animation on/off and speed come from Fūin' own config or, optionally, a desktop-shell
 // settings JSON (appearance.animations / appearance.animationSpeed).
 #pragma once
 

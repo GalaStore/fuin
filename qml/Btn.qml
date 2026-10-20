@@ -1,5 +1,5 @@
 import QtQuick
-import Archivos
+import Fuin
 // Pill button. kind: filled | tonal | outline | text | danger
 Rectangle {
   id: root

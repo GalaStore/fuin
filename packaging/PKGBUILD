@@ -1,10 +1,10 @@
 # Maintainer: Galactus <https://github.com/Galactuuus>
-pkgname=archivos
+pkgname=fuin
 pkgver=0.1.0
 pkgrel=1
 pkgdesc="Keyboard-first file manager (Qt 6 + KIO) with data/model previews, AI context packs and an MCP server"
 arch=('x86_64' 'aarch64')
-url="https://github.com/Galactuuus/archivos"
+url="https://github.com/Galactuuus/fuin"
 license=('MIT')
 depends=('qt6-base' 'qt6-declarative' 'qt6-svg' 'kio' 'kio-extras' 'solid' 'kcoreaddons' 'kservice' 'syntax-highlighting'
          'ttf-material-symbols-variable' 'hicolor-icon-theme')
@@ -26,7 +26,7 @@ build() {
   cmake -S "$pkgname-$pkgver" -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=None \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DARCHIVOS_WITH_PARQUET=ON
+    -DFUIN_WITH_PARQUET=ON
   cmake --build build
 }
 

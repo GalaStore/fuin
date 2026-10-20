@@ -204,7 +204,7 @@ void Theme::loadMotion()
         anim = s.value(QStringLiteral("appearance/animations")).toBool();
     if (s.contains(QStringLiteral("appearance/animationSpeed")))
         speed = s.value(QStringLiteral("appearance/animationSpeed")).toDouble();
-    if (qEnvironmentVariableIsSet("ARCHIVOS_NO_ANIMATIONS"))
+    if (qEnvironmentVariableIsSet("FUIN_NO_ANIMATIONS"))
         anim = false;
     speed = qBound<qreal>(0.1, speed <= 0 ? 1.0 : speed, 5.0);
     if (anim != m_animations || !qFuzzyCompare(speed, m_speed)) {

@@ -76,7 +76,7 @@ QString FileOps::humanSize(double bytes) const
 
 void FileOps::track(KJob *job, const QString &label, const QString &doneText, bool undoable)
 {
-    job->setProperty("archivosLabel", label);
+    job->setProperty("fuinLabel", label);
     m_jobs.insert(job);
     connect(job, &KJob::percentChanged, this, &FileOps::recompute);
     connect(job, &KJob::speed, this, [this](KJob *, unsigned long bps) {
@@ -85,11 +85,11 @@ void FileOps::track(KJob *job, const QString &label, const QString &doneText, bo
     });
     if (auto *cj = qobject_cast<KIO::CopyJob *>(job)) {
         connect(cj, &KIO::CopyJob::copying, this, [this, cj, label](KIO::Job *, const QUrl &src, const QUrl &) {
-            cj->setProperty("archivosLabel", label + QStringLiteral(" · ") + src.fileName());
+            cj->setProperty("fuinLabel", label + QStringLiteral(" · ") + src.fileName());
             recompute();
         });
         connect(cj, &KIO::CopyJob::moving, this, [this, cj, label](KIO::Job *, const QUrl &src, const QUrl &) {
-            cj->setProperty("archivosLabel", label + QStringLiteral(" · ") + src.fileName());
+            cj->setProperty("fuinLabel", label + QStringLiteral(" · ") + src.fileName());
             recompute();
         });
     }
@@ -115,7 +115,7 @@ void FileOps::recompute()
         for (KJob *j : std::as_const(m_jobs))
             sum += j->percent();
         m_progress = sum / (100.0 * m_jobs.size());
-        m_label = (*m_jobs.cbegin())->property("archivosLabel").toString();
+        m_label = (*m_jobs.cbegin())->property("fuinLabel").toString();
     }
     Q_EMIT progressChanged();
 }
@@ -300,7 +300,7 @@ void FileOps::paste(const QString &destDir)
         return;
     const QList<QUrl> urls = KUrlMimeData::urlsFromMimeData(md);
     if (urls.isEmpty()) {
-        Q_EMIT notify(QStringLiteral("No hay archivos en el portapapeles"), QStringLiteral("info"), false);
+        Q_EMIT notify(QStringLiteral("No hay ficheros en el portapapeles"), QStringLiteral("info"), false);
         return;
     }
     QStringList s;

@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 // Centered dialog: title + body + buttons; content goes into the default property.
 Popup {
   id: root

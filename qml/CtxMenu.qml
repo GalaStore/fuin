@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 // Context menu. items: [{ label, icon, shortcut, enabled, danger, sep, sub: [items], run: fn }]
 // Keyboard: ↑/↓ move, Enter runs, → opens a submenu, ← / Esc goes back.
 Popup {

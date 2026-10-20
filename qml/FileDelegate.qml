@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
-import Archivos
+import Fuin
 import "Glyphs.js" as G
 
 // One entry in grid or list mode: thumbnail/glyph, name, git + secret badges, selection,

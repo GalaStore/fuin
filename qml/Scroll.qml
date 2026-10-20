@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import Archivos
+import Fuin
 ScrollBar {
   id: root
   implicitWidth: 10
