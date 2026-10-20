@@ -79,6 +79,10 @@ ApplicationWindow {
     if (a.undo) FileOps.undo()
     if (a.context) copyContext(a.context)
     if (a.key) keysDlg.open()
+    if (a.settings !== undefined) openSettings(a.settings)
+    if (a.settingsFilter !== undefined) DefaultApps.filter = a.settingsFilter
+    if (a.setDefault) DefaultApps.setDefault(a.setDefault[0], a.setDefault[1])
+    if (a.closeSettings) settingsDlg.close()
     if (a.approve !== undefined && agentDlg.opened) { Ipc.resolve(agentDlg.reqId, a.approve); agentDlg.close() }
     if (a.grab) Qt.callLater(() => AppInfo.grabWindow(appWin, a.grab))
   }
@@ -103,6 +107,8 @@ ApplicationWindow {
   function askRename(url, name) { nameDlg.mode = "rename"; nameDlg.target = url; nameDlg.initial = name; nameDlg.open() }
   function askNew(dirUrl, folder) { nameDlg.mode = folder ? "folder" : "file"; nameDlg.target = dirUrl; nameDlg.initial = folder ? "Nueva carpeta" : "nuevo.txt"; nameDlg.open() }
   function showProps(items) { propsDlg.items = items; propsDlg.open() }
+  // Settings view; with a MIME type it opens "Aplicaciones por defecto" focused on that type.
+  function openSettings(mime) { settingsDlg.show(mime || "") }
 
   ContextPack {
     id: packer
@@ -295,13 +301,14 @@ ApplicationWindow {
       { sep: true },
       { label: FileOps.canUndo ? "Deshacer: " + FileOps.undoText : "Nada que deshacer", icon: "undo", enabled: FileOps.canUndo, shortcut: "Ctrl+Z", run: () => FileOps.undo() },
       { label: "Atajos de teclado", icon: "keyboard", shortcut: "F1", run: () => keysDlg.open() },
-      { label: "Ajustes (" + Config.configFile.split("/").pop() + ")", icon: "settings", run: () => FileOps.openInEditor(Config.configFile) },
+      { label: "Ajustes…", icon: "settings", shortcut: "Ctrl+,", run: () => openSettings("") },
       { label: "Acerca de Fūin " + AppInfo.version, icon: "info", run: () => aboutDlg.open() }
     ]
   }
 
   // ---------------------------------------------------------------- overlays
   CtxMenu { id: ctx }
+  SettingsDialog { id: settingsDlg; onClosed: if (appWin.pane) appWin.pane.focusView() }
   Toast { id: toaster }
 
   Modal {
@@ -413,7 +420,7 @@ ApplicationWindow {
                 "Ctrl+Tab", "Siguiente pestaña", "F3", "Vista dividida", "F5 / F6", "Copiar / mover al otro panel", "F9 · Espacio", "Vista previa",
                 "Ctrl+I", "Panel IA", "Ctrl+Mayús+I", "Copiar contexto para IA", "F2", "Renombrar", "Supr", "Mover a la papelera",
                 "Mayús+Supr", "Eliminar definitivamente", "Ctrl+Z", "Deshacer", "Ctrl+H", "Ocultos", "Ctrl+1/2/3", "Cuadrícula / lista / columnas",
-                "Ctrl+Mayús+N", "Nueva carpeta", "Ctrl+Mayús+C", "Copiar ruta", "Ctrl+Alt+T", "Terminal aquí", "Alt+←/→/↑", "Atrás / adelante / subir"]
+                "Ctrl+Mayús+N", "Nueva carpeta", "Ctrl+Mayús+C", "Copiar ruta", "Ctrl+Alt+T", "Terminal aquí", "Alt+←/→/↑", "Atrás / adelante / subir", "Ctrl+,", "Ajustes"]
         Txt { required property string modelData; required property int index; text: modelData; mono: index % 2 === 0; font.pointSize: 9; color: index % 2 === 0 ? Theme.primary : Theme.textMain }
       }
     }
@@ -430,7 +437,7 @@ ApplicationWindow {
 
   // ---------------------------------------------------------------- shortcuts
   readonly property bool typing: !!activeFocusItem && activeFocusItem.cursorPosition !== undefined
-  readonly property bool modalOpen: delDlg.opened || nameDlg.opened || propsDlg.opened || agentDlg.opened || emptyDlg.opened || keysDlg.opened || aboutDlg.opened || ctx.visible
+  readonly property bool modalOpen: delDlg.opened || nameDlg.opened || propsDlg.opened || agentDlg.opened || emptyDlg.opened || keysDlg.opened || aboutDlg.opened || settingsDlg.opened || ctx.visible
   component Key: Shortcut { property bool always: false; enabled: !appWin.modalOpen && (always || !appWin.typing); context: Qt.WindowShortcut }
   Key { sequence: "Ctrl+L"; always: true; onActivated: pathBar.edit() }
   Key { sequence: "Ctrl+F"; always: true; onActivated: { search.forceActiveFocus(); search.selectAll() } }
@@ -467,6 +474,7 @@ ApplicationWindow {
   Key { sequence: "Ctrl+-"; always: true; onActivated: Config.iconSize = Math.max(32, Config.iconSize - 16) }
   Key { sequence: "Ctrl+Alt+T"; always: true; onActivated: FileOps.openTerminal(pane.model.localPath) }
   Key { sequence: "F1"; always: true; onActivated: keysDlg.open() }
+  Key { sequence: "Ctrl+,"; always: true; onActivated: openSettings("") }
   Key { sequence: "Ctrl+Q"; always: true; onActivated: Qt.quit() }
 
   Component.onCompleted: {

@@ -155,6 +155,8 @@ FocusScope {
         items.push({ label: "Abrir en pestaña nueva", icon: "tab", run: () => win.newTab(one.url) })
         items.push({ label: "Abrir en el otro panel", icon: "vertical_split", run: () => win.openInOtherPane(one.url) })
       }
+      if (one && one.mimeType)
+        items.push({ label: "Cambiar app por defecto…", icon: "settings_applications", run: () => win.openSettings(one.mimeType) })
       items.push({ sep: true })
       items.push({ label: "Cortar", icon: "content_cut", shortcut: "Ctrl+X", run: () => copySel(true) })
       items.push({ label: "Copiar", icon: "content_copy", shortcut: "Ctrl+C", run: () => copySel(false) })

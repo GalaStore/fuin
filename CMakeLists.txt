@@ -30,7 +30,7 @@ qt_standard_project_setup(REQUIRES 6.6)
 
 add_executable(fuin
   src/main.cpp
-  src/app/Config.cpp src/app/Theme.cpp src/app/AppInfo.cpp
+  src/app/Config.cpp src/app/Theme.cpp src/app/AppInfo.cpp src/app/DefaultAppsModel.cpp src/app/IconProvider.cpp
   src/fs/FileKind.cpp src/fs/FolderModel.cpp src/fs/FileOps.cpp src/fs/PlacesModel.cpp src/fs/ThumbnailProvider.cpp
   src/preview/Inspector.cpp src/preview/Previewer.cpp src/preview/CodeHighlighter.cpp
   src/ai/SecretGuard.cpp src/ai/ContextPacker.cpp src/ai/McpServer.cpp

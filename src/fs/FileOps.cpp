@@ -382,7 +382,10 @@ void FileOps::open(const QString &url)
     job->setRunExecutables(false);
     job->setShowOpenOrExecuteDialog(true);
     auto mimeType = std::make_shared<QString>();
-    connect(job, &KIO::OpenUrlJob::mimeTypeFound, this, [mimeType](const QString &mime) { *mimeType = mime; });
+    connect(job, &KIO::OpenUrlJob::mimeTypeFound, this, [mimeType](const QString &mime) {
+        *mimeType = mime;
+        Config::instance()->noteOpenedMimeType(mime);
+    });
     connect(job, &KJob::result, this, [this, job, target, mimeType] {
         if (job->error() && job->error() != KJob::KilledJobError)
             Q_EMIT notify(openErrorText(target, *mimeType, job->errorString()), QStringLiteral("error"), false);

@@ -145,6 +145,21 @@ QStringList Config::mcpRoots() const
 
 QString Config::configFile() const { return m_settings.fileName(); }
 
+QStringList Config::openedMimeTypes() const { return value(QStringLiteral("apps/openedTypes"), QStringList()).toStringList(); }
+
+void Config::noteOpenedMimeType(const QString &mimeType)
+{
+    if (mimeType.isEmpty())
+        return;
+    QStringList list = openedMimeTypes();
+    if (!list.isEmpty() && list.first() == mimeType)
+        return;
+    list.removeAll(mimeType);
+    list.prepend(mimeType);
+    // Not a view preference: stored without emitting changed() to avoid re-evaluating QML bindings.
+    m_settings.setValue(QStringLiteral("apps/openedTypes"), list.mid(0, 24));
+}
+
 QString Config::colorsFile() const
 {
     // 1. explicit setting, 2. env, 3. own cache file, 4. the common Quickshell/matugen location.

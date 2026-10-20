@@ -54,6 +54,10 @@ public:
 
     QString configFile() const;
 
+    // MIME types of files opened from Fūin, most recent first (feeds "Aplicaciones por defecto").
+    QStringList openedMimeTypes() const;
+    void noteOpenedMimeType(const QString &mimeType);
+
     // External, optional files.
     QString colorsFile() const;        // matugen-style JSON palette
     QString shellSettingsFile() const; // optional desktop-shell settings (appearance.animations ...)

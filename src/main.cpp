@@ -4,6 +4,8 @@
 #include "ai/McpServer.h"
 #include "app/AppInfo.h"
 #include "app/Config.h"
+#include "app/DefaultAppsModel.h"
+#include "app/IconProvider.h"
 #include "app/Theme.h"
 #include "fs/FileOps.h"
 #include "fs/FolderModel.h"
@@ -153,6 +155,7 @@ int main(int argc, char **argv)
     auto *ops = new FileOps(&app);
     auto *places = new PlacesModel(&app);
     auto *info = new AppInfo(&app);
+    auto *defaultApps = new DefaultAppsModel(&app);
     auto *ipc = new IpcServer(ops, &app);
     ipc->listen();
 
@@ -161,6 +164,7 @@ int main(int argc, char **argv)
     qmlRegisterSingletonInstance("Fuin", 1, 0, "FileOps", ops);
     qmlRegisterSingletonInstance("Fuin", 1, 0, "Places", places);
     qmlRegisterSingletonInstance("Fuin", 1, 0, "AppInfo", info);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "DefaultApps", defaultApps);
     qmlRegisterSingletonInstance("Fuin", 1, 0, "Ipc", ipc);
     qmlRegisterType<FolderModel>("Fuin", 1, 0, "FolderModel");
     qmlRegisterType<Previewer>("Fuin", 1, 0, "Previewer");
@@ -169,6 +173,7 @@ int main(int argc, char **argv)
 
     QQmlApplicationEngine engine;
     engine.addImageProvider(u"thumb"_s, new ThumbnailProvider);
+    engine.addImageProvider(u"icon"_s, new IconProvider);
     engine.setInitialProperties({{u"startUrl"_s, revealUrl.isEmpty() ? start : revealUrl},
                                  {u"revealUrl"_s, revealUrl},
                                  {u"startPreview"_s, p.isSet(preview)}});
