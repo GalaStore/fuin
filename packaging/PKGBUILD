@@ -1,0 +1,35 @@
+# Maintainer: Galactus <https://github.com/Galactuuus>
+pkgname=archivos
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Keyboard-first file manager (Qt 6 + KIO) with data/model previews, AI context packs and an MCP server"
+arch=('x86_64' 'aarch64')
+url="https://github.com/Galactuuus/archivos"
+license=('MIT')
+depends=('qt6-base' 'qt6-declarative' 'qt6-svg' 'kio' 'kio-extras' 'solid' 'kcoreaddons' 'kservice' 'syntax-highlighting'
+         'ttf-material-symbols-variable' 'hicolor-icon-theme')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'git')
+optdepends=('arrow: Parquet previews (schema, statistics, rows)'
+            'kdegraphics-thumbnailers: PDF thumbnails'
+            'ffmpegthumbs: video thumbnails'
+            'kimageformats: AVIF/HEIF/PSD/… thumbnails'
+            'fd: fast recursive search'
+            'ripgrep: content search for agents'
+            'duckdb: «Abrir en DuckDB» for CSV/Parquet/JSON'
+            'git: repository badges'
+            'kitty: default terminal (any terminal works)')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cmake -S "$pkgname-$pkgver" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DARCHIVOS_WITH_PARQUET=ON
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$pkgname-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

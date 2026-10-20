@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-arch:
+    name: Arch Linux (Qt 6 + KF6)
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        parquet: [ON, OFF]
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed base-devel git cmake ninja extra-cmake-modules \
+            qt6-base qt6-declarative qt6-svg kio kio-extras solid kcoreaddons kservice syntax-highlighting \
+            $([ "${{ matrix.parquet }}" = ON ] && echo arrow)
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DARCHIVOS_WITH_PARQUET=${{ matrix.parquet }}
+      - name: Build
+        run: cmake --build build
+      - name: Smoke test (headless)
+        run: |
+          ./build/archivos --version
+          ./build/archivos --context --format markdown README.md > /dev/null
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
+                         '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | ./build/archivos --mcp | grep -q archivos_context_pack
+      - name: Install into a staging dir
+        run: DESTDIR=$PWD/stage cmake --install build --prefix /usr && find stage -type f
