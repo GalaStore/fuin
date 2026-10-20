@@ -19,3 +19,14 @@ compile_commands.json
 # local secrets never belong here
 .env
 .env.*
+# local test data and model files
+*.parquet
+*.gguf
+*.safetensors
+*.onnx
+# CI staging dir (DESTDIR install)
+/stage/
+# editor / tool leftovers
+*.kate-swp
+.qmlls.ini
+*.user
