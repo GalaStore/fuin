@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <sys/stat.h>
 
-// Issue #10 profiling; enable with QT_LOGGING_RULES="fuin.folder.timing.debug=true".
 Q_LOGGING_CATEGORY(lcFolderTiming, "fuin.folder.timing", QtWarningMsg)
 
 namespace {
@@ -488,7 +487,6 @@ void FolderModel::rebuild()
     const qint64 sortNs = t.nsecsElapsed() - sortStart;
     m_rowsDirty = true;
     endResetModel();
-    // Total includes the model reset, so view teardown/recreation is counted too.
     qCDebug(lcFolderTiming).nospace() << "rebuild view=" << m_view.size() << " sort=" << sortNs / 1000 << "us total="
                                       << t.nsecsElapsed() / 1000 << "us";
     if (m_current >= m_view.size()) {
