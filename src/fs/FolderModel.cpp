@@ -10,6 +10,7 @@
 
 #include <QDir>
 #include <QDirIterator>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QLoggingCategory>
@@ -19,7 +20,7 @@
 #include <algorithm>
 #include <sys/stat.h>
 
-// Off by default; enable with QT_LOGGING_RULES="fuin.folder.timing.debug=true".
+// Issue #10 profiling; enable with QT_LOGGING_RULES="fuin.folder.timing.debug=true".
 Q_LOGGING_CATEGORY(lcFolderTiming, "fuin.folder.timing", QtWarningMsg)
 
 namespace {
@@ -386,8 +387,6 @@ void FolderModel::open(const QUrl &url, bool pushHistory)
     Q_EMIT selectionChanged();
     Q_EMIT currentIndexChanged();
     Q_EMIT locationChanged();
-    m_stats = {};
-    m_listTimer.start();
     m_lister->openUrl(url);
     updateRepo();
 }
@@ -481,19 +480,17 @@ void FolderModel::rebuild()
     for (const KFileItem &it : src)
         if (searching() || accepts(it))
             m_view.append(it);
-    if (!searching()) {
-        QElapsedTimer st;
-        st.start();
+    const qint64 sortStart = t.nsecsElapsed();
+    if (!searching())
         std::stable_sort(m_view.begin(), m_view.end(), [this](const KFileItem &a, const KFileItem &b) {
             return lessThan(a, b);
         });
-        m_stats.sortNs += st.nsecsElapsed();
-    }
+    const qint64 sortNs = t.nsecsElapsed() - sortStart;
     m_rowsDirty = true;
     endResetModel();
-    // Includes the model reset, so view teardown/recreation is part of the cost.
-    ++m_stats.rebuilds;
-    m_stats.rebuildNs += t.nsecsElapsed();
+    // Total includes the model reset, so view teardown/recreation is counted too.
+    qCDebug(lcFolderTiming).nospace() << "rebuild view=" << m_view.size() << " sort=" << sortNs / 1000 << "us total="
+                                      << t.nsecsElapsed() / 1000 << "us";
     if (m_current >= m_view.size()) {
         m_current = int(m_view.size()) - 1;
         Q_EMIT currentIndexChanged();
@@ -503,11 +500,6 @@ void FolderModel::rebuild()
 
 void FolderModel::onNewItems(const KFileItemList &items)
 {
-    QElapsedTimer t;
-    t.start();
-    ++m_stats.batches;
-    m_stats.items += int(items.size());
-    m_stats.maxBatch = qMax(m_stats.maxBatch, int(items.size()));
     for (const KFileItem &it : items)
         m_source.append(it);
     if (searching())
@@ -516,8 +508,6 @@ void FolderModel::onNewItems(const KFileItemList &items)
     if (bulk) {
         rebuild();
     } else {
-        QElapsedTimer insT;
-        insT.start();
         for (const KFileItem &it : items) {
             if (!accepts(it))
                 continue;
@@ -530,13 +520,8 @@ void FolderModel::onNewItems(const KFileItemList &items)
         }
         m_rowsDirty = true;
         Q_EMIT countChanged();
-        m_stats.insertNs += insT.nsecsElapsed();
     }
     applyPendingSelect();
-    const qint64 ns = t.nsecsElapsed();
-    m_stats.newItemsNs += ns;
-    qCDebug(lcFolderTiming).nospace() << "newItems batch=" << items.size() << " source=" << m_source.size() << " view=" << m_view.size()
-                                      << (bulk ? " rebuild" : " insert") << " " << ns / 1000 << "us";
 }
 
 void FolderModel::onDeleted(const KFileItemList &items)
@@ -596,15 +581,6 @@ void FolderModel::onCompleted()
     Q_EMIT loadingChanged();
     applyPendingSelect();
     scanGit();
-    if (m_stats.batches > 0) {
-        const auto ms = [](qint64 ns) { return double(ns) / 1e6; };
-        qCDebug(lcFolderTiming).nospace() << "listing " << m_url.toDisplayString() << ": items=" << m_stats.items
-                                          << " batches=" << m_stats.batches << " maxBatch=" << m_stats.maxBatch
-                                          << " rebuilds=" << m_stats.rebuilds << " | newItems=" << ms(m_stats.newItemsNs)
-                                          << "ms rebuild=" << ms(m_stats.rebuildNs) << "ms (sort=" << ms(m_stats.sortNs)
-                                          << "ms) insert=" << ms(m_stats.insertNs) << "ms wall=" << m_listTimer.elapsed() << "ms";
-        m_stats = {};
-    }
 }
 
 void FolderModel::applyPendingSelect()
