@@ -6,6 +6,7 @@
 #include <KFileItem>
 #include <QAbstractListModel>
 #include <QCollator>
+#include <QElapsedTimer>
 #include <QHash>
 #include <QPointer>
 #include <QProcess>
@@ -205,4 +206,12 @@ private:
     QString m_repoRoot, m_repoBranch;
     int m_repoDirty = -1;
     QPointer<QProcess> m_repoProc;
+
+    // Listing cost counters (issue #10), reset in open() and logged by onCompleted()
+    // under the "fuin.folder.timing" category.
+    struct ListingStats {
+        int batches = 0, items = 0, maxBatch = 0, rebuilds = 0;
+        qint64 rebuildNs = 0, sortNs = 0, insertNs = 0, newItemsNs = 0;
+    } m_stats;
+    QElapsedTimer m_listTimer;
 };
