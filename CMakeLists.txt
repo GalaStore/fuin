@@ -12,6 +12,7 @@ endif()
 
 option(FUIN_WITH_PARQUET "Parquet preview via Apache Arrow C++" ON)
 option(FUIN_WITH_SYNTAX "Syntax highlighting via KSyntaxHighlighting" ON)
+option(FUIN_BUILD_TESTS "FolderModel tests and listing benchmark (CTest)" OFF)
 
 # KDE's find modules (LibMount, UDev) are needed by KF6Solid's package config.
 find_package(ECM 6.0 NO_MODULE QUIET)
@@ -66,6 +67,11 @@ file(GLOB FUIN_QML RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS qml/*.
 qt_add_resources(fuin fuin_ui
   PREFIX "/"
   FILES ${FUIN_QML} assets/tomoe.svg assets/konoha.svg assets/leaf.svg assets/fuin.svg)
+
+if(FUIN_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS fuin RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
