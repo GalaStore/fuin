@@ -71,6 +71,7 @@ Item {
         focus: root.visible
         model: root.visible ? root.pane.model : null
         keyNavigationEnabled: false
+        reuseItems: root.pane.listing
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: Scroll {}
         Keys.onPressed: e => root.pane.handleKey(e)

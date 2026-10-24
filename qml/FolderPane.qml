@@ -15,6 +15,7 @@ FocusScope {
   property string viewMode: Config.viewMode
   property int iconSize: Config.iconSize
   property var current: null        // single selected item (map) or null
+  property bool listing: false      // first fill of a folder; KDirWatch refreshes also toggle fm.loading
   readonly property bool viewFocused: activeView ? activeView.activeFocus : false
   readonly property var activeView: viewMode === "list" ? list : viewMode === "columns" ? columns.currentList : grid
   signal focused()
@@ -35,6 +36,7 @@ FocusScope {
     onSelectionChanged: pane.refreshCurrent()
     onLocationChanged: pane.refreshCurrent()
     onRevealRow: row => pane.positionAt(row)
+    onLoadingChanged: pane.listing = loading && count === 0
   }
   Component.onCompleted: refreshCurrent()
 
@@ -266,13 +268,14 @@ FocusScope {
     currentIndex: fm.currentIndex
     highlightFollowsCurrentItem: false
     boundsBehavior: Flickable.StopAtBounds
-    cacheBuffer: 600
+    cacheBuffer: pane.listing ? 0 : 600
+    reuseItems: pane.listing
     ScrollBar.vertical: Scroll {}
     Keys.onPressed: e => pane.handleKey(e)
     delegate: FileDelegate { pane: paneSelf; gridMode: true }
     Band { width: Math.max(grid.width, grid.contentWidth); height: Math.max(grid.height, grid.contentHeight) }
-    add: Transition { enabled: Theme.animations; NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.dur(160) } }
-    displaced: Transition { enabled: Theme.animations; NumberAnimation { properties: "x,y"; duration: Theme.dur(180); easing.type: Easing.OutCubic } }
+    add: Transition { enabled: Theme.animations && !pane.listing; NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.dur(160) } }
+    displaced: Transition { enabled: Theme.animations && !pane.listing; NumberAnimation { properties: "x,y"; duration: Theme.dur(180); easing.type: Easing.OutCubic } }
   }
 
   ListView {
@@ -287,7 +290,8 @@ FocusScope {
     currentIndex: fm.currentIndex
     highlightFollowsCurrentItem: false
     boundsBehavior: Flickable.StopAtBounds
-    cacheBuffer: 800
+    cacheBuffer: pane.listing ? 0 : 800
+    reuseItems: pane.listing
     headerPositioning: ListView.OverlayHeader
     ScrollBar.vertical: Scroll {}
     Keys.onPressed: e => pane.handleKey(e)
@@ -322,8 +326,8 @@ FocusScope {
       Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Qt.alpha(Theme.outlineVariant, 0.6) }
     }
     Band { width: list.width; height: Math.max(list.height, list.contentHeight + 40) }
-    add: Transition { enabled: Theme.animations; NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.dur(160) } }
-    displaced: Transition { enabled: Theme.animations; NumberAnimation { properties: "y"; duration: Theme.dur(160); easing.type: Easing.OutCubic } }
+    add: Transition { enabled: Theme.animations && !pane.listing; NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.dur(160) } }
+    displaced: Transition { enabled: Theme.animations && !pane.listing; NumberAnimation { properties: "y"; duration: Theme.dur(160); easing.type: Easing.OutCubic } }
   }
 
   ColumnsView {
