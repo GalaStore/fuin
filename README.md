@@ -79,11 +79,22 @@ cmake --install build
 |---|---|---|
 | `FUIN_WITH_PARQUET` | `ON` | Parquet previews if Arrow/Parquet C++ is found |
 | `FUIN_WITH_SYNTAX` | `ON` | Syntax highlighting if KSyntaxHighlighting is found |
+| `FUIN_BUILD_TESTS` | `OFF` | Build the CTest tests and the listing benchmark (never installed) |
 
 > **Arch Linux and Arrow updates:** Fūin links against Apache Arrow/Parquet, whose soname changes with every major
 > release (e.g. `libarrow.so.2500` → `libarrow.so.2600`). After such a `pacman -Syu` the binary fails with
 > *"cannot open shared object file"* — rebuild and reinstall (the three commands above, or `makepkg -si` for the
 > package). Build with `-DFUIN_WITH_PARQUET=OFF` if you prefer not to depend on Arrow.
+
+### Tests
+
+```sh
+cmake -S . -B build -DFUIN_BUILD_TESTS=ON && cmake --build build
+dbus-run-session -- ctest --test-dir build --output-on-failure -LE bench
+./build/tests/bench_foldermodel 1000 10000 100000   # listing benchmark, prints ms per size and order
+```
+
+Without a D-Bus session bus the rename test is skipped. See [CONTRIBUTING.md](CONTRIBUTING.md#tests).
 
 ## Usage
 
