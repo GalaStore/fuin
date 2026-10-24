@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QLocale>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
@@ -34,9 +35,20 @@ public:
 
     bool list(const QString &dir)
     {
+        return waitListed([&] { navigate(dir); });
+    }
+
+    bool relist()
+    {
+        return waitListed([&] { refresh(); });
+    }
+
+    template<typename Start>
+    bool waitListed(Start start)
+    {
         bool done = false;
         const auto c = connect(this, &FolderModel::loadingChanged, this, [&] { done |= !loading(); });
-        navigate(dir);
+        start();
         const bool ok = QTest::qWaitFor([&] { return done; }, kTimeout);
         disconnect(c);
         return ok;
@@ -127,6 +139,8 @@ private Q_SLOTS:
     void initTestCase()
     {
         QStandardPaths::setTestModeEnabled(true);
+        // FolderModel's collator follows the default locale, and under C it ignores numeric and case-insensitive mode.
+        QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));
         QCoreApplication::instance()->setQuitLockEnabled(false);
     }
 
@@ -141,6 +155,7 @@ private Q_SLOTS:
     {
         QFETCH(bool, shuffled);
         QTemporaryDir dir;
+        QVERIFY(dir.isValid());
         const QStringList expected = populate(dir.path(), 3000, shuffled);
         Model m;
         QVERIFY(m.list(dir.path()));
@@ -150,6 +165,7 @@ private Q_SLOTS:
     void hiddenAndFilter()
     {
         QTemporaryDir dir;
+        QVERIFY(dir.isValid());
         const QStringList expected = populate(dir.path(), 300, true);
         Model m;
         QVERIFY(m.list(dir.path()));
@@ -191,6 +207,7 @@ private Q_SLOTS:
         constexpr int n = 500;
         constexpr qint64 base = 1600000000;
         QTemporaryDir dir;
+        QVERIFY(dir.isValid());
         QList<qint64> mtime(n);
         for (int i = 0; i < n; ++i) {
             const QString p = dir.filePath(u"f"_s + QString::number(i));
@@ -217,8 +234,8 @@ private Q_SLOTS:
             const int i = 7 * t;
             touch(dir.filePath(u"f"_s + QString::number(i)), mtime[i] = t % 2 ? base + 10000 + t : base - 10000 - t);
         }
-        m.refresh();
-        QTRY_COMPARE_WITH_TIMEOUT(m.names(), expected(), kTimeout);
+        QVERIFY(m.relist());
+        QCOMPARE(m.names(), expected());
         QCOMPARE(m.selectedNames(), (QSet<QString>{u"f7"_s, u"f100"_s, u"f101"_s}));
         QCOMPARE(m.currentName(), u"f7"_s);
     }
@@ -228,6 +245,7 @@ private Q_SLOTS:
         if (!QDBusConnection::sessionBus().isConnected())
             QSKIP("KIO rename notifications need a D-Bus session bus (run under dbus-run-session)");
         QTemporaryDir dir;
+        QVERIFY(dir.isValid());
         const QStringList expected = populate(dir.path(), 100, false);
         Model m;
         QVERIFY(m.list(dir.path()));
@@ -240,7 +258,8 @@ private Q_SLOTS:
         QCOMPARE(m.currentName(), u"file4"_s);
 
         QVERIFY(kioRename(m.path(u".file2"_s), m.path(u"file2"_s)));
-        QTRY_COMPARE_WITH_TIMEOUT(m.names(), expected, kTimeout);
+        QTRY_COMPARE_WITH_TIMEOUT(m.rowCount(), int(expected.size()), kTimeout);
+        QCOMPARE(m.names(), expected);
 
         m.setFilter(u"file"_s);
         m.setCurrentIndex(m.indexOfUrl(m.path(u"file4"_s)));
@@ -255,6 +274,7 @@ private Q_SLOTS:
     {
         constexpr int n = 2000;
         QTemporaryDir dir;
+        QVERIFY(dir.isValid());
         QStringList survivors;
         for (int i = 0; i < n; ++i) {
             createFile(dir.filePath(u"f"_s + QString::number(i)));
@@ -268,8 +288,8 @@ private Q_SLOTS:
         m.select({u"f10"_s, u"f11"_s, u"f1500"_s, u"f1999"_s}, u"f1501"_s);
         for (int i = 0; i < n; i += 2)
             QVERIFY(QFile::remove(dir.filePath(u"f"_s + QString::number(i))));
-        m.refresh();
-        QTRY_COMPARE_WITH_TIMEOUT(m.names(), survivors, kTimeout);
+        QVERIFY(m.relist());
+        QCOMPARE(m.names(), survivors);
         QCOMPARE(m.selectedNames(), (QSet<QString>{u"f11"_s, u"f1999"_s}));
         QCOMPARE(m.currentName(), u"f1501"_s);
     }
@@ -280,6 +300,7 @@ private Q_SLOTS:
     {
         QFETCH(bool, shuffled);
         QTemporaryDir dir;
+        QVERIFY(dir.isValid());
         const QStringList expected = populate(dir.path(), 5000, shuffled);
         Model m;
         int merges = 0;

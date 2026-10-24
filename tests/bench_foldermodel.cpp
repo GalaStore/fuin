@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QElapsedTimer>
 #include <QEventLoop>
+#include <QLocale>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 
@@ -21,6 +22,8 @@ int main(int argc, char **argv)
     QCoreApplication app(argc, argv);
     app.setQuitLockEnabled(false);
     QStandardPaths::setTestModeEnabled(true);
+    // The dirN order check needs numeric collation, which QCollator ignores under the C locale.
+    QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));
     QList<int> sizes;
     for (int i = 1; i < argc; ++i)
         sizes << QByteArray(argv[i]).toInt();
@@ -31,6 +34,10 @@ int main(int argc, char **argv)
     for (int n : std::as_const(sizes)) {
         for (bool shuffled : {false, true}) {
             QTemporaryDir dir;
+            if (!dir.isValid()) {
+                std::fprintf(stderr, "cannot create a temporary dir: %s\n", qPrintable(dir.errorString()));
+                return 1;
+            }
             QList<int> order(n);
             std::iota(order.begin(), order.end(), 0);
             if (shuffled)

@@ -546,6 +546,7 @@ void FolderModel::mergePending()
 
 void FolderModel::insertSorted(QList<FolderEntry> &batch)
 {
+    m_rowsDirty = true;
     const auto less = [this](const FolderEntry &a, const FolderEntry &b) { return lessThan(a, b); };
     std::stable_sort(batch.begin(), batch.end(), less);
 
@@ -609,7 +610,6 @@ void FolderModel::insertSorted(QList<FolderEntry> &batch)
         m_anchor = remap(m_anchor);
         Q_EMIT layoutChanged({}, QAbstractItemModel::VerticalSortHint);
     }
-    m_rowsDirty = true;
 }
 
 // order[i] is the current row that must end up at row i.

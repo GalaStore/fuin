@@ -29,7 +29,7 @@ jobs:
       - name: Build
         run: cmake --build build
       - name: Tests
-        # The rename tests need a session bus for KIO's change notifications.
+        # The rename test needs a session bus for KIO's change notifications.
         run: dbus-run-session -- ctest --test-dir build --output-on-failure -LE bench
       - name: Smoke test (headless)
         run: |
