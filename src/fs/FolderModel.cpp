@@ -498,15 +498,13 @@ void FolderModel::onNewItems(const KFileItemList &items)
         return;
     QElapsedTimer t;
     t.start();
-    ensureRowIndex();
+    // KCoreDirLister never re-sends listed items (changes come via refreshItems), so no dedupe.
     QList<KFileItem> batch;
     for (const KFileItem &it : items)
-        if (accepts(it) && !m_rowCache.contains(it.url()))
+        if (accepts(it))
             batch.append(it);
-    if (batch.isEmpty()) {
-        applyPendingSelect();
+    if (batch.isEmpty())
         return;
-    }
     const auto less = [this](const KFileItem &a, const KFileItem &b) { return lessThan(a, b); };
     std::stable_sort(batch.begin(), batch.end(), less);
 
@@ -536,7 +534,10 @@ void FolderModel::onNewItems(const KFileItemList &items)
     if (m_current != oldCurrent)
         Q_EMIT currentIndexChanged();
     Q_EMIT countChanged();
-    applyPendingSelect();
+    // applyPendingSelect() rebuilds the row index, so only pay for it when this batch can resolve it.
+    if (!m_pendingSelect.isEmpty()
+        && std::any_of(batch.cbegin(), batch.cend(), [this](const KFileItem &it) { return it.url() == m_pendingSelect; }))
+        applyPendingSelect();
 }
 
 void FolderModel::onDeleted(const KFileItemList &items)
@@ -586,6 +587,34 @@ void FolderModel::onRefresh(const QList<QPair<KFileItem, KFileItem>> &items)
                 m_rowsDirty = true;
             }
             Q_EMIT dataChanged(index(row), index(row));
+            // onNewItems() binary-searches m_view, so a refresh that changes the sort key must re-sort the row.
+            const KFileItem &cur = m_view.at(row);
+            const bool up = row > 0 && lessThan(cur, m_view.at(row - 1));
+            const bool down = row + 1 < m_view.size() && lessThan(m_view.at(row + 1), cur);
+            if (!up && !down)
+                continue;
+            const auto less = [this](const KFileItem &a, const KFileItem &b) { return lessThan(a, b); };
+            const int dest = up ? int(std::upper_bound(m_view.cbegin(), m_view.cbegin() + row, cur, less) - m_view.cbegin())
+                                : int(std::upper_bound(m_view.cbegin() + row + 1, m_view.cend(), cur, less) - m_view.cbegin());
+            const int to = up ? dest : dest - 1;
+            const auto remap = [&](int r) {
+                if (r == row)
+                    return to;
+                if (up && r >= to && r < row)
+                    return r + 1;
+                if (down && r > row && r <= to)
+                    return r - 1;
+                return r;
+            };
+            beginMoveRows({}, row, row, {}, dest);
+            m_view.move(row, to);
+            endMoveRows();
+            const int oldCurrent = m_current;
+            m_current = remap(m_current);
+            m_anchor = remap(m_anchor);
+            m_rowsDirty = true;
+            if (m_current != oldCurrent)
+                Q_EMIT currentIndexChanged();
         }
     }
 }
