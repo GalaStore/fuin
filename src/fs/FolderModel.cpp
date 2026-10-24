@@ -381,6 +381,7 @@ void FolderModel::open(const QUrl &url, bool pushHistory)
     m_error.clear();
     m_source.clear();
     rebuild();
+    m_listTimer.start();
     Q_EMIT filterChanged();
     Q_EMIT searchChanged();
     Q_EMIT selectionChanged();
@@ -424,6 +425,7 @@ void FolderModel::refresh()
         runSearch();
         return;
     }
+    m_listTimer.start();
     m_lister->updateDirectory(m_url);
     updateRepo();
 }
@@ -461,14 +463,6 @@ bool FolderModel::lessThan(const KFileItem &a, const KFileItem &b) const
     return c < 0;
 }
 
-int FolderModel::insertPosition(const KFileItem &it) const
-{
-    auto pos = std::lower_bound(m_view.cbegin(), m_view.cend(), it, [this](const KFileItem &a, const KFileItem &b) {
-        return lessThan(a, b);
-    });
-    return int(pos - m_view.cbegin());
-}
-
 void FolderModel::rebuild()
 {
     QElapsedTimer t;
@@ -502,23 +496,46 @@ void FolderModel::onNewItems(const KFileItemList &items)
         m_source.append(it);
     if (searching())
         return;
-    const bool bulk = items.size() > 64 || m_view.isEmpty();
-    if (bulk) {
-        rebuild();
-    } else {
-        for (const KFileItem &it : items) {
-            if (!accepts(it))
-                continue;
-            const int pos = insertPosition(it);
-            beginInsertRows({}, pos, pos);
-            m_view.insert(pos, it);
-            endInsertRows();
-            if (m_current >= pos)
-                ++m_current;
-        }
-        m_rowsDirty = true;
-        Q_EMIT countChanged();
+    QElapsedTimer t;
+    t.start();
+    ensureRowIndex();
+    QList<KFileItem> batch;
+    for (const KFileItem &it : items)
+        if (accepts(it) && !m_rowCache.contains(it.url()))
+            batch.append(it);
+    if (batch.isEmpty()) {
+        applyPendingSelect();
+        return;
     }
+    const auto less = [this](const KFileItem &a, const KFileItem &b) { return lessThan(a, b); };
+    std::stable_sort(batch.begin(), batch.end(), less);
+
+    const int oldCurrent = m_current;
+    qsizetype from = 0;
+    for (qsizetype i = 0; i < batch.size();) {
+        // upper_bound keeps new items after existing equal ones, matching a stable sort of m_source.
+        const qsizetype pos = std::upper_bound(m_view.cbegin() + from, m_view.cend(), batch.at(i), less) - m_view.cbegin();
+        qsizetype j = i + 1;
+        while (j < batch.size() && (pos == m_view.size() || lessThan(batch.at(j), m_view.at(pos))))
+            ++j;
+        const qsizetype len = j - i;
+        beginInsertRows({}, int(pos), int(pos + len - 1));
+        m_view.insert(pos, len, KFileItem());
+        std::copy(batch.cbegin() + i, batch.cbegin() + j, m_view.begin() + pos);
+        endInsertRows();
+        if (m_current >= pos)
+            m_current += int(len);
+        if (m_anchor >= pos)
+            m_anchor += int(len);
+        from = pos + len;
+        i = j;
+    }
+    m_rowsDirty = true;
+    qCDebug(lcFolderTiming).nospace() << "insert batch=" << batch.size() << " view=" << m_view.size()
+                                      << " total=" << t.nsecsElapsed() / 1000 << "us";
+    if (m_current != oldCurrent)
+        Q_EMIT currentIndexChanged();
+    Q_EMIT countChanged();
     applyPendingSelect();
 }
 
@@ -577,6 +594,8 @@ void FolderModel::onCompleted()
 {
     m_loading = false;
     Q_EMIT loadingChanged();
+    qCDebug(lcFolderTiming).nospace() << "listing complete view=" << m_view.size()
+                                      << " elapsed=" << m_listTimer.elapsed() << "ms";
     applyPendingSelect();
     scanGit();
 }

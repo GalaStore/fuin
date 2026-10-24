@@ -6,6 +6,7 @@
 #include <KFileItem>
 #include <QAbstractListModel>
 #include <QCollator>
+#include <QElapsedTimer>
 #include <QHash>
 #include <QPointer>
 #include <QProcess>
@@ -154,7 +155,6 @@ private:
     void rebuild();
     bool accepts(const KFileItem &it) const;
     bool lessThan(const KFileItem &a, const KFileItem &b) const;
-    int insertPosition(const KFileItem &it) const;
     void onNewItems(const KFileItemList &items);
     void onDeleted(const KFileItemList &items);
     void onRefresh(const QList<QPair<KFileItem, KFileItem>> &items);
@@ -172,6 +172,7 @@ private:
     QList<QUrl> m_history;
     int m_histIdx = -1;
     bool m_loading = false;
+    QElapsedTimer m_listTimer;
     QString m_error;
 
     QList<KFileItem> m_source; // all items of the folder (or search results)
