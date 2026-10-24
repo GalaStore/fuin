@@ -164,6 +164,10 @@ private:
     bool lessThan(const FolderEntry &a, const FolderEntry &b) const;
     void onNewItems(const KFileItemList &items);
     void mergePending();
+    void insertSorted(QList<FolderEntry> &batch);
+    void removeViewRows(const QList<int> &rows);
+    void resortRows(QList<int> rows);
+    void reorder(const QList<int> &order);
     void onDeleted(const KFileItemList &items);
     void onRefresh(const QList<QPair<KFileItem, KFileItem>> &items);
     void onCompleted();

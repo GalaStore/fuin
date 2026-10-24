@@ -18,6 +18,7 @@
 #include <QtConcurrent>
 
 #include <algorithm>
+#include <numeric>
 #include <sys/stat.h>
 
 Q_LOGGING_CATEGORY(lcFolderTiming, "fuin.folder.timing", QtWarningMsg)
@@ -459,7 +460,8 @@ bool FolderModel::lessThan(const FolderEntry &a, const FolderEntry &b) const
         return a.isDir();
     int c = 0;
     if (m_sortField == QLatin1String("time")) {
-        const auto ta = a.time(KFileItem::ModificationTime), tb = b.time(KFileItem::ModificationTime);
+        // time() builds a QDateTime per call, which made sorting by date ~40x slower than reading the UDS field.
+        const auto ta = a.entry().numberValue(KIO::UDSEntry::UDS_MODIFICATION_TIME), tb = b.entry().numberValue(KIO::UDSEntry::UDS_MODIFICATION_TIME);
         c = ta < tb ? 1 : ta > tb ? -1 : 0; // newest first
     } else if (m_sortField == QLatin1String("size")) {
         c = a.size() < b.size() ? 1 : a.size() > b.size() ? -1 : 0; // biggest first
@@ -529,6 +531,21 @@ void FolderModel::mergePending()
     m_merged = m_source.size();
     if (batch.isEmpty())
         return;
+    const int oldCurrent = m_current;
+    insertSorted(batch);
+    qCDebug(lcFolderTiming).nospace() << "insert batch=" << batch.size() << " view=" << m_view.size()
+                                      << " total=" << t.nsecsElapsed() / 1000 << "us";
+    if (m_current != oldCurrent)
+        Q_EMIT currentIndexChanged();
+    Q_EMIT countChanged();
+    // applyPendingSelect() rebuilds the row index, so only pay for it when this batch can resolve it.
+    if (!m_pendingSelect.isEmpty()
+        && std::any_of(batch.cbegin(), batch.cend(), [this](const KFileItem &it) { return it.url() == m_pendingSelect; }))
+        applyPendingSelect();
+}
+
+void FolderModel::insertSorted(QList<FolderEntry> &batch)
+{
     const auto less = [this](const FolderEntry &a, const FolderEntry &b) { return lessThan(a, b); };
     std::stable_sort(batch.begin(), batch.end(), less);
 
@@ -546,7 +563,6 @@ void FolderModel::mergePending()
         from = pos[i];
     }
 
-    const int oldCurrent = m_current;
     if (runs <= kMaxInsertRuns) {
         for (qsizetype i = 0, shift = 0; i < batch.size();) {
             qsizetype j = i + 1;
@@ -594,40 +610,156 @@ void FolderModel::mergePending()
         Q_EMIT layoutChanged({}, QAbstractItemModel::VerticalSortHint);
     }
     m_rowsDirty = true;
-    qCDebug(lcFolderTiming).nospace() << "insert batch=" << batch.size() << " view=" << m_view.size()
-                                      << " total=" << t.nsecsElapsed() / 1000 << "us";
-    if (m_current != oldCurrent)
-        Q_EMIT currentIndexChanged();
-    Q_EMIT countChanged();
-    // applyPendingSelect() rebuilds the row index, so only pay for it when this batch can resolve it.
-    if (!m_pendingSelect.isEmpty()
-        && std::any_of(batch.cbegin(), batch.cend(), [this](const KFileItem &it) { return it.url() == m_pendingSelect; }))
-        applyPendingSelect();
+}
+
+// order[i] is the current row that must end up at row i.
+void FolderModel::reorder(const QList<int> &order)
+{
+    Q_EMIT layoutAboutToBeChanged({}, QAbstractItemModel::VerticalSortHint);
+    QList<int> to(order.size());
+    QList<FolderEntry> view;
+    view.reserve(order.size());
+    for (int i = 0; i < order.size(); ++i) {
+        to[order.at(i)] = i;
+        view.append(std::move(m_view[order.at(i)]));
+    }
+    m_view = std::move(view);
+    const QModelIndexList from = persistentIndexList();
+    QModelIndexList moved;
+    moved.reserve(from.size());
+    for (const QModelIndex &idx : from)
+        moved.append(index(to.at(idx.row())));
+    changePersistentIndexList(from, moved);
+    const auto remap = [&](int r) { return r >= 0 && r < to.size() ? to.at(r) : r; };
+    m_current = remap(m_current);
+    m_anchor = remap(m_anchor);
+    m_rowsDirty = true;
+    Q_EMIT layoutChanged({}, QAbstractItemModel::VerticalSortHint);
+}
+
+// rows must be sorted and unique. A removed current/anchor row goes to the item that slides into its place.
+void FolderModel::removeViewRows(const QList<int> &rows)
+{
+    if (rows.isEmpty())
+        return;
+    const auto survivorsBefore = [&](int r) { return r < 0 ? r : r - int(std::lower_bound(rows.cbegin(), rows.cend(), r) - rows.cbegin()); };
+    const int current = survivorsBefore(m_current), anchor = survivorsBefore(m_anchor);
+    qsizetype ranges = 1;
+    for (qsizetype i = 1; i < rows.size(); ++i)
+        if (rows.at(i) != rows.at(i - 1) + 1)
+            ++ranges;
+    if (ranges <= kMaxInsertRuns) {
+        for (qsizetype j = rows.size(); j > 0;) {
+            qsizetype i = j - 1;
+            while (i > 0 && rows.at(i - 1) == rows.at(i) - 1)
+                --i;
+            beginRemoveRows({}, rows.at(i), rows.at(j - 1));
+            m_view.remove(rows.at(i), j - i);
+            endRemoveRows();
+            j = i;
+        }
+    } else {
+        // Each scattered range would memmove the tail, so gather the removed rows at the end and drop them at once.
+        QList<int> order;
+        order.reserve(m_view.size());
+        for (int r = 0, j = 0; r < m_view.size(); ++r) {
+            if (j < rows.size() && rows.at(j) == r)
+                ++j;
+            else
+                order.append(r);
+        }
+        order.append(rows);
+        reorder(order);
+        const int n = int(m_view.size()), k = int(rows.size());
+        beginRemoveRows({}, n - k, n - 1);
+        m_view.remove(n - k, k);
+        endRemoveRows();
+    }
+    m_current = qMin(current, int(m_view.size()) - 1);
+    m_anchor = qMin(anchor, int(m_view.size()) - 1);
+    m_rowsDirty = true;
+}
+
+// rows hold the items whose sort key may have changed; the rest of m_view must be sorted.
+void FolderModel::resortRows(QList<int> rows)
+{
+    const auto less = [this](int a, int b) { return lessThan(m_view.at(a), m_view.at(b)); };
+    const int n = int(m_view.size());
+    if (std::all_of(rows.cbegin(), rows.cend(), [&](int r) { return (r == 0 || !less(r, r - 1)) && (r + 1 == n || !less(r + 1, r)); }))
+        return;
+    QList<bool> changed(n, false);
+    for (int r : std::as_const(rows))
+        changed[r] = true;
+    QList<int> rest;
+    rest.reserve(n - rows.size());
+    for (int r = 0; r < n; ++r)
+        if (!changed.at(r))
+            rest.append(r);
+    std::stable_sort(rows.begin(), rows.end(), less);
+    QList<int> order;
+    order.reserve(n);
+    std::merge(rest.cbegin(), rest.cend(), rows.cbegin(), rows.cend(), std::back_inserter(order), less);
+    if (rows.size() > kMaxInsertRuns) {
+        reorder(order);
+        return;
+    }
+    // Placing each changed item right after its final predecessor, in final order, converges on order; single moves animate.
+    QList<int> cur(n);
+    std::iota(cur.begin(), cur.end(), 0);
+    for (int f = 0; f < n; ++f) {
+        if (!changed.at(order.at(f)))
+            continue;
+        const int from = int(cur.indexOf(order.at(f)));
+        const int dest = f == 0 ? 0 : int(cur.indexOf(order.at(f - 1))) + 1;
+        if (dest == from)
+            continue;
+        const int to = dest > from ? dest - 1 : dest;
+        const auto remap = [&](int r) {
+            if (r == from)
+                return to;
+            if (to < from && r >= to && r < from)
+                return r + 1;
+            if (from < to && r > from && r <= to)
+                return r - 1;
+            return r;
+        };
+        beginMoveRows({}, from, from, {}, dest);
+        m_view.move(from, to);
+        cur.move(from, to);
+        endMoveRows();
+        m_current = remap(m_current);
+        m_anchor = remap(m_anchor);
+    }
+    m_rowsDirty = true;
 }
 
 void FolderModel::onDeleted(const KFileItemList &items)
 {
     mergePending();
+    QSet<QUrl> gone;
+    gone.reserve(items.size());
     bool selChanged = false;
     for (const KFileItem &it : items) {
-        m_source.removeIf([&](const KFileItem &x) { return x.url() == it.url(); });
+        gone.insert(it.url());
         if (m_sel.remove(it.url()))
             selChanged = true;
-        if (searching())
-            continue;
+    }
+    m_source.removeIf([&](const KFileItem &x) { return gone.contains(x.url()); });
+    m_merged = qMin(m_merged, m_source.size());
+    const int oldCurrent = m_current;
+    if (!searching()) {
         ensureRowIndex();
-        const int row = m_rowCache.value(it.url(), -1);
-        if (row < 0)
-            continue;
-        beginRemoveRows({}, row, row);
-        m_view.removeAt(row);
-        endRemoveRows();
-        m_rowsDirty = true;
+        QList<int> rows;
+        for (const QUrl &u : std::as_const(gone))
+            if (const int row = m_rowCache.value(u, -1); row >= 0)
+                rows.append(row);
+        std::sort(rows.begin(), rows.end());
+        removeViewRows(rows);
     }
-    if (m_current >= m_view.size()) {
+    if (m_current >= m_view.size())
         m_current = int(m_view.size()) - 1;
+    if (m_current != oldCurrent)
         Q_EMIT currentIndexChanged();
-    }
     Q_EMIT countChanged();
     if (selChanged)
         Q_EMIT selectionChanged();
@@ -635,55 +767,74 @@ void FolderModel::onDeleted(const KFileItemList &items)
 
 void FolderModel::onRefresh(const QList<QPair<KFileItem, KFileItem>> &items)
 {
-    for (const auto &p : items) {
-        const FolderEntry e(p.second, m_collator);
-        for (FolderEntry &x : m_source)
-            if (x.url() == p.first.url()) {
-                x = e;
-                break;
-            }
-        if (searching())
+    QHash<QUrl, qsizetype> pending;
+    pending.reserve(items.size());
+    for (qsizetype i = 0; i < items.size(); ++i)
+        pending.insert(items.at(i).first.url(), i);
+    QList<qsizetype> src(items.size(), -1);
+    for (qsizetype s = 0, found = 0; s < m_source.size() && found < pending.size(); ++s) {
+        const auto it = pending.constFind(m_source.at(s).url());
+        if (it == pending.cend())
             continue;
-        ensureRowIndex();
-        const int row = m_rowCache.value(p.first.url(), -1);
-        if (row >= 0) {
+        src[*it] = s;
+        m_source[s] = FolderEntry(items.at(*it).second, m_collator);
+        ++found;
+    }
+    if (searching())
+        return;
+
+    ensureRowIndex();
+    const int oldCurrent = m_current;
+    bool renamed = false, selChanged = false;
+    QList<int> changed, removed;
+    QList<FolderEntry> added;
+    for (qsizetype i = 0; i < items.size(); ++i) {
+        // Items past m_merged are not in m_view yet; mergePending() takes their new state.
+        if (src.at(i) < 0 || src.at(i) >= m_merged)
+            continue;
+        const QUrl &before = items.at(i).first.url(), &after = items.at(i).second.url();
+        const FolderEntry &e = m_source.at(src.at(i));
+        const int row = m_rowCache.value(before, -1);
+        const bool keep = accepts(e);
+        if (row >= 0 && keep) {
             m_view[row] = e;
-            if (p.first.url() != p.second.url()) { // renamed: keep selection, refresh index
-                if (m_sel.remove(p.first.url()))
-                    m_sel.insert(p.second.url());
-                m_rowsDirty = true;
-            }
-            Q_EMIT dataChanged(index(row), index(row));
-            // onNewItems() binary-searches m_view, so a refresh that changes the sort key must re-sort the row.
-            const FolderEntry &cur = m_view.at(row);
-            const bool up = row > 0 && lessThan(cur, m_view.at(row - 1));
-            const bool down = row + 1 < m_view.size() && lessThan(m_view.at(row + 1), cur);
-            if (!up && !down)
-                continue;
-            const auto less = [this](const FolderEntry &a, const FolderEntry &b) { return lessThan(a, b); };
-            const int dest = up ? int(std::upper_bound(m_view.cbegin(), m_view.cbegin() + row, cur, less) - m_view.cbegin())
-                                : int(std::upper_bound(m_view.cbegin() + row + 1, m_view.cend(), cur, less) - m_view.cbegin());
-            const int to = up ? dest : dest - 1;
-            const auto remap = [&](int r) {
-                if (r == row)
-                    return to;
-                if (up && r >= to && r < row)
-                    return r + 1;
-                if (down && r > row && r <= to)
-                    return r - 1;
-                return r;
-            };
-            beginMoveRows({}, row, row, {}, dest);
-            m_view.move(row, to);
-            endMoveRows();
-            const int oldCurrent = m_current;
-            m_current = remap(m_current);
-            m_anchor = remap(m_anchor);
-            m_rowsDirty = true;
-            if (m_current != oldCurrent)
-                Q_EMIT currentIndexChanged();
+            changed.append(row);
+        } else if (row >= 0) {
+            removed.append(row);
+        } else if (keep) {
+            added.append(e);
+        }
+        renamed |= before != after;
+        if (m_sel.remove(before)) {
+            if (row >= 0 && !keep)
+                selChanged = true;
+            else
+                m_sel.insert(after);
         }
     }
+    if (changed.size() > kMaxInsertRuns) {
+        const auto [lo, hi] = std::minmax_element(changed.cbegin(), changed.cend());
+        Q_EMIT dataChanged(index(*lo), index(*hi));
+    } else {
+        for (int row : std::as_const(changed))
+            Q_EMIT dataChanged(index(row), index(row));
+    }
+    std::sort(removed.begin(), removed.end());
+    removeViewRows(removed);
+    for (int &row : changed)
+        row -= int(std::lower_bound(removed.cbegin(), removed.cend(), row) - removed.cbegin());
+    // insertSorted() binary-searches m_view, so rows whose sort key changed must move.
+    resortRows(changed);
+    if (!added.isEmpty())
+        insertSorted(added);
+    if (renamed)
+        m_rowsDirty = true;
+    if (m_current != oldCurrent)
+        Q_EMIT currentIndexChanged();
+    if (!removed.isEmpty() || !added.isEmpty())
+        Q_EMIT countChanged();
+    if (selChanged)
+        Q_EMIT selectionChanged();
 }
 
 void FolderModel::onCompleted()
