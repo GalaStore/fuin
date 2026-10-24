@@ -25,6 +25,7 @@ Q_LOGGING_CATEGORY(lcFolderTiming, "fuin.folder.timing", QtWarningMsg)
 namespace {
 constexpr int kMaxResults = 2000;
 constexpr int kMaxDirtyChecks = 40;
+constexpr qsizetype kMaxInsertRuns = 8;
 
 KFileItem itemForLocalPath(const QString &path)
 {
@@ -117,6 +118,9 @@ FolderModel::FolderModel(QObject *parent)
         Q_EMIT loadingChanged();
     });
 
+    m_mergeTimer.setSingleShot(true);
+    m_mergeTimer.setInterval(100);
+    connect(&m_mergeTimer, &QTimer::timeout, this, &FolderModel::mergePending);
     m_searchDebounce.setSingleShot(true);
     m_searchDebounce.setInterval(220);
     connect(&m_searchDebounce, &QTimer::timeout, this, &FolderModel::runSearch);
@@ -485,6 +489,7 @@ void FolderModel::rebuild()
             return lessThan(a, b);
         });
     const qint64 sortNs = t.nsecsElapsed() - sortStart;
+    m_merged = m_source.size();
     m_rowsDirty = true;
     endResetModel();
     qCDebug(lcFolderTiming).nospace() << "rebuild view=" << m_view.size() << " sort=" << sortNs / 1000 << "us total="
@@ -498,42 +503,95 @@ void FolderModel::rebuild()
 
 void FolderModel::onNewItems(const KFileItemList &items)
 {
-    const qsizetype first = m_source.size();
     for (const KFileItem &it : items)
         m_source.append(FolderEntry(it, m_collator));
+    // Each view update costs QML work and a frame, so while listing merge KIO's ~200-item batches in bigger chunks.
+    if (m_loading && !m_view.isEmpty() && !searching()) {
+        if (!m_mergeTimer.isActive())
+            m_mergeTimer.start();
+        return;
+    }
+    mergePending();
+}
+
+void FolderModel::mergePending()
+{
+    m_mergeTimer.stop();
     if (searching())
         return;
     QElapsedTimer t;
     t.start();
     // KCoreDirLister never re-sends listed items (changes come via refreshItems), so no dedupe.
     QList<FolderEntry> batch;
-    for (auto it = m_source.cbegin() + first; it != m_source.cend(); ++it)
+    for (auto it = m_source.cbegin() + m_merged; it != m_source.cend(); ++it)
         if (accepts(*it))
             batch.append(*it);
+    m_merged = m_source.size();
     if (batch.isEmpty())
         return;
     const auto less = [this](const FolderEntry &a, const FolderEntry &b) { return lessThan(a, b); };
     std::stable_sort(batch.begin(), batch.end(), less);
 
+    // upper_bound keeps new items after existing equal ones, matching a stable sort of m_source.
+    QList<qsizetype> pos(batch.size());
+    qsizetype runs = 0;
+    for (qsizetype i = 0, from = 0; i < batch.size(); ++i) {
+        if (i > 0 && (from == m_view.size() || lessThan(batch.at(i), m_view.at(from)))) {
+            pos[i] = from;
+            continue;
+        }
+        pos[i] = std::upper_bound(m_view.cbegin() + from, m_view.cend(), batch.at(i), less) - m_view.cbegin();
+        if (i == 0 || pos[i] != pos[i - 1])
+            ++runs;
+        from = pos[i];
+    }
+
     const int oldCurrent = m_current;
-    qsizetype from = 0;
-    for (qsizetype i = 0; i < batch.size();) {
-        // upper_bound keeps new items after existing equal ones, matching a stable sort of m_source.
-        const qsizetype pos = std::upper_bound(m_view.cbegin() + from, m_view.cend(), batch.at(i), less) - m_view.cbegin();
-        qsizetype j = i + 1;
-        while (j < batch.size() && (pos == m_view.size() || lessThan(batch.at(j), m_view.at(pos))))
-            ++j;
-        const qsizetype len = j - i;
-        beginInsertRows({}, int(pos), int(pos + len - 1));
-        m_view.insert(pos, len, batch.at(i));
-        std::copy(batch.cbegin() + i, batch.cbegin() + j, m_view.begin() + pos);
+    if (runs <= kMaxInsertRuns) {
+        for (qsizetype i = 0, shift = 0; i < batch.size();) {
+            qsizetype j = i + 1;
+            while (j < batch.size() && pos[j] == pos[i])
+                ++j;
+            const qsizetype at = pos[i] + shift, len = j - i;
+            beginInsertRows({}, int(at), int(at + len - 1));
+            m_view.insert(at, len, batch.at(i));
+            std::copy(batch.cbegin() + i, batch.cbegin() + j, m_view.begin() + at);
+            endInsertRows();
+            if (m_current >= at)
+                m_current += int(len);
+            if (m_anchor >= at)
+                m_anchor += int(len);
+            shift += len;
+            i = j;
+        }
+    } else {
+        // One insert per run costs an O(n) memmove and a view update each, so append and merge once instead.
+        const qsizetype n = m_view.size(), k = batch.size();
+        beginInsertRows({}, int(n), int(n + k - 1));
+        m_view.append(batch);
         endInsertRows();
-        if (m_current >= pos)
-            m_current += int(len);
-        if (m_anchor >= pos)
-            m_anchor += int(len);
-        from = pos + len;
-        i = j;
+        Q_EMIT layoutAboutToBeChanged({}, QAbstractItemModel::VerticalSortHint);
+        for (qsizetype i = k - 1, end = n; i >= 0; --i) {
+            std::move_backward(m_view.begin() + pos[i], m_view.begin() + end, m_view.begin() + end + i + 1);
+            m_view[pos[i] + i] = batch.at(i);
+            end = pos[i];
+        }
+        const auto remap = [&](int r) {
+            if (r < 0)
+                return r;
+            if (r >= n)
+                return int(pos[r - n] + r - n);
+            return r + int(std::upper_bound(pos.cbegin(), pos.cend(), r) - pos.cbegin());
+        };
+        const QModelIndexList from = persistentIndexList();
+        QModelIndexList to;
+        to.reserve(from.size());
+        for (const QModelIndex &idx : from)
+            to.append(index(remap(idx.row())));
+        changePersistentIndexList(from, to);
+        m_current = remap(m_current);
+        m_anchor = remap(m_anchor);
+        Q_EMIT layoutChanged({}, QAbstractItemModel::VerticalSortHint);
     }
     m_rowsDirty = true;
     qCDebug(lcFolderTiming).nospace() << "insert batch=" << batch.size() << " view=" << m_view.size()
@@ -549,6 +607,7 @@ void FolderModel::onNewItems(const KFileItemList &items)
 
 void FolderModel::onDeleted(const KFileItemList &items)
 {
+    mergePending();
     bool selChanged = false;
     for (const KFileItem &it : items) {
         m_source.removeIf([&](const KFileItem &x) { return x.url() == it.url(); });
@@ -629,6 +688,7 @@ void FolderModel::onRefresh(const QList<QPair<KFileItem, KFileItem>> &items)
 
 void FolderModel::onCompleted()
 {
+    mergePending();
     m_loading = false;
     Q_EMIT loadingChanged();
     qCDebug(lcFolderTiming).nospace() << "listing complete view=" << m_view.size()

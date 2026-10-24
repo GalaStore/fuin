@@ -163,6 +163,7 @@ private:
     bool accepts(const KFileItem &it) const;
     bool lessThan(const FolderEntry &a, const FolderEntry &b) const;
     void onNewItems(const KFileItemList &items);
+    void mergePending();
     void onDeleted(const KFileItemList &items);
     void onRefresh(const QList<QPair<KFileItem, KFileItem>> &items);
     void onCompleted();
@@ -184,6 +185,8 @@ private:
 
     QList<FolderEntry> m_source; // all items of the folder (or search results)
     QList<FolderEntry> m_view;   // filtered + sorted
+    qsizetype m_merged = 0;      // m_source[m_merged..] is not in m_view yet
+    QTimer m_mergeTimer;
     mutable bool m_rowsDirty = true;
     void ensureRowIndex() const;
     mutable QHash<QUrl, int> m_rowCache;
