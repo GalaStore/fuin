@@ -69,6 +69,10 @@ todo el escritorio). Fuera de Plasma, Fūin indica a KIO qué terminal usar para
 
 Consulta [ROADMAP.md](ROADMAP.md) y el [issue fijado «Roadmap»](https://github.com/GalaStore/fuin/issues/1).
 
+Previsto para la v0.2.0 (solo Linux): **Fūin como selector de archivos del sistema**, con un modo selector y un
+backend `org.freedesktop.impl.portal.FileChooser` (`OpenFile`, `SaveFile`, `SaveFiles`) para que los diálogos
+«Abrir» / «Guardar como» de otras aplicaciones usen Fūin a través de xdg-desktop-portal ([#39](https://github.com/GalaStore/fuin/issues/39)).
+
 ## Licencia
 
 [MIT](LICENSE).

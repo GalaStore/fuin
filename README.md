@@ -184,6 +184,10 @@ qml/         the interface
 
 See [ROADMAP.md](ROADMAP.md) and the pinned [Roadmap issue](https://github.com/GalaStore/fuin/issues/1).
 
+Planned for v0.2.0 (Linux only): **Fūin as the system file chooser** — a picker mode plus an
+`org.freedesktop.impl.portal.FileChooser` backend (`OpenFile`, `SaveFile`, `SaveFiles`) so "Open" / "Save as"
+dialogs from other apps go through Fūin via xdg-desktop-portal ([#39](https://github.com/GalaStore/fuin/issues/39)).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and pull requests are welcome. More documentation is in the
