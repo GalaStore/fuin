@@ -66,6 +66,12 @@ QString readGitHead(const QString &dir)
 }
 }
 
+FolderEntry::FolderEntry(const KFileItem &it, const QCollator &collator)
+    : KFileItem(it)
+    , key(collator.sortKey(it.text()))
+{
+}
+
 FolderModel::FolderModel(QObject *parent)
     : QAbstractListModel(parent)
     , m_lister(new KCoreDirLister(this))
@@ -209,7 +215,7 @@ QVariant FolderModel::data(const QModelIndex &index, int role) const
 
 KFileItem FolderModel::itemAt(int row) const
 {
-    return row >= 0 && row < m_view.size() ? m_view.at(row) : KFileItem();
+    return row >= 0 && row < m_view.size() ? KFileItem(m_view.at(row)) : KFileItem();
 }
 
 QVariantMap FolderModel::get(int row) const
@@ -443,7 +449,7 @@ bool FolderModel::accepts(const KFileItem &it) const
     return true;
 }
 
-bool FolderModel::lessThan(const KFileItem &a, const KFileItem &b) const
+bool FolderModel::lessThan(const FolderEntry &a, const FolderEntry &b) const
 {
     if (a.isDir() != b.isDir())
         return a.isDir();
@@ -457,7 +463,7 @@ bool FolderModel::lessThan(const KFileItem &a, const KFileItem &b) const
         c = QString::compare(FileKind::extension(a.text()), FileKind::extension(b.text()), Qt::CaseInsensitive);
     }
     if (c == 0)
-        c = m_collator.compare(a.text(), b.text());
+        c = a.key.compare(b.key);
     if (m_sortReversed)
         c = -c;
     return c < 0;
@@ -469,13 +475,13 @@ void FolderModel::rebuild()
     t.start();
     beginResetModel();
     m_view.clear();
-    const QList<KFileItem> &src = searching() ? m_results : m_source;
-    for (const KFileItem &it : src)
+    const QList<FolderEntry> &src = searching() ? m_results : m_source;
+    for (const FolderEntry &it : src)
         if (searching() || accepts(it))
             m_view.append(it);
     const qint64 sortStart = t.nsecsElapsed();
     if (!searching())
-        std::stable_sort(m_view.begin(), m_view.end(), [this](const KFileItem &a, const KFileItem &b) {
+        std::stable_sort(m_view.begin(), m_view.end(), [this](const FolderEntry &a, const FolderEntry &b) {
             return lessThan(a, b);
         });
     const qint64 sortNs = t.nsecsElapsed() - sortStart;
@@ -492,20 +498,21 @@ void FolderModel::rebuild()
 
 void FolderModel::onNewItems(const KFileItemList &items)
 {
+    const qsizetype first = m_source.size();
     for (const KFileItem &it : items)
-        m_source.append(it);
+        m_source.append(FolderEntry(it, m_collator));
     if (searching())
         return;
     QElapsedTimer t;
     t.start();
     // KCoreDirLister never re-sends listed items (changes come via refreshItems), so no dedupe.
-    QList<KFileItem> batch;
-    for (const KFileItem &it : items)
-        if (accepts(it))
-            batch.append(it);
+    QList<FolderEntry> batch;
+    for (auto it = m_source.cbegin() + first; it != m_source.cend(); ++it)
+        if (accepts(*it))
+            batch.append(*it);
     if (batch.isEmpty())
         return;
-    const auto less = [this](const KFileItem &a, const KFileItem &b) { return lessThan(a, b); };
+    const auto less = [this](const FolderEntry &a, const FolderEntry &b) { return lessThan(a, b); };
     std::stable_sort(batch.begin(), batch.end(), less);
 
     const int oldCurrent = m_current;
@@ -518,7 +525,7 @@ void FolderModel::onNewItems(const KFileItemList &items)
             ++j;
         const qsizetype len = j - i;
         beginInsertRows({}, int(pos), int(pos + len - 1));
-        m_view.insert(pos, len, KFileItem());
+        m_view.insert(pos, len, batch.at(i));
         std::copy(batch.cbegin() + i, batch.cbegin() + j, m_view.begin() + pos);
         endInsertRows();
         if (m_current >= pos)
@@ -570,9 +577,10 @@ void FolderModel::onDeleted(const KFileItemList &items)
 void FolderModel::onRefresh(const QList<QPair<KFileItem, KFileItem>> &items)
 {
     for (const auto &p : items) {
-        for (KFileItem &x : m_source)
+        const FolderEntry e(p.second, m_collator);
+        for (FolderEntry &x : m_source)
             if (x.url() == p.first.url()) {
-                x = p.second;
+                x = e;
                 break;
             }
         if (searching())
@@ -580,7 +588,7 @@ void FolderModel::onRefresh(const QList<QPair<KFileItem, KFileItem>> &items)
         ensureRowIndex();
         const int row = m_rowCache.value(p.first.url(), -1);
         if (row >= 0) {
-            m_view[row] = p.second;
+            m_view[row] = e;
             if (p.first.url() != p.second.url()) { // renamed: keep selection, refresh index
                 if (m_sel.remove(p.first.url()))
                     m_sel.insert(p.second.url());
@@ -588,12 +596,12 @@ void FolderModel::onRefresh(const QList<QPair<KFileItem, KFileItem>> &items)
             }
             Q_EMIT dataChanged(index(row), index(row));
             // onNewItems() binary-searches m_view, so a refresh that changes the sort key must re-sort the row.
-            const KFileItem &cur = m_view.at(row);
+            const FolderEntry &cur = m_view.at(row);
             const bool up = row > 0 && lessThan(cur, m_view.at(row - 1));
             const bool down = row + 1 < m_view.size() && lessThan(m_view.at(row + 1), cur);
             if (!up && !down)
                 continue;
-            const auto less = [this](const KFileItem &a, const KFileItem &b) { return lessThan(a, b); };
+            const auto less = [this](const FolderEntry &a, const FolderEntry &b) { return lessThan(a, b); };
             const int dest = up ? int(std::upper_bound(m_view.cbegin(), m_view.cbegin() + row, cur, less) - m_view.cbegin())
                                 : int(std::upper_bound(m_view.cbegin() + row + 1, m_view.cend(), cur, less) - m_view.cbegin());
             const int to = up ? dest : dest - 1;
@@ -736,7 +744,7 @@ void FolderModel::runSearch()
             if (query != m_query.trimmed())
                 return;
             for (const QString &p : watcher->result())
-                m_results.append(itemForLocalPath(p));
+                m_results.append(FolderEntry(itemForLocalPath(p), m_collator));
             m_searchBusy = false;
             Q_EMIT searchChanged();
             rebuild();
@@ -764,13 +772,13 @@ void FolderModel::runSearch()
         args << QStringLiteral("--hidden") << QStringLiteral("--exclude") << QStringLiteral(".git");
     args << QStringLiteral("--") << query << root;
     connect(p, &QProcess::readyReadStandardOutput, this, [this, p] {
-        QList<KFileItem> batch;
+        QList<FolderEntry> batch;
         while (p->canReadLine()) {
             QString line = QString::fromUtf8(p->readLine()).trimmed();
             if (line.endsWith(QLatin1Char('/')) && line.size() > 1)
                 line.chop(1);
             if (!line.isEmpty())
-                batch.append(itemForLocalPath(line));
+                batch.append(FolderEntry(itemForLocalPath(line), m_collator));
         }
         if (batch.isEmpty())
             return;

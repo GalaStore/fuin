@@ -16,6 +16,13 @@
 
 class KCoreDirLister;
 
+// Caches the collation key so lessThan() skips QCollator::compare(); relocatable keeps m_view inserts a memmove.
+struct FolderEntry : KFileItem {
+    FolderEntry(const KFileItem &it, const QCollator &collator);
+    QCollatorSortKey key;
+};
+Q_DECLARE_TYPEINFO(FolderEntry, Q_RELOCATABLE_TYPE);
+
 class FolderModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -154,7 +161,7 @@ private:
     void open(const QUrl &url, bool pushHistory);
     void rebuild();
     bool accepts(const KFileItem &it) const;
-    bool lessThan(const KFileItem &a, const KFileItem &b) const;
+    bool lessThan(const FolderEntry &a, const FolderEntry &b) const;
     void onNewItems(const KFileItemList &items);
     void onDeleted(const KFileItemList &items);
     void onRefresh(const QList<QPair<KFileItem, KFileItem>> &items);
@@ -175,8 +182,8 @@ private:
     QElapsedTimer m_listTimer;
     QString m_error;
 
-    QList<KFileItem> m_source; // all items of the folder (or search results)
-    QList<KFileItem> m_view;   // filtered + sorted
+    QList<FolderEntry> m_source; // all items of the folder (or search results)
+    QList<FolderEntry> m_view;   // filtered + sorted
     mutable bool m_rowsDirty = true;
     void ensureRowIndex() const;
     mutable QHash<QUrl, int> m_rowCache;
@@ -186,7 +193,7 @@ private:
     bool m_searchBusy = false;
     QPointer<QProcess> m_search;
     QTimer m_searchDebounce;
-    QList<KFileItem> m_results;
+    QList<FolderEntry> m_results;
 
     bool m_showHidden = false;
     QString m_sortField = QStringLiteral("name");
