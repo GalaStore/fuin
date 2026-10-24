@@ -48,6 +48,17 @@ cmake --build build && cmake --install build
 Otras distribuciones: CMake ≥ 3.22, C++20, Qt ≥ 6.6, KDE Frameworks 6 (KIO, Solid, CoreAddons, Service) y la
 fuente *Material Symbols Rounded*. Detalles en el [README en inglés](README.md#from-source-any-distro).
 
+### Tests
+
+```sh
+cmake -S . -B build -DFUIN_BUILD_TESTS=ON && cmake --build build
+dbus-run-session -- ctest --test-dir build --output-on-failure -LE bench
+./build/tests/bench_foldermodel 1000 10000 100000   # benchmark del listado: ms por tamaño y orden
+```
+
+`FUIN_BUILD_TESTS` está desactivada por defecto y los tests nunca se instalan. Sin bus de sesión D-Bus se omite el
+test de renombrado.
+
 ## Uso
 
 ```sh

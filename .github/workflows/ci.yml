@@ -25,9 +25,12 @@ jobs:
             $([ "${{ matrix.parquet }}" = ON ] && echo arrow)
       - uses: actions/checkout@v7
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DFUIN_WITH_PARQUET=${{ matrix.parquet }}
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DFUIN_WITH_PARQUET=${{ matrix.parquet }} -DFUIN_BUILD_TESTS=ON
       - name: Build
         run: cmake --build build
+      - name: Tests
+        # The rename test needs a session bus for KIO's change notifications.
+        run: dbus-run-session -- ctest --test-dir build --output-on-failure -LE bench
       - name: Smoke test (headless)
         run: |
           ./build/fuin --version

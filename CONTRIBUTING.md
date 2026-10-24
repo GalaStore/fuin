@@ -18,6 +18,24 @@ Arch ships Arrow/Parquet as shared libraries whose soname changes with each majo
 `libarrow.so.2600`). A `pacman -Syu` that updates `arrow` breaks an existing `fuin` binary; rebuild it
 (`cmake --build build && cmake --install build`) and bump `pkgrel` in `packaging/PKGBUILD` for AUR users.
 
+## Tests
+
+`-DFUIN_BUILD_TESTS=ON` builds `tests/`: `tst_foldermodel` (QTest, with a fatal `QAbstractItemModelTester`) covers
+listing order, hidden/filter, refresh moves, renames, mass deletes and selection; `bench_foldermodel` times listing
+folders in creation and shuffled order.
+
+```sh
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DFUIN_BUILD_TESTS=ON
+cmake --build build
+dbus-run-session -- ctest --test-dir build --output-on-failure -LE bench   # what CI runs
+ctest --test-dir build -L bench --verbose                                  # benchmark, 1k and 10k
+./build/tests/bench_foldermodel 100000                                     # any sizes as arguments
+```
+
+The rename test needs a D-Bus session bus (KIO's rename notifications) and is skipped without one. Each test
+creates its own temporary directory. Changes to `FolderModel` should keep the tests green and come with the
+benchmark numbers before and after.
+
 ## Code style
 
 - C++20, Qt 6 idioms. `QT_NO_KEYWORDS` is on: use `Q_SIGNALS`, `Q_SLOTS`, `Q_EMIT`.
