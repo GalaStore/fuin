@@ -27,6 +27,7 @@ namespace {
 constexpr int kMaxResults = 2000;
 constexpr int kMaxDirtyChecks = 40;
 constexpr qsizetype kMaxInsertRuns = 8;
+constexpr qsizetype kMaxInsertRows = 256;
 
 KFileItem itemForLocalPath(const QString &path)
 {
@@ -564,7 +565,9 @@ void FolderModel::insertSorted(QList<FolderEntry> &batch)
         from = pos[i];
     }
 
-    if (runs <= kMaxInsertRuns) {
+    // A big insert above existing rows displaces every delegate and QML rebuilds a screenful; a merge keeps them.
+    const bool append = pos.front() == m_view.size();
+    if (append || (runs <= kMaxInsertRuns && batch.size() <= kMaxInsertRows)) {
         for (qsizetype i = 0, shift = 0; i < batch.size();) {
             qsizetype j = i + 1;
             while (j < batch.size() && pos[j] == pos[i])
