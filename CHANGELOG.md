@@ -52,7 +52,8 @@ First public release.
 - Secret guard: `.env` files, keys and tokens are marked and never sent to an AI.
 - Single-instance GUI with `--reveal` and `--preview`.
 - Material 3 theme with optional live colours from matugen; XDG configuration under `$XDG_CONFIG_HOME/fuin`.
-- Packaging: CMake project, desktop entry, AppStream metadata, icons and a PKGBUILD in `packaging/`.
+- Packaging: desktop entry, AppStream metadata, icons and a PKGBUILD in `packaging/`, with optional
+  `plasma-activities-stats` for the Recent place.
 - GitHub Actions CI on Arch Linux, with and without Parquet, including headless smoke tests.
 - README (English and Spanish), contributing guide and design notes.
 
