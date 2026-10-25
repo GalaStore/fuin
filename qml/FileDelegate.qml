@@ -175,11 +175,9 @@ Item {
   // ---- interaction
   Item {
     id: proxy
-    Drag.active: ma.drag.active
     Drag.dragType: Drag.Automatic
     Drag.supportedActions: Qt.CopyAction | Qt.MoveAction | Qt.LinkAction
     Drag.proposedAction: Qt.MoveAction
-    Drag.mimeData: ({ "text/uri-list": it.pane.dragUris(it.url).join("\r\n") })
     Drag.source: it.pane
   }
   MouseArea {
@@ -189,6 +187,10 @@ Item {
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
     drag.target: proxy
     drag.threshold: 8
+    drag.onActiveChanged: {
+      if (drag.active) proxy.Drag.mimeData = { "text/uri-list": it.pane.dragUris(it.url).join("\r\n") }
+      proxy.Drag.active = drag.active
+    }
     onPressed: e => {
       it.pane.focusView()
       if (e.button === Qt.RightButton) {
