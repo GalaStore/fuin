@@ -16,11 +16,6 @@
 #include <algorithm>
 
 namespace {
-const QString kRecent = QStringLiteral("Abiertos recientemente");
-const QString kSelected = QStringLiteral("Tipo seleccionado");
-const QString kCommon = QStringLiteral("Habituales");
-const QString kSearch = QStringLiteral("Otros tipos");
-
 // Case- and accent-insensitive form used for searching ("vídeo" matches "video").
 QString fold(const QString &text)
 {
@@ -151,24 +146,25 @@ void DefaultAppsModel::reload()
     };
 
     for (const QString &m : std::as_const(m_pinned))
-        add(db.mimeTypeForName(m), kSelected);
+        add(db.mimeTypeForName(m), tr("Selected type"));
     for (const QString &m : Config::instance()->openedMimeTypes())
-        add(db.mimeTypeForName(m), kRecent);
+        add(db.mimeTypeForName(m), tr("Recently opened"));
 
+    const QString common = tr("Common");
     // Everyday types, resolved through the MIME database (aliases map to the canonical name).
     for (const char *name : {"text/plain", "text/markdown", "text/x-python", "text/csv", "application/json", "application/x-shellscript", "application/pdf",
                              "inode/directory"})
-        add(db.mimeTypeForName(QString::fromLatin1(name)), kCommon);
+        add(db.mimeTypeForName(QString::fromLatin1(name)), common);
     // Data and model formats Fūin previews, only if the system's MIME database knows them.
     for (const char *suffix : {"parquet", "safetensors", "gguf"}) {
         const QMimeType mt = db.mimeTypeForFile(QStringLiteral("x.") + QString::fromLatin1(suffix), QMimeDatabase::MatchExtension);
-        add(mt, kCommon);
+        add(mt, common);
     }
 
     // Media families: every type with file patterns that an installed application declares.
-    const QList<QPair<QString, QString>> families{{QStringLiteral("image/"), QStringLiteral("Imágenes")},
-                                                  {QStringLiteral("video/"), QStringLiteral("Vídeo")},
-                                                  {QStringLiteral("audio/"), QStringLiteral("Audio")}};
+    const QList<QPair<QString, QString>> families{{QStringLiteral("image/"), tr("Images")},
+                                                  {QStringLiteral("video/"), tr("Video")},
+                                                  {QStringLiteral("audio/"), tr("Audio")}};
     const QList<QMimeType> everything = db.allMimeTypes();
     for (const auto &[prefix, section] : families) {
         QList<Entry> group;
@@ -242,7 +238,7 @@ void DefaultAppsModel::rebuildRows()
             if (mt.isDefault() || listed.contains(mt.name()) || m_extra.size() >= 40)
                 continue;
             listed.insert(mt.name());
-            m_extra << makeEntry(mt.name(), kSearch);
+            m_extra << makeEntry(mt.name(), tr("Other types"));
             m_rows << -int(m_extra.size());
         }
     }
@@ -286,7 +282,7 @@ bool DefaultAppsModel::setDefault(const QString &mimeType, const QString &storag
 {
     const KService::Ptr service = KService::serviceByStorageId(storageId);
     if (mimeType.isEmpty() || !service || !service->isValid()) {
-        Q_EMIT failed(QStringLiteral("No se encontró la aplicación «%1»").arg(storageId));
+        Q_EMIT failed(tr("Application «%1» not found").arg(storageId));
         return false;
     }
     // Writes [Default Applications] in ~/.config/mimeapps.list (shared with every XDG app).
@@ -326,7 +322,7 @@ void DefaultAppsModel::finishSycocaRefresh(const QString &mimeType, const QStrin
     if (now && now->name() == appName)
         Q_EMIT defaultChanged(mimeType, appName);
     else
-        Q_EMIT failed(QStringLiteral("El sistema no aplicó %1 para %2; revisa ~/.config/mimeapps.list").arg(appName, mimeType));
+        Q_EMIT failed(tr("The system did not apply %1 for %2; check ~/.config/mimeapps.list").arg(appName, mimeType));
 }
 
 void DefaultAppsModel::refreshApps()

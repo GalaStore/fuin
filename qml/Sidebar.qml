@@ -38,11 +38,11 @@ Rectangle {
           readonly property bool on: url !== "" && root.currentUrl === url
           width: col.width
           Txt {
-            visible: entry.firstOfSection && entry.section !== "Otros"
+            visible: entry.firstOfSection && entry.section !== qsTranslate("PlacesModel", "Other")
             text: entry.section; dim: true; font.pointSize: 8.5; font.weight: Font.DemiBold
             leftPadding: 14; topPadding: 12; bottomPadding: 4; font.capitalization: Font.AllUppercase; font.letterSpacing: 0.6
           }
-          Item { visible: entry.firstOfSection && entry.section === "Otros"; width: 1; height: 8 }
+          Item { visible: entry.firstOfSection && entry.section === qsTranslate("PlacesModel", "Other"); width: 1; height: 8 }
           Rectangle {
             id: pl
             width: col.width; height: entry.usage >= 0 ? 46 : 36; radius: 12

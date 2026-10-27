@@ -90,7 +90,7 @@ static QString toUrlString(const QString &p)
 void IpcServer::handle(QLocalSocket *sock, const QJsonObject &req)
 {
     const QString cmd = req.value(u"cmd"_s).toString();
-    const QString client = req.value(u"client"_s).toString(u"agente"_s);
+    const QString client = req.value(u"client"_s).toString(tr("agent"));
     if (cmd == "ping"_L1) {
         reply(sock, {{u"ok"_s, true}, {u"pid"_s, QCoreApplication::applicationPid()}});
     } else if (cmd == "open"_L1) {
@@ -103,7 +103,7 @@ void IpcServer::handle(QLocalSocket *sock, const QJsonObject &req)
         else
             Q_EMIT previewRequested(url);
         if (req.contains(u"client"_s))
-            Q_EMIT agentActivity(u"%1 mostró %2"_s.arg(client, QUrl(url).fileName()));
+            Q_EMIT agentActivity(tr("%1 showed %2").arg(client, QUrl(url).fileName()));
         reply(sock, {{u"ok"_s, true}});
     } else if (cmd == "state"_L1) {
         QJsonObject o = QJsonObject::fromVariantMap(m_state);
