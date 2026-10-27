@@ -58,12 +58,12 @@ QString IpcServer::socketPath() const
     return Config::socketPath();
 }
 
-bool IpcServer::listen()
+bool IpcServer::listen(const QString &path)
 {
-    const QString path = Config::socketPath();
-    if (QFile::exists(path) && !IpcClient::isRunning())
-        QLocalServer::removeServer(path); // stale socket from a crash
-    return m_server.listen(path);
+    const QString p = path.isEmpty() ? Config::socketPath() : path;
+    if (QFile::exists(p) && (!path.isEmpty() || !IpcClient::isRunning()))
+        QLocalServer::removeServer(p); // stale socket from a crash
+    return m_server.listen(p);
 }
 
 void IpcServer::publishState(const QVariantMap &state)

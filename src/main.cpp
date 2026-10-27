@@ -14,6 +14,9 @@
 #include "ipc/Ipc.h"
 #include "preview/CodeHighlighter.h"
 #include "preview/Previewer.h"
+#ifdef FUIN_WITH_PORTAL
+#include "portal/FileChooserPortal.h"
+#endif
 
 #include <KConfig>
 #include <KConfigGroup>
@@ -105,6 +108,61 @@ static int runHeadless(int argc, char **argv)
     return 0;
 }
 
+// Creates the C++ singletons and types the QML side expects; returns the (not yet listening) IPC server.
+static IpcServer *registerQmlTypes(QObject *owner)
+{
+    auto *config = Config::instance();
+    auto *theme = new Theme(owner);
+    auto *ops = new FileOps(owner);
+    auto *places = new PlacesModel(owner);
+    auto *info = new AppInfo(owner);
+    auto *defaultApps = new DefaultAppsModel(owner);
+    auto *ipc = new IpcServer(ops, owner);
+
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Theme", theme);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Config", config);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "FileOps", ops);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Places", places);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "AppInfo", info);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "DefaultApps", defaultApps);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Ipc", ipc);
+    qmlRegisterType<FolderModel>("Fuin", 1, 0, "FolderModel");
+    qmlRegisterType<Previewer>("Fuin", 1, 0, "Previewer");
+    qmlRegisterType<CodeHighlighter>("Fuin", 1, 0, "CodeHighlighter");
+    qmlRegisterType<ContextPack>("Fuin", 1, 0, "ContextPack");
+
+    return ipc;
+}
+
+static void setupEngine(QQmlApplicationEngine &engine, QCoreApplication &app)
+{
+    engine.addImageProvider(u"thumb"_s, new ThumbnailProvider);
+    engine.addImageProvider(u"icon"_s, new IconProvider);
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
+    QObject::connect(&engine, &QQmlApplicationEngine::quit, &app, &QCoreApplication::quit);
+}
+
+#ifdef FUIN_WITH_PORTAL
+static int runPortal(QApplication &app)
+{
+    // Picker windows come and go; the process stays until the portal's idle timer ends it.
+    app.setQuitOnLastWindowClosed(false);
+    IpcServer *ipc = registerQmlTypes(&app);
+    auto *portal = new FileChooserPortal(&app);
+    qmlRegisterSingletonInstance("Fuin", 1, 0, "Portal", portal);
+
+    QQmlApplicationEngine engine;
+    setupEngine(engine, app);
+    engine.load(QUrl(u"qrc:/qml/PortalRoot.qml"_s));
+    if (engine.rootObjects().isEmpty() || !portal->registerOnBus())
+        return 1;
+    // Never the GUI's socket: agents must keep talking to the file manager, not to a picker.
+    if (qEnvironmentVariableIntValue("FUIN_DEV") == 1)
+        ipc->listen(QFileInfo(Config::socketPath()).absolutePath() + u"/fuin-portal.sock"_s);
+    return app.exec();
+}
+#endif
+
 int main(int argc, char **argv)
 {
     for (int i = 1; i < argc; ++i) {
@@ -136,12 +194,20 @@ int main(int argc, char **argv)
     p.addOption(reveal);
     p.addOption(preview);
     p.addOption(newWindow);
+#ifdef FUIN_WITH_PORTAL
+    QCommandLineOption portal(u"portal"_s, u"Serve the xdg-desktop-portal file chooser (started by D-Bus)."_s);
+    p.addOption(portal);
+#endif
     p.addOption({u"mcp"_s, u"Run the MCP server on stdio (for Claude Code, Cursor, ...)."_s});
     p.addOption({u"context"_s, u"Print a Markdown/XML context pack of the given paths to stdout."_s});
     p.addPositionalArgument(u"url"_s, u"Folder, file or KIO URL to open."_s, u"[url]"_s);
     p.process(app);
 
     ensureKioTerminal();
+#ifdef FUIN_WITH_PORTAL
+    if (p.isSet(portal))
+        return runPortal(app);
+#endif
 
     const QString start = argToUrl(p.positionalArguments().value(0));
     const QString revealUrl = p.isSet(reveal) ? argToUrl(p.value(reveal)) : p.isSet(preview) ? argToUrl(p.value(preview)) : QString();
@@ -155,35 +221,14 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    auto *config = Config::instance();
-    auto *theme = new Theme(&app);
-    auto *ops = new FileOps(&app);
-    auto *places = new PlacesModel(&app);
-    auto *info = new AppInfo(&app);
-    auto *defaultApps = new DefaultAppsModel(&app);
-    auto *ipc = new IpcServer(ops, &app);
+    IpcServer *ipc = registerQmlTypes(&app);
     ipc->listen();
 
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "Theme", theme);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "Config", config);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "FileOps", ops);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "Places", places);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "AppInfo", info);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "DefaultApps", defaultApps);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "Ipc", ipc);
-    qmlRegisterType<FolderModel>("Fuin", 1, 0, "FolderModel");
-    qmlRegisterType<Previewer>("Fuin", 1, 0, "Previewer");
-    qmlRegisterType<CodeHighlighter>("Fuin", 1, 0, "CodeHighlighter");
-    qmlRegisterType<ContextPack>("Fuin", 1, 0, "ContextPack");
-
     QQmlApplicationEngine engine;
-    engine.addImageProvider(u"thumb"_s, new ThumbnailProvider);
-    engine.addImageProvider(u"icon"_s, new IconProvider);
+    setupEngine(engine, app);
     engine.setInitialProperties({{u"startUrl"_s, revealUrl.isEmpty() ? start : revealUrl},
                                  {u"revealUrl"_s, revealUrl},
                                  {u"startPreview"_s, p.isSet(preview)}});
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
-    QObject::connect(&engine, &QQmlApplicationEngine::quit, &app, &QCoreApplication::quit);
     engine.load(QUrl(u"qrc:/qml/Main.qml"_s));
     return app.exec();
 }

@@ -12,6 +12,9 @@ endif()
 
 option(FUIN_WITH_PARQUET "Parquet preview via Apache Arrow C++" ON)
 option(FUIN_WITH_SYNTAX "Syntax highlighting via KSyntaxHighlighting" ON)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  option(FUIN_WITH_PORTAL "Serve the xdg-desktop-portal file chooser (fuin --portal)" ON)
+endif()
 option(FUIN_BUILD_TESTS "FolderModel tests and listing benchmark (CTest)" OFF)
 
 # KDE's find modules (LibMount, UDev) are needed by KF6Solid's package config.
@@ -61,6 +64,13 @@ if(FUIN_WITH_PARQUET)
   else()
     message(STATUS "Parquet preview: disabled (Apache Arrow/Parquet C++ not found)")
   endif()
+endif()
+
+if(FUIN_WITH_PORTAL)
+  find_package(Qt6 REQUIRED COMPONENTS DBus)
+  target_sources(fuin PRIVATE src/portal/FileChooserPortal.cpp)
+  target_link_libraries(fuin PRIVATE Qt6::DBus)
+  target_compile_definitions(fuin PRIVATE FUIN_WITH_PORTAL)
 endif()
 
 file(GLOB FUIN_QML RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS qml/*.qml qml/*.js)
