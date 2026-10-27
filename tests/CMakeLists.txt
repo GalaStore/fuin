@@ -17,7 +17,7 @@ target_link_libraries(bench_foldermodel PRIVATE fuin_foldermodel)
 add_test(NAME bench_foldermodel COMMAND bench_foldermodel)
 set_tests_properties(bench_foldermodel PROPERTIES LABELS bench)
 
-foreach(mode version context)
+foreach(mode version context mcp)
     add_test(NAME smoke_${mode}
              COMMAND ${CMAKE_COMMAND} -DFUIN=$<TARGET_FILE:fuin> -DMODE=${mode} -DVERSION=${PROJECT_VERSION}
                      -DWORK=${CMAKE_CURRENT_BINARY_DIR}/smoke_${mode} -P ${CMAKE_CURRENT_SOURCE_DIR}/smoke.cmake)
