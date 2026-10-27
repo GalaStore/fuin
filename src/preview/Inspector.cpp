@@ -3,6 +3,7 @@
 #include "../ai/SecretGuard.h"
 #include "../fs/FileKind.h"
 
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -290,7 +291,7 @@ QVariant ggufValue(Reader &r, quint32 type, bool keep)
             for (quint64 i = 0; i < n && r.ok; ++i)
                 ggufValue(r, et, false);
         }
-        return keep ? QVariant(u"[%1 elementos]"_s.arg(n)) : QVariant();
+        return keep ? QVariant(QCoreApplication::translate("Inspector", "[%1 items]").arg(n)) : QVariant();
     }
     case 10: return r.read<quint64>();
     case 11: return r.read<qint64>();
@@ -309,7 +310,7 @@ QString ggmlType(quint32 t)
                                                    {26, "I32"},    {27, "I64"},   {28, "F64"},   {29, "IQ1_M"},  {30, "BF16"},  {34, "TQ1_0"},
                                                    {35, "TQ2_0"},  {39, "MXFP4"}};
     const auto it = m.find(t);
-    return it != m.end() ? QString::fromLatin1(it->second) : u"tipo %1"_s.arg(t);
+    return it != m.end() ? QString::fromLatin1(it->second) : QCoreApplication::translate("Inspector", "type %1").arg(t);
 }
 
 QString llamaFileType(quint32 t)
@@ -370,11 +371,11 @@ QVariantMap Inspector::inspect(const QString &path, const Options &opts)
 {
     const QFileInfo fi(path);
     if (!fi.exists())
-        return error(u"No existe"_s);
+        return error(QCoreApplication::translate("Inspector", "Does not exist"));
     if (fi.isDir())
         return inspectFolder(path);
     if (!fi.isReadable())
-        return error(u"Sin permiso de lectura"_s);
+        return error(QCoreApplication::translate("Inspector", "No read permission"));
 
     const QString name = fi.fileName();
     const QString ext = FileKind::extension(name);
@@ -397,7 +398,7 @@ QVariantMap Inspector::inspect(const QString &path, const Options &opts)
         out = inspectOnnx(path);
     } else if (ext == "pt"_L1 || ext == "pth"_L1 || ext == "ckpt"_L1 || ext == "pkl"_L1) {
         out = {{u"kind"_s, u"model"_s}, {u"format"_s, u"pickle"_s},
-               {u"fields"_s, QVariantList{pair(u"Formato"_s, u"PyTorch / pickle"_s), pair(u"Nota"_s, u"No se deserializa: un pickle puede ejecutar código. Prefiere .safetensors."_s)}}};
+               {u"fields"_s, QVariantList{pair(QCoreApplication::translate("Inspector", "Format"), u"PyTorch / pickle"_s), pair(QCoreApplication::translate("Inspector", "Note"), QCoreApplication::translate("Inspector", "Not deserialized: a pickle can run code. Prefer .safetensors."))}}};
     } else if (mime.startsWith("image/"_L1)) {
         QImageReader r(path);
         const QSize s = r.size();
@@ -422,7 +423,7 @@ QVariantMap Inspector::inspect(const QString &path, const Options &opts)
         }
     }
     if (SecretGuard::isSecretName(name) && !out.contains(u"secret"_s))
-        out.insert(u"secret"_s, u"nombre de archivo sensible"_s);
+        out.insert(u"secret"_s, QCoreApplication::translate("Inspector", "sensitive file name"));
     out.insert(u"mime"_s, mime);
     out.insert(u"size"_s, double(fi.size()));
     out.insert(u"path"_s, fi.absoluteFilePath());
@@ -462,10 +463,10 @@ QVariantMap Inspector::inspectCsv(const QString &path, QChar delimiter, const Op
     for (const ColStats &s : stats)
         columns << s.toMap();
     const qint64 lines = countLines(path, 1024LL * 1024 * 1024);
-    const QString delimName = delimiter == u'\t' ? u"tabulador"_s : QString(delimiter);
+    const QString delimName = delimiter == u'\t' ? QCoreApplication::translate("Inspector", "tab") : QString(delimiter);
     return {{u"kind"_s, u"table"_s},
             {u"format"_s, u"csv"_s},
-            {u"engine"_s, u"lector CSV · separador «%1»"_s.arg(delimName)},
+            {u"engine"_s, QCoreApplication::translate("Inspector", "CSV reader · separator «%1»").arg(delimName)},
             {u"columns"_s, columns},
             {u"rows"_s, outRows},
             {u"totalRows"_s, lines >= 0 ? QVariant(double(qMax<qint64>(0, lines - 1))) : QVariant()},
@@ -487,7 +488,7 @@ QVariantMap Inspector::inspectJson(const QString &path, const Options &opts)
     const QJsonDocument doc = QJsonDocument::fromJson(all, &err);
     if (err.error != QJsonParseError::NoError)
         return {{u"kind"_s, u"text"_s}, {u"text"_s, QString::fromUtf8(all.left(opts.maxTextBytes))}, {u"truncated"_s, all.size() > opts.maxTextBytes},
-                {u"warning"_s, u"JSON no válido: "_s + err.errorString()}};
+                {u"warning"_s, QCoreApplication::translate("Inspector", "Invalid JSON: %1").arg(err.errorString())}};
     if (doc.isArray()) {
         const QJsonArray arr = doc.array();
         QList<QJsonObject> objs;
@@ -503,7 +504,7 @@ QVariantMap Inspector::inspectJson(const QString &path, const Options &opts)
         if (allObjects) {
             QVariantMap t = tableFromObjects(objs, opts.maxColumns);
             t.insert(u"format"_s, u"json"_s);
-            t.insert(u"engine"_s, u"JSON (array de objetos)"_s);
+            t.insert(u"engine"_s, QCoreApplication::translate("Inspector", "JSON (array of objects)"));
             t.insert(u"totalRows"_s, double(arr.size()));
             t.insert(u"statsSample"_s, int(objs.size()));
             return t;
@@ -539,7 +540,7 @@ QVariantMap Inspector::inspectJsonLines(const QString &path, const Options &opts
         t.insert(u"totalRows"_s, double(lines));
     t.insert(u"statsSample"_s, int(objs.size()));
     if (bad)
-        t.insert(u"warning"_s, u"%1 líneas no son objetos JSON"_s.arg(bad));
+        t.insert(u"warning"_s, QCoreApplication::translate("Inspector", "%1 lines are not JSON objects").arg(bad));
     return t;
 }
 
@@ -548,7 +549,7 @@ QVariantMap Inspector::inspectParquet(const QString &path, const Options &opts)
 #ifndef FUIN_HAVE_PARQUET
     Q_UNUSED(path)
     Q_UNUSED(opts)
-    return error(u"Compilado sin soporte Parquet (Apache Arrow)."_s);
+    return error(QCoreApplication::translate("Inspector", "Built without Parquet support (Apache Arrow)."));
 #else
     try {
         auto infile = arrow::io::ReadableFile::Open(path.toStdString());
@@ -659,9 +660,9 @@ QVariantMap Inspector::inspectParquet(const QString &path, const Options &opts)
                 {u"rows"_s, rows},
                 {u"totalRows"_s, double(md->num_rows())},
                 {u"exactStats"_s, true},
-                {u"fields"_s, QVariantList{pair(u"Grupos de filas"_s, nrg), pair(u"Compresión"_s, compression),
-                                           pair(u"Creado por"_s, QString::fromStdString(md->created_by())),
-                                           pair(u"Versión"_s, QString::fromStdString(md->version() == parquet::ParquetVersion::PARQUET_1_0 ? "1.0" : "2.x"))}}};
+                {u"fields"_s, QVariantList{pair(QCoreApplication::translate("Inspector", "Row groups"), nrg), pair(QCoreApplication::translate("Inspector", "Compression"), compression),
+                                           pair(QCoreApplication::translate("Inspector", "Created by"), QString::fromStdString(md->created_by())),
+                                           pair(QCoreApplication::translate("Inspector", "Version"), QString::fromStdString(md->version() == parquet::ParquetVersion::PARQUET_1_0 ? "1.0" : "2.x"))}}};
     } catch (const std::exception &e) {
         return error(QString::fromUtf8(e.what()));
     }
@@ -675,10 +676,10 @@ QVariantMap Inspector::inspectSafetensors(const QString &path)
         return error(f.errorString());
     quint64 n = 0;
     if (f.read(reinterpret_cast<char *>(&n), 8) != 8)
-        return error(u"Cabecera incompleta"_s);
+        return error(QCoreApplication::translate("Inspector", "Incomplete header"));
     n = qFromLittleEndian(n);
     if (n == 0 || n > 100 * 1024 * 1024)
-        return error(u"Cabecera safetensors no válida"_s);
+        return error(QCoreApplication::translate("Inspector", "Invalid safetensors header"));
     const QJsonObject hdr = QJsonDocument::fromJson(f.read(qint64(n))).object();
     double params = 0;
     QMap<QString, double> dtypes;
@@ -701,8 +702,8 @@ QVariantMap Inspector::inspectSafetensors(const QString &path)
     QStringList dt;
     for (auto it = dtypes.cbegin(); it != dtypes.cend(); ++it)
         dt << u"%1 %2%"_s.arg(it.key()).arg(qRound(100 * it.value() / qMax(1.0, params)));
-    QVariantList fields{pair(u"Formato"_s, u"safetensors"_s), pair(u"Tensores"_s, int(names.size())), pair(u"Parámetros"_s, humanCount(params)),
-                        pair(u"Tipos"_s, dt.join(u" · "_s))};
+    QVariantList fields{pair(QCoreApplication::translate("Inspector", "Format"), u"safetensors"_s), pair(QCoreApplication::translate("Inspector", "Tensors"), int(names.size())), pair(QCoreApplication::translate("Inspector", "Parameters"), humanCount(params)),
+                        pair(QCoreApplication::translate("Inspector", "Types"), dt.join(u" · "_s))};
     const QJsonObject meta = hdr.value(u"__metadata__"_s).toObject();
     for (auto it = meta.begin(); it != meta.end() && fields.size() < 14; ++it)
         fields << QVariant(pair(it.key(), it.value().toString().left(120)));
@@ -716,10 +717,10 @@ QVariantMap Inspector::inspectGguf(const QString &path)
         return error(f.errorString());
     Reader r{f};
     if (f.read(4) != "GGUF")
-        return error(u"No es un archivo GGUF"_s);
+        return error(QCoreApplication::translate("Inspector", "Not a GGUF file"));
     const quint32 version = r.read<quint32>();
     if (version < 2)
-        return error(u"GGUF v1 no soportado"_s);
+        return error(QCoreApplication::translate("Inspector", "GGUF v1 is not supported"));
     const quint64 nTensors = r.read<quint64>();
     const quint64 nKv = r.read<quint64>();
     QMap<QString, QVariant> kv;
@@ -749,31 +750,31 @@ QVariantMap Inspector::inspectGguf(const QString &path)
             tensors << QVariantMap{{u"name"_s, name}, {u"dtype"_s, t}, {u"shape"_s, u"["_s + shape.join(u", "_s) + u"]"_s}};
     }
     const QString arch = kv.value(u"general.architecture"_s).toString();
-    QVariantList fields{pair(u"Formato"_s, u"GGUF v%1"_s.arg(version))};
+    QVariantList fields{pair(QCoreApplication::translate("Inspector", "Format"), u"GGUF v%1"_s.arg(version))};
     auto add = [&](const QString &label, const QString &key) {
         if (kv.contains(key))
             fields << QVariant(pair(label, kv.value(key)));
     };
-    add(u"Nombre"_s, u"general.name"_s);
-    add(u"Arquitectura"_s, u"general.architecture"_s);
-    add(u"Tamaño"_s, u"general.size_label"_s);
+    add(QCoreApplication::translate("Inspector", "Name"), u"general.name"_s);
+    add(QCoreApplication::translate("Inspector", "Architecture"), u"general.architecture"_s);
+    add(QCoreApplication::translate("Inspector", "Size"), u"general.size_label"_s);
     if (kv.contains(u"general.file_type"_s))
-        fields << QVariant(pair(u"Cuantización"_s, llamaFileType(kv.value(u"general.file_type"_s).toUInt())));
-    add(u"Contexto"_s, arch + u".context_length"_s);
+        fields << QVariant(pair(QCoreApplication::translate("Inspector", "Quantization"), llamaFileType(kv.value(u"general.file_type"_s).toUInt())));
+    add(QCoreApplication::translate("Inspector", "Context"), arch + u".context_length"_s);
     add(u"Embedding"_s, arch + u".embedding_length"_s);
-    add(u"Capas"_s, arch + u".block_count"_s);
-    add(u"Cabezas atención"_s, arch + u".attention.head_count"_s);
-    add(u"Expertos"_s, arch + u".expert_count"_s);
-    add(u"Tokenizador"_s, u"tokenizer.ggml.model"_s);
-    add(u"Licencia"_s, u"general.license"_s);
-    fields << QVariant(pair(u"Tensores"_s, double(nTensors)));
+    add(QCoreApplication::translate("Inspector", "Layers"), arch + u".block_count"_s);
+    add(QCoreApplication::translate("Inspector", "Attention heads"), arch + u".attention.head_count"_s);
+    add(QCoreApplication::translate("Inspector", "Experts"), arch + u".expert_count"_s);
+    add(QCoreApplication::translate("Inspector", "Tokenizer"), u"tokenizer.ggml.model"_s);
+    add(QCoreApplication::translate("Inspector", "License"), u"general.license"_s);
+    fields << QVariant(pair(QCoreApplication::translate("Inspector", "Tensors"), double(nTensors)));
     if (r.ok)
-        fields << QVariant(pair(u"Parámetros"_s, humanCount(params)));
+        fields << QVariant(pair(QCoreApplication::translate("Inspector", "Parameters"), humanCount(params)));
     QStringList ts;
     for (auto it = types.cbegin(); it != types.cend(); ++it)
         ts << u"%1 %2%"_s.arg(it.key()).arg(qRound(100 * it.value() / qMax(1.0, params)));
     if (!ts.isEmpty())
-        fields << QVariant(pair(u"Tipos de tensor"_s, ts.join(u" · "_s)));
+        fields << QVariant(pair(QCoreApplication::translate("Inspector", "Tensor types"), ts.join(u" · "_s)));
     return {{u"kind"_s, u"model"_s}, {u"format"_s, u"gguf"_s}, {u"fields"_s, fields}, {u"tensors"_s, tensors}, {u"params"_s, params}};
 }
 
@@ -782,7 +783,7 @@ QVariantMap Inspector::inspectOnnx(const QString &path)
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly))
         return error(f.errorString());
-    QVariantList fields{pair(u"Formato"_s, u"ONNX"_s)};
+    QVariantList fields{pair(QCoreApplication::translate("Inspector", "Format"), u"ONNX"_s)};
     QStringList opsets;
     // Walk top-level ModelProto fields, seeking over the (large) graph.
     for (int guard = 0; guard < 64 && !f.atEnd(); ++guard) {
@@ -799,7 +800,7 @@ QVariantMap Inspector::inspectOnnx(const QString &path)
             if (field == 1)
                 fields << QVariant(pair(u"IR version"_s, double(v)));
             else if (field == 5)
-                fields << QVariant(pair(u"Versión del modelo"_s, double(v)));
+                fields << QVariant(pair(QCoreApplication::translate("Inspector", "Model version"), double(v)));
         } else if (wire == 2) {
             const quint64 len = varint(head, i, ok);
             if (!ok)
@@ -812,13 +813,13 @@ QVariantMap Inspector::inspectOnnx(const QString &path)
             }
             const QByteArray val = f.read(qint64(len));
             if (field == 2)
-                fields << QVariant(pair(u"Productor"_s, QString::fromUtf8(val)));
+                fields << QVariant(pair(QCoreApplication::translate("Inspector", "Producer"), QString::fromUtf8(val)));
             else if (field == 3)
-                fields << QVariant(pair(u"Versión productor"_s, QString::fromUtf8(val)));
+                fields << QVariant(pair(QCoreApplication::translate("Inspector", "Producer version"), QString::fromUtf8(val)));
             else if (field == 4)
-                fields << QVariant(pair(u"Dominio"_s, QString::fromUtf8(val)));
+                fields << QVariant(pair(QCoreApplication::translate("Inspector", "Domain"), QString::fromUtf8(val)));
             else if (field == 6 && !val.isEmpty())
-                fields << QVariant(pair(u"Descripción"_s, QString::fromUtf8(val).left(200)));
+                fields << QVariant(pair(QCoreApplication::translate("Inspector", "Description"), QString::fromUtf8(val).left(200)));
             else if (field == 8) { // OperatorSetIdProto { domain = 1; version = 2 }
                 QString dom = u"ai.onnx"_s;
                 quint64 ver = 0;

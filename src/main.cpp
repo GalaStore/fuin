@@ -99,8 +99,8 @@ static int runHeadless(int argc, char **argv)
         paths << QDir::currentPath();
     const auto r = ContextPacker::build(paths, p.value(u"format"_s));
     std::cout << r.text.toStdString();
-    std::cerr << "≈ " << r.tokens << " tokens · " << r.included.size() << " ficheros (" << r.summarized << " como esquema) · " << r.skipped.size()
-              << " omitidos · " << r.secretsBlocked << " secretos bloqueados" << std::endl;
+    std::cerr << "≈ " << r.tokens << " tokens · " << r.included.size() << " files (" << r.summarized << " as schema) · " << r.skipped.size()
+              << " skipped · " << r.secretsBlocked << " secrets blocked" << std::endl;
     return 0;
 }
 
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
     QQuickStyle::setStyle(u"Basic"_s);
 
     QCommandLineParser p;
-    p.setApplicationDescription(u"Fūin — gestor de ficheros con KIO y funciones para IA"_s);
+    p.setApplicationDescription(u"Fūin — a KIO file manager with AI features"_s);
     p.addHelpOption();
     p.addVersionOption();
     QCommandLineOption reveal(u"reveal"_s, u"Open the folder of <path> and select it."_s, u"path"_s);
