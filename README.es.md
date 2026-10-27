@@ -35,7 +35,7 @@ aquí, tus ficheros.
 ## Instalación (Arch Linux)
 
 ```sh
-sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-declarative qt6-svg \
+sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-declarative qt6-svg qt6-tools \
   kio kio-extras solid kcoreaddons kservice syntax-highlighting ttf-material-symbols-variable
 sudo pacman -S --needed arrow fd ripgrep git duckdb kdegraphics-thumbnailers ffmpegthumbs kimageformats plasma-activities-stats  # opcional
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/.local
