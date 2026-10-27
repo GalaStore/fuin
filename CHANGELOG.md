@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FUIN_BUILD_TESTS` CMake option: `tst_foldermodel` (QTest with a fatal `QAbstractItemModelTester`) and the
   `bench_foldermodel` listing benchmark. CI runs the tests on both Parquet configurations
   ([#38](https://github.com/GalaStore/fuin/pull/38)).
+- CTest smoke tests for the command line: `fuin --version`, `--context` in Markdown and XML (a fixture `.env` stays
+  out of the pack) and the MCP server (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing a secret). They
+  run headless and replace the inline smoke step in CI ([#3](https://github.com/GalaStore/fuin/issues/3)).
 
 ### Changed
 

@@ -1,0 +1,145 @@
+# SPDX-License-Identifier: MIT
+# Smoke tests for the fuin command line, run with `cmake -P` so they need nothing beyond CMake.
+#   cmake -DFUIN=<fuin> -DMODE=version|context|mcp -DVERSION=<x.y.z> -DWORK=<scratch dir> -P smoke.cmake
+cmake_minimum_required(VERSION 3.22)
+
+foreach(var FUIN MODE VERSION WORK)
+    if(NOT DEFINED ${var})
+        message(FATAL_ERROR "smoke.cmake: -D${var}=... is required")
+    endif()
+endforeach()
+
+# A throwaway HOME keeps the user's config out of the test, and the MCP roots sandbox defaults to ~,
+# so the fixture has to live under it.
+set(home "${WORK}/home")
+file(REMOVE_RECURSE "${WORK}")
+file(MAKE_DIRECTORY "${home}")
+set(ENV{HOME} "${home}")
+set(ENV{XDG_CONFIG_HOME} "${home}/.config")
+
+set(fixture "${home}/fixture")
+set(secret "FUIN_SMOKE_SECRET_7f3a")
+file(WRITE "${fixture}/README.md" "# Fixture\n")
+file(WRITE "${fixture}/src/main.py" "print('fuin')\n")
+# Written here instead of committed because .env is gitignored.
+file(WRITE "${fixture}/.env" "API_TOKEN=${secret}\n")
+
+function(expect_contains what haystack needle)
+    string(FIND "${haystack}" "${needle}" pos)
+    if(pos EQUAL -1)
+        message(FATAL_ERROR "${what}: expected to find '${needle}' in:\n${haystack}")
+    endif()
+endfunction()
+
+function(expect_lacks what haystack needle)
+    string(FIND "${haystack}" "${needle}" pos)
+    if(NOT pos EQUAL -1)
+        message(FATAL_ERROR "${what}: '${needle}' must not appear in:\n${haystack}")
+    endif()
+endfunction()
+
+if(MODE STREQUAL "version")
+    execute_process(COMMAND "${FUIN}" --version RESULT_VARIABLE rc OUTPUT_VARIABLE out ERROR_VARIABLE err)
+    string(STRIP "${out}" out)
+    if(NOT rc EQUAL 0 OR NOT out STREQUAL "fuin ${VERSION}")
+        message(FATAL_ERROR "fuin --version: exit ${rc}, expected 'fuin ${VERSION}', got '${out}'\n${err}")
+    endif()
+
+elseif(MODE STREQUAL "context")
+    foreach(format markdown xml)
+        set(what "fuin --context --format ${format}")
+        execute_process(COMMAND "${FUIN}" --context --format ${format} "${fixture}" RESULT_VARIABLE rc OUTPUT_VARIABLE out ERROR_VARIABLE err)
+        if(NOT rc EQUAL 0)
+            message(FATAL_ERROR "${what}: exit ${rc}\n${err}")
+        endif()
+        if(format STREQUAL "markdown")
+            expect_contains("${what}" "${out}" "## README.md")
+            expect_contains("${what}" "${out}" "## src/main.py")
+        else()
+            expect_contains("${what}" "${out}" "<source>README.md</source>")
+            expect_contains("${what}" "${out}" "<source>src/main.py</source>")
+        endif()
+        expect_contains("${what}" "${out}" "# Fixture")
+        expect_lacks("${what}" "${out}" ".env")
+        expect_lacks("${what}" "${out}" "${secret}")
+    endforeach()
+
+elseif(MODE STREQUAL "mcp")
+    file(WRITE "${WORK}/requests.jsonl"
+         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{},\"clientInfo\":{\"name\":\"ctest\",\"version\":\"1\"}}}\n"
+         "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n"
+         "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}\n"
+         "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"fuin_read_file\",\"arguments\":{\"path\":\"${fixture}/.env\"}}}\n"
+         "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\",\"params\":{\"name\":\"fuin_read_file\",\"arguments\":{\"path\":\"${fixture}/README.md\"}}}\n")
+    execute_process(COMMAND "${FUIN}" --mcp INPUT_FILE "${WORK}/requests.jsonl" RESULT_VARIABLE rc OUTPUT_VARIABLE out ERROR_VARIABLE err)
+    if(NOT rc EQUAL 0)
+        message(FATAL_ERROR "fuin --mcp: exit ${rc}\n${err}")
+    endif()
+
+    # Walked by hand: the JSON may contain ';', which would split a CMake list.
+    set(rest "${out}")
+    while(NOT rest STREQUAL "")
+        string(FIND "${rest}" "\n" nl)
+        if(nl EQUAL -1)
+            set(line "${rest}")
+            set(rest "")
+        else()
+            string(SUBSTRING "${rest}" 0 ${nl} line)
+            math(EXPR nl "${nl} + 1")
+            string(SUBSTRING "${rest}" ${nl} -1 rest)
+        endif()
+        string(JSON id ERROR_VARIABLE jerr GET "${line}" id)
+        if(NOT jerr)
+            set(resp_${id} "${line}")
+        endif()
+    endwhile()
+    foreach(id 1 2 3 4)
+        if(NOT DEFINED resp_${id})
+            message(FATAL_ERROR "fuin --mcp: no response to request ${id}:\n${out}\n${err}")
+        endif()
+        string(JSON type ERROR_VARIABLE jerr TYPE "${resp_${id}}" result)
+        if(jerr)
+            message(FATAL_ERROR "fuin --mcp: request ${id} failed: ${resp_${id}}")
+        endif()
+    endforeach()
+
+    string(JSON name GET "${resp_1}" result serverInfo name)
+    string(JSON version GET "${resp_1}" result serverInfo version)
+    if(NOT name STREQUAL "fuin" OR NOT version STREQUAL "${VERSION}")
+        message(FATAL_ERROR "initialize: expected serverInfo fuin ${VERSION}, got ${resp_1}")
+    endif()
+
+    set(expected fuin_context_pack fuin_copy fuin_create_folder fuin_get_current_view fuin_inspect fuin_list_directory fuin_move
+                 fuin_move_to_trash fuin_read_file fuin_reveal fuin_search)
+    set(tools "")
+    string(JSON count LENGTH "${resp_2}" result tools)
+    if(count GREATER 0)
+        math(EXPR last "${count} - 1")
+        foreach(i RANGE ${last})
+            string(JSON tool GET "${resp_2}" result tools ${i} name)
+            list(APPEND tools "${tool}")
+        endforeach()
+    endif()
+    list(SORT tools)
+    if(NOT tools STREQUAL expected)
+        message(FATAL_ERROR "tools/list: expected ${expected}, got ${tools}")
+    endif()
+
+    string(JSON refused GET "${resp_3}" result isError)
+    string(JSON text GET "${resp_3}" result content 0 text)
+    if(NOT refused OR NOT text MATCHES "secret")
+        message(FATAL_ERROR "fuin_read_file must refuse .env as a secret, got ${resp_3}")
+    endif()
+    expect_lacks("fuin_read_file .env" "${resp_3}" "${secret}")
+
+    # Proves the refusal above comes from the secret guard and not from the roots sandbox.
+    string(JSON refused GET "${resp_4}" result isError)
+    string(JSON text GET "${resp_4}" result content 0 text)
+    if(refused)
+        message(FATAL_ERROR "fuin_read_file README.md must succeed, got ${resp_4}")
+    endif()
+    expect_contains("fuin_read_file README.md" "${text}" "# Fixture")
+
+else()
+    message(FATAL_ERROR "smoke.cmake: unknown MODE '${MODE}'")
+endif()
