@@ -55,7 +55,7 @@ server so coding agents can see (and, with your permission, act on) the folder y
 ### Arch Linux
 
 ```sh
-sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-declarative qt6-svg \
+sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-declarative qt6-svg qt6-tools \
   kio kio-extras solid kcoreaddons kservice syntax-highlighting ttf-material-symbols-variable
 # optional but recommended
 sudo pacman -S --needed arrow fd ripgrep git duckdb kdegraphics-thumbnailers ffmpegthumbs kimageformats plasma-activities-stats
