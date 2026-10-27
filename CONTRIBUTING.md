@@ -48,9 +48,23 @@ come with the benchmark numbers before and after.
   remote URLs, the trash and undo keep working. Never block the GUI thread: use KIO jobs or `QtConcurrent`.
 - QML: small components, colours only from `Theme` roles, durations through `Theme.dur(ms)` so the
   "no animations" setting is honoured. Avoid naming QML files like Qt Quick Controls types (`Pane`, `Page`…).
-- Code and comments in English. UI strings are currently Spanish; translations are welcome
-  (planned move to `qsTr` + Qt Linguist).
+- Code and comments in English. UI strings are English source text wrapped in `qsTr()` (QML) or `tr()` /
+  `QCoreApplication::translate()` (C++); see [Translations](#translations).
 - Format C++ with `clang-format` (WebKit-ish, 4 spaces, 160 columns) if you have it.
+
+## Translations
+
+English is the source language. Translations live in `i18n/fuin_<lang>.ts`; the build compiles them with `lrelease`
+(package `qt6-tools`) and Fūin loads the one that matches the system locale, falling back to English. Only the GUI is
+translated: `fuin --mcp` and `fuin --context` always print English.
+
+- Mark new strings with `qsTr("…")` in QML/JS and `tr("…")` in C++ (`QCoreApplication::translate("Context", "…")`
+  outside a `QObject`). Use `%1` placeholders instead of concatenating pieces.
+- After changing strings, refresh the `.ts` files with `cmake --build build --target update_translations`.
+- Translate in Qt Linguist (`/usr/lib/qt6/bin/linguist i18n/fuin_es.ts`) or any `.ts` editor and rebuild.
+- To add a language, add `i18n/fuin_<lang>.ts` to `TS_FILES` in `CMakeLists.txt`, run `update_translations` and
+  translate the new file.
+- Check the result with `LANG=es_ES.UTF-8 fuin` (or your locale).
 
 ## Developer automation
 

@@ -40,7 +40,7 @@ FileOps::FileOps(QObject *parent)
     connect(undo, &KIO::FileUndoManager::undoAvailable, this, &FileOps::undoChanged);
     connect(undo, &KIO::FileUndoManager::undoTextChanged, this, &FileOps::undoChanged);
     connect(undo, &KIO::FileUndoManager::undoJobFinished, this, [this] {
-        Q_EMIT notify(QStringLiteral("Deshecho"), QStringLiteral("ok"), false);
+        Q_EMIT notify(tr("Undone"), QStringLiteral("ok"), false);
     });
     connect(QApplication::clipboard(), &QClipboard::dataChanged, this, &FileOps::clipboardChanged);
 }
@@ -133,12 +133,12 @@ void FileOps::cancelAll()
 
 static QString countText(int n, const QString &one, const QString &many)
 {
-    return n == 1 ? one : QString::number(n) + QLatin1Char(' ') + many;
+    return n == 1 ? one : many.arg(n);
 }
 
 static void withUi(KJob *job)
 {
-    // Default KIO UI delegate: conflict ("ya existe") dialogs, auth prompts, error handling.
+    // Default KIO UI delegate: conflict ("already exists") dialogs, auth prompts, error handling.
     job->setUiDelegate(KIO::createDefaultJobUiDelegate(KJobUiDelegate::AutoWarningHandlingEnabled, nullptr));
 }
 
@@ -152,7 +152,7 @@ void FileOps::copy(const QStringList &urls, const QString &destDir)
     auto *job = KIO::copy(src, toUrl(destDir));
     withUi(job);
     KIO::FileUndoManager::self()->recordCopyJob(job);
-    track(job, QStringLiteral("Copiando"), countText(int(src.size()), QStringLiteral("Copiado"), QStringLiteral("elementos copiados")), true);
+    track(job, tr("Copying"), countText(int(src.size()), tr("Copied"), tr("%1 items copied")), true);
 }
 
 void FileOps::move(const QStringList &urls, const QString &destDir)
@@ -163,7 +163,7 @@ void FileOps::move(const QStringList &urls, const QString &destDir)
     auto *job = KIO::move(src, toUrl(destDir));
     withUi(job);
     KIO::FileUndoManager::self()->recordCopyJob(job);
-    track(job, QStringLiteral("Moviendo"), countText(int(src.size()), QStringLiteral("Movido"), QStringLiteral("elementos movidos")), true);
+    track(job, tr("Moving"), countText(int(src.size()), tr("Moved"), tr("%1 items moved")), true);
 }
 
 void FileOps::trash(const QStringList &urls)
@@ -174,8 +174,7 @@ void FileOps::trash(const QStringList &urls)
     auto *job = KIO::trash(src);
     withUi(job);
     KIO::FileUndoManager::self()->recordJob(KIO::FileUndoManager::Trash, src, QUrl(QStringLiteral("trash:/")), job);
-    track(job, QStringLiteral("Moviendo a la papelera"),
-          countText(int(src.size()), QStringLiteral("Movido a la papelera"), QStringLiteral("elementos a la papelera")), true);
+    track(job, tr("Moving to the trash"), countText(int(src.size()), tr("Moved to the trash"), tr("%1 items moved to the trash")), true);
 }
 
 void FileOps::deleteForever(const QStringList &urls)
@@ -185,7 +184,7 @@ void FileOps::deleteForever(const QStringList &urls)
         return;
     auto *job = KIO::del(src);
     withUi(job);
-    track(job, QStringLiteral("Eliminando"), countText(int(src.size()), QStringLiteral("Eliminado"), QStringLiteral("elementos eliminados")), false);
+    track(job, tr("Deleting"), countText(int(src.size()), tr("Deleted"), tr("%1 items deleted")), false);
 }
 
 void FileOps::restore(const QStringList &trashUrls)
@@ -195,14 +194,14 @@ void FileOps::restore(const QStringList &trashUrls)
         return;
     auto *job = KIO::restoreFromTrash(src);
     withUi(job);
-    track(job, QStringLiteral("Restaurando"), countText(int(src.size()), QStringLiteral("Restaurado"), QStringLiteral("elementos restaurados")), false);
+    track(job, tr("Restoring"), countText(int(src.size()), tr("Restored"), tr("%1 items restored")), false);
 }
 
 void FileOps::emptyTrash()
 {
     auto *job = KIO::emptyTrash();
     withUi(job);
-    track(job, QStringLiteral("Vaciando la papelera"), QStringLiteral("Papelera vacía"), false);
+    track(job, tr("Emptying the trash"), tr("Trash emptied"), false);
 }
 
 void FileOps::mkdir(const QString &dirUrl, const QString &name)
@@ -219,7 +218,7 @@ void FileOps::mkdir(const QString &dirUrl, const QString &name)
         if (!job->error())
             Q_EMIT created(u.toString());
     });
-    track(job, QStringLiteral("Creando carpeta"), QStringLiteral("Carpeta creada"), true);
+    track(job, tr("Creating folder"), tr("Folder created"), true);
 }
 
 void FileOps::newFile(const QString &dirUrl, const QString &name)
@@ -236,7 +235,7 @@ void FileOps::newFile(const QString &dirUrl, const QString &name)
         if (!job->error())
             Q_EMIT created(u.toString());
     });
-    track(job, QStringLiteral("Creando archivo"), QStringLiteral("Archivo creado"), true);
+    track(job, tr("Creating file"), tr("File created"), true);
 }
 
 void FileOps::rename(const QString &url, const QString &newName)
@@ -254,7 +253,7 @@ void FileOps::rename(const QString &url, const QString &newName)
         if (!job->error())
             Q_EMIT created(dst.toString());
     });
-    track(job, QStringLiteral("Renombrando"), QStringLiteral("Renombrado"), true);
+    track(job, tr("Renaming"), tr("Renamed"), true);
 }
 
 // ---------------------------------------------------------------- clipboard & dnd
@@ -273,8 +272,8 @@ void FileOps::setClipboard(const QStringList &urls, bool cut)
         paths << (u.isLocalFile() ? u.toLocalFile() : u.toString());
     md->setText(paths.join(QLatin1Char('\n')));
     QApplication::clipboard()->setMimeData(md);
-    Q_EMIT notify(cut ? countText(int(list.size()), QStringLiteral("Cortado"), QStringLiteral("elementos cortados"))
-                      : countText(int(list.size()), QStringLiteral("Copiado al portapapeles"), QStringLiteral("elementos copiados")),
+    Q_EMIT notify(cut ? countText(int(list.size()), tr("Cut"), tr("%1 items cut"))
+                      : countText(int(list.size()), tr("Copied to the clipboard"), tr("%1 items copied")),
                   QStringLiteral("info"), false);
 }
 
@@ -304,7 +303,7 @@ void FileOps::paste(const QString &destDir)
         return;
     const QList<QUrl> urls = KUrlMimeData::urlsFromMimeData(md);
     if (urls.isEmpty()) {
-        Q_EMIT notify(QStringLiteral("No hay ficheros en el portapapeles"), QStringLiteral("info"), false);
+        Q_EMIT notify(tr("There are no files on the clipboard"), QStringLiteral("info"), false);
         return;
     }
     QStringList s;
@@ -321,7 +320,7 @@ void FileOps::paste(const QString &destDir)
 void FileOps::copyText(const QString &text)
 {
     QApplication::clipboard()->setText(text);
-    Q_EMIT notify(QStringLiteral("Copiado al portapapeles"), QStringLiteral("info"), false);
+    Q_EMIT notify(tr("Copied to the clipboard"), QStringLiteral("info"), false);
 }
 
 void FileOps::drop(const QStringList &urls, const QString &destDir, const QString &action)
@@ -362,16 +361,16 @@ static QString openErrorText(const QUrl &url, const QString &mimeType, const QSt
     const QString file = url.fileName().isEmpty() ? url.toDisplayString(QUrl::PreferLocalFile) : url.fileName();
     const KService::Ptr app = mimeType.isEmpty() ? KService::Ptr() : KApplicationTrader::preferredService(mimeType);
     if (!app)
-        return QStringLiteral("No se pudo abrir «%1»: %2").arg(file, kioError);
+        return FileOps::tr("Could not open «%1»: %2").arg(file, kioError);
     if (app->terminal()) {
         const KConfigGroup general(KSharedConfig::openConfig(), QStringLiteral("General"));
         const QString terminal = QProcess::splitCommand(general.readPathEntry("TerminalApplication", QStringLiteral("konsole"))).value(0);
         if (terminal.isEmpty() || QStandardPaths::findExecutable(terminal).isEmpty())
-            return QStringLiteral("No se pudo abrir «%1» con %2: se ejecuta en un terminal y «%3» no está instalado. "
-                                  "Define TerminalApplication en ~/.config/fuinrc o elige otra aplicación por defecto.")
-                .arg(file, app->name(), terminal.isEmpty() ? QStringLiteral("(ninguno)") : terminal);
+            return FileOps::tr("Could not open «%1» with %2: it runs in a terminal and «%3» is not installed. "
+                               "Set TerminalApplication in ~/.config/fuinrc or choose another default application.")
+                .arg(file, app->name(), terminal.isEmpty() ? FileOps::tr("(none)") : terminal);
     }
-    return QStringLiteral("No se pudo abrir «%1» con %2: %3").arg(file, app->name(), kioError);
+    return FileOps::tr("Could not open «%1» with %2: %3").arg(file, app->name(), kioError);
 }
 
 void FileOps::open(const QString &url)
@@ -418,7 +417,7 @@ void FileOps::openWith(const QString &storageId, const QStringList &urls)
 
 void FileOps::openWithDialog(const QStringList &urls)
 {
-    // An ApplicationLauncherJob without a service shows KIO's "Abrir con" dialog.
+    // An ApplicationLauncherJob without a service shows KIO's "Open With" dialog.
     auto *job = new KIO::ApplicationLauncherJob();
     job->setUrls(toUrls(urls));
     job->setUiDelegate(KIO::createDefaultJobUiDelegate(KJobUiDelegate::AutoHandlingEnabled, nullptr));
@@ -440,7 +439,7 @@ void FileOps::openTerminal(const QString &dir, const QString &command)
         d = QFileInfo(d).absolutePath();
     const QString term = Config::instance()->terminal();
     if (term.isEmpty()) {
-        Q_EMIT notify(QStringLiteral("No se encontró ningún terminal"), QStringLiteral("error"), false);
+        Q_EMIT notify(tr("No terminal found"), QStringLiteral("error"), false);
         return;
     }
     const QString bin = QFileInfo(term).fileName();
@@ -464,7 +463,7 @@ void FileOps::openTerminal(const QString &dir, const QString &command)
         args << QStringLiteral("sh") << QStringLiteral("-c") << command;
     }
     if (!QProcess::startDetached(term, args, d))
-        Q_EMIT notify(QStringLiteral("No se pudo abrir ") + term, QStringLiteral("error"), false);
+        Q_EMIT notify(tr("Could not open %1").arg(term), QStringLiteral("error"), false);
 }
 
 void FileOps::openInEditor(const QString &path)
@@ -473,7 +472,7 @@ void FileOps::openInEditor(const QString &path)
     const QString p = u.isLocalFile() ? u.toLocalFile() : path;
     const QString ed = Config::instance()->editor();
     if (ed.isEmpty() || !QProcess::startDetached(ed, {p}, QFileInfo(p).isDir() ? p : QFileInfo(p).absolutePath()))
-        Q_EMIT notify(QStringLiteral("No se encontró el editor"), QStringLiteral("error"), false);
+        Q_EMIT notify(tr("Editor not found"), QStringLiteral("error"), false);
 }
 
 void FileOps::openInFileManagerWindow(const QString &url)

@@ -141,63 +141,63 @@ FocusScope {
     let items = []
     if (onItem && sel.length) {
       if (fm.isTrash) {
-        items.push({ label: "Restaurar", icon: "restore_from_trash", run: () => FileOps.restore(urls) })
-        items.push({ label: "Eliminar definitivamente", icon: "delete_forever", danger: true, shortcut: "Supr", run: () => win.confirmDelete(urls) })
+        items.push({ label: qsTr("Restore"), icon: "restore_from_trash", run: () => FileOps.restore(urls) })
+        items.push({ label: qsTr("Delete permanently"), icon: "delete_forever", danger: true, shortcut: qsTr("Del"), run: () => win.confirmDelete(urls) })
         win.menu.openAt(mapToItem(win.contentItem, x, y).x, mapToItem(win.contentItem, x, y).y, items)
         return
       }
-      items.push({ label: one && one.isDir ? "Abrir" : "Abrir", icon: "open_in_new", shortcut: "Intro", run: () => openSelection() })
+      items.push({ label: qsTr("Open"), icon: "open_in_new", shortcut: qsTr("Enter"), run: () => openSelection() })
       if (one && !one.isDir) {
         const apps = FileOps.openWithApps(one.mimeType).map(a => ({ label: a.name, icon: "apps", run: () => FileOps.openWith(a.id, urls) }))
         apps.push({ sep: true })
-        apps.push({ label: "Otra aplicación…", icon: "more_horiz", run: () => FileOps.openWithDialog(urls) })
-        items.push({ label: "Abrir con", icon: "apps", sub: apps })
+        apps.push({ label: qsTr("Other application…"), icon: "more_horiz", run: () => FileOps.openWithDialog(urls) })
+        items.push({ label: qsTr("Open with"), icon: "apps", sub: apps })
       }
       if (one && one.isDir) {
-        items.push({ label: "Abrir en pestaña nueva", icon: "tab", run: () => win.newTab(one.url) })
-        items.push({ label: "Abrir en el otro panel", icon: "vertical_split", run: () => win.openInOtherPane(one.url) })
+        items.push({ label: qsTr("Open in new tab"), icon: "tab", run: () => win.newTab(one.url) })
+        items.push({ label: qsTr("Open in the other pane"), icon: "vertical_split", run: () => win.openInOtherPane(one.url) })
       }
       if (one && one.mimeType)
-        items.push({ label: "Cambiar app por defecto…", icon: "settings_applications", run: () => win.openSettings(one.mimeType) })
+        items.push({ label: qsTr("Change default app…"), icon: "settings_applications", run: () => win.openSettings(one.mimeType) })
       items.push({ sep: true })
-      items.push({ label: "Cortar", icon: "content_cut", shortcut: "Ctrl+X", run: () => copySel(true) })
-      items.push({ label: "Copiar", icon: "content_copy", shortcut: "Ctrl+C", run: () => copySel(false) })
-      items.push({ label: "Copiar ruta", icon: "link", shortcut: "Ctrl+Mayús+C", run: () => FileOps.copyText(fm.selectedPaths().join("\n")) })
+      items.push({ label: qsTr("Cut"), icon: "content_cut", shortcut: "Ctrl+X", run: () => copySel(true) })
+      items.push({ label: qsTr("Copy"), icon: "content_copy", shortcut: "Ctrl+C", run: () => copySel(false) })
+      items.push({ label: qsTr("Copy path"), icon: "link", shortcut: qsTr("Ctrl+Shift+C"), run: () => FileOps.copyText(fm.selectedPaths().join("\n")) })
       if (other) {
-        items.push({ label: "Copiar al otro panel", icon: "file_copy", shortcut: "F5", run: () => FileOps.copy(urls, other.model.url) })
-        items.push({ label: "Mover al otro panel", icon: "drive_file_move", shortcut: "F6", run: () => FileOps.move(urls, other.model.url) })
+        items.push({ label: qsTr("Copy to the other pane"), icon: "file_copy", shortcut: "F5", run: () => FileOps.copy(urls, other.model.url) })
+        items.push({ label: qsTr("Move to the other pane"), icon: "drive_file_move", shortcut: "F6", run: () => FileOps.move(urls, other.model.url) })
       }
       items.push({ sep: true })
-      items.push({ label: "Renombrar", icon: "edit", shortcut: "F2", enabled: !!one, run: () => renameSelected() })
-      items.push({ label: "Mover a la papelera", icon: "delete", shortcut: "Supr", run: () => trashSelected() })
-      items.push({ label: "Eliminar definitivamente", icon: "delete_forever", shortcut: "Mayús+Supr", danger: true, run: () => deleteSelected() })
+      items.push({ label: qsTr("Rename"), icon: "edit", shortcut: "F2", enabled: !!one, run: () => renameSelected() })
+      items.push({ label: qsTr("Move to trash"), icon: "delete", shortcut: qsTr("Del"), run: () => trashSelected() })
+      items.push({ label: qsTr("Delete permanently"), icon: "delete_forever", shortcut: qsTr("Shift+Del"), danger: true, run: () => deleteSelected() })
       items.push({ sep: true })
-      items.push({ label: "Contexto para IA", icon: "auto_awesome", shortcut: "Ctrl+Mayús+I", run: () => win.copyContext(urls) })
+      items.push({ label: qsTr("AI context"), icon: "auto_awesome", shortcut: qsTr("Ctrl+Shift+I"), run: () => win.copyContext(urls) })
       if (one && one.kind === "data") {
-        items.push({ label: "Copiar SQL (DuckDB)", icon: "database", run: () => FileOps.copyText(win.duckSql(one.path)) })
-        if (AppInfo.hasDuckdb) items.push({ label: "Abrir en DuckDB", icon: "terminal", run: () => win.openDuckdb(one.path) })
+        items.push({ label: qsTr("Copy SQL (DuckDB)"), icon: "database", run: () => FileOps.copyText(win.duckSql(one.path)) })
+        if (AppInfo.hasDuckdb) items.push({ label: qsTr("Open in DuckDB"), icon: "terminal", run: () => win.openDuckdb(one.path) })
       }
       const dir = one && one.isDir ? one.url : fm.url
-      items.push({ label: "Abrir terminal aquí", icon: "terminal", shortcut: "Ctrl+Alt+T", run: () => FileOps.openTerminal(dir) })
-      items.push({ label: "Abrir en " + G.appName(Config.editor), icon: "code", run: () => FileOps.openInEditor(one ? one.url : fm.url) })
+      items.push({ label: qsTr("Open terminal here"), icon: "terminal", shortcut: "Ctrl+Alt+T", run: () => FileOps.openTerminal(dir) })
+      items.push({ label: qsTr("Open in %1").arg(G.appName(Config.editor)), icon: "code", run: () => FileOps.openInEditor(one ? one.url : fm.url) })
       items.push({ sep: true })
-      items.push({ label: "Propiedades", icon: "info", shortcut: "Alt+Intro", run: () => win.showProps(sel) })
+      items.push({ label: qsTr("Properties"), icon: "info", shortcut: qsTr("Alt+Enter"), run: () => win.showProps(sel) })
     } else {
       fm.clearSelection()
       if (fm.isTrash) {
-        items.push({ label: "Vaciar papelera", icon: "delete_sweep", danger: true, run: () => win.confirmEmptyTrash() })
+        items.push({ label: qsTr("Empty trash"), icon: "delete_sweep", danger: true, run: () => win.confirmEmptyTrash() })
       } else {
-        items.push({ label: "Nueva carpeta", icon: "create_new_folder", shortcut: "Ctrl+Mayús+N", run: () => win.askNew(fm.url, true) })
-        items.push({ label: "Nuevo archivo", icon: "note_add", run: () => win.askNew(fm.url, false) })
-        items.push({ label: "Pegar", icon: "content_paste", shortcut: "Ctrl+V", enabled: FileOps.clipboardCount > 0, run: () => pasteHere() })
+        items.push({ label: qsTr("New folder"), icon: "create_new_folder", shortcut: qsTr("Ctrl+Shift+N"), run: () => win.askNew(fm.url, true) })
+        items.push({ label: qsTr("New file"), icon: "note_add", run: () => win.askNew(fm.url, false) })
+        items.push({ label: qsTr("Paste"), icon: "content_paste", shortcut: "Ctrl+V", enabled: FileOps.clipboardCount > 0, run: () => pasteHere() })
         items.push({ sep: true })
-        items.push({ label: "Seleccionar todo", icon: "select_all", shortcut: "Ctrl+A", run: () => fm.selectAll() })
-        items.push({ label: Config.showHidden ? "Ocultar ficheros ocultos" : "Mostrar ficheros ocultos", icon: "visibility", shortcut: "Ctrl+H", run: () => Config.showHidden = !Config.showHidden })
+        items.push({ label: qsTr("Select all"), icon: "select_all", shortcut: "Ctrl+A", run: () => fm.selectAll() })
+        items.push({ label: Config.showHidden ? qsTr("Hide hidden files") : qsTr("Show hidden files"), icon: "visibility", shortcut: "Ctrl+H", run: () => Config.showHidden = !Config.showHidden })
         items.push({ sep: true })
-        items.push({ label: "Contexto de esta carpeta para IA", icon: "auto_awesome", run: () => win.copyContext([fm.url]) })
-        items.push({ label: "Abrir terminal aquí", icon: "terminal", shortcut: "Ctrl+Alt+T", run: () => FileOps.openTerminal(fm.url) })
-        items.push({ label: "Abrir en " + G.appName(Config.editor), icon: "code", run: () => FileOps.openInEditor(fm.url) })
-        items.push({ label: "Copiar ruta", icon: "link", run: () => FileOps.copyText(fm.localPath || fm.url) })
+        items.push({ label: qsTr("AI context for this folder"), icon: "auto_awesome", run: () => win.copyContext([fm.url]) })
+        items.push({ label: qsTr("Open terminal here"), icon: "terminal", shortcut: "Ctrl+Alt+T", run: () => FileOps.openTerminal(fm.url) })
+        items.push({ label: qsTr("Open in %1").arg(G.appName(Config.editor)), icon: "code", run: () => FileOps.openInEditor(fm.url) })
+        items.push({ label: qsTr("Copy path"), icon: "link", run: () => FileOps.copyText(fm.localPath || fm.url) })
       }
     }
     const p = mapToItem(win.contentItem, x, y)
@@ -318,10 +318,10 @@ FocusScope {
       Row {
         x: 10
         Item { width: 30; height: 30 }
-        H { label: "Nombre"; field: "name"; w: pane.colName }
-        H { label: "Tamaño"; field: "size"; w: pane.colSize; alignEnd: true }
-        H { label: "Modificado"; field: "time"; w: pane.colDate }
-        H { label: "Tipo"; field: "type"; w: pane.colType }
+        H { label: qsTr("Name"); field: "name"; w: pane.colName }
+        H { label: qsTr("Size"); field: "size"; w: pane.colSize; alignEnd: true }
+        H { label: qsTr("Modified"); field: "time"; w: pane.colDate }
+        H { label: qsTr("Type"); field: "type"; w: pane.colType }
       }
       Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Qt.alpha(Theme.outlineVariant, 0.6) }
     }
@@ -346,15 +346,15 @@ FocusScope {
     error: fm.error !== ""
     icon: fm.error !== "" ? "error" : fm.searching ? (fm.searchBusy ? "travel_explore" : "search_off") : fm.filter !== "" ? "filter_alt_off" : fm.isTrash ? "delete" : "folder_open"
     emblem: fm.isTrash ? "tomoe" : fm.error !== "" ? "tomoe" : "leaf"
-    title: fm.error !== "" ? "No se puede abrir"
-         : fm.searching ? (fm.searchBusy ? "Buscando…" : "Sin resultados para «" + fm.searchQuery + "»")
-         : fm.filter !== "" ? "Nada coincide con «" + fm.filter + "»"
-         : fm.isTrash ? "La papelera está vacía" : "Carpeta vacía"
+    title: fm.error !== "" ? qsTr("Cannot open")
+         : fm.searching ? (fm.searchBusy ? qsTr("Searching…") : qsTr("No results for «%1»").arg(fm.searchQuery))
+         : fm.filter !== "" ? qsTr("Nothing matches «%1»").arg(fm.filter)
+         : fm.isTrash ? qsTr("The trash is empty") : qsTr("Empty folder")
     hint: fm.error !== "" ? fm.error
-        : fm.searching ? (fm.searchBusy ? "" : "La búsqueda incluye subcarpetas y respeta .gitignore")
-        : fm.filter !== "" ? "Retroceso borra el filtro · Esc lo quita"
-        : fm.isTrash ? "Lo que borres con Supr aparecerá aquí (y se puede deshacer)"
-        : "Arrastra ficheros aquí o pulsa Ctrl+Mayús+N para crear una carpeta"
+        : fm.searching ? (fm.searchBusy ? "" : qsTr("The search includes subfolders and respects .gitignore"))
+        : fm.filter !== "" ? qsTr("Backspace edits the filter · Esc clears it")
+        : fm.isTrash ? qsTr("What you delete with Del shows up here (and can be undone)")
+        : qsTr("Drag files here or press Ctrl+Shift+N to create a folder")
   }
   Rectangle {
     visible: fm.filter !== ""
@@ -364,7 +364,7 @@ FocusScope {
     Row { id: frow; anchors.centerIn: parent; spacing: 8
       Icon { text: "filter_alt"; size: 12; color: Theme.textOnPrimaryContainer; fill: 1; anchors.verticalCenter: parent.verticalCenter }
       Txt { text: fm.filter; mono: true; font.pointSize: 10; color: Theme.textOnPrimaryContainer; anchors.verticalCenter: parent.verticalCenter }
-      Txt { text: fm.count + " de " + fm.totalCount; font.pointSize: 9; color: Theme.textOnPrimaryContainer; opacity: 0.7; anchors.verticalCenter: parent.verticalCenter }
+      Txt { text: qsTr("%1 of %2").arg(fm.count).arg(fm.totalCount); font.pointSize: 9; color: Theme.textOnPrimaryContainer; opacity: 0.7; anchors.verticalCenter: parent.verticalCenter }
       IconBtn { icon: "close"; size: 20; fg: Theme.textOnPrimaryContainer; onClicked: fm.filter = ""; anchors.verticalCenter: parent.verticalCenter }
     }
   }

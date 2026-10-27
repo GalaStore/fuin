@@ -105,18 +105,19 @@ ApplicationWindow {
   function confirmDelete(urls) { delDlg.urls = urls; delDlg.open() }
   function confirmEmptyTrash() { emptyDlg.open() }
   function askRename(url, name) { nameDlg.mode = "rename"; nameDlg.target = url; nameDlg.initial = name; nameDlg.open() }
-  function askNew(dirUrl, folder) { nameDlg.mode = folder ? "folder" : "file"; nameDlg.target = dirUrl; nameDlg.initial = folder ? "Nueva carpeta" : "nuevo.txt"; nameDlg.open() }
+  function askNew(dirUrl, folder) { nameDlg.mode = folder ? "folder" : "file"; nameDlg.target = dirUrl; nameDlg.initial = folder ? qsTr("New folder") : qsTr("new.txt"); nameDlg.open() }
   function showProps(items) { propsDlg.items = items; propsDlg.open() }
-  // Settings view; with a MIME type it opens "Aplicaciones por defecto" focused on that type.
+  // Settings view; with a MIME type it opens "Default applications" focused on that type.
   function openSettings(mime) { settingsDlg.show(mime || "") }
 
   ContextPack {
     id: packer
-    onCopied: s => appWin.toast("Contexto copiado · ≈ " + G.count(s.tokens) + " tokens · " + s.files + " ficheros" + (s.secretsBlocked ? " · " + s.secretsBlocked + (s.secretsBlocked === 1 ? " secreto bloqueado" : " secretos bloqueados") : ""), "ok")
+    onCopied: s => appWin.toast(qsTr("Context copied · ≈ %1 tokens · %2 files").arg(G.count(s.tokens)).arg(s.files)
+                                 + (!s.secretsBlocked ? "" : " · " + (s.secretsBlocked === 1 ? qsTr("1 secret blocked") : qsTr("%1 secrets blocked").arg(s.secretsBlocked))), "ok")
   }
   Connections {
     target: FileOps
-    function onNotify(text, kind, undoable) { toaster.show(text, kind, undoable ? "Deshacer" : "", undoable ? () => FileOps.undo() : null) }
+    function onNotify(text, kind, undoable) { toaster.show(text, kind, undoable ? qsTr("Undo") : "", undoable ? () => FileOps.undo() : null) }
     function onCreated(url) { if (appWin.active && appWin.pane) appWin.pane.model.selectUrl(url) }
   }
 
@@ -173,7 +174,7 @@ ApplicationWindow {
           IconBtn { anchors.right: parent.right; anchors.rightMargin: 3; anchors.verticalCenter: parent.verticalCenter; size: 24; icon: "close"; onClicked: appWin.closeTab(index) }
         }
       }
-      IconBtn { size: 30; icon: "add"; tip: "Pestaña nueva (Ctrl+T)"; onClicked: appWin.newTab(); anchors.verticalCenter: parent.verticalCenter }
+      IconBtn { size: 30; icon: "add"; tip: qsTr("New tab (Ctrl+T)"); onClicked: appWin.newTab(); anchors.verticalCenter: parent.verticalCenter }
     }
 
     // toolbar
@@ -185,9 +186,9 @@ ApplicationWindow {
       Row {
         id: nav
         spacing: 2; anchors.verticalCenter: parent.verticalCenter
-        IconBtn { icon: "arrow_back"; tip: "Atrás (Alt+←)"; enabled2: pane && pane.model.canBack; onClicked: pane.model.back() }
-        IconBtn { icon: "arrow_forward"; tip: "Adelante (Alt+→)"; enabled2: pane && pane.model.canForward; onClicked: pane.model.forward() }
-        IconBtn { icon: "arrow_upward"; tip: "Subir (Alt+↑)"; enabled2: pane && pane.model.canUp; onClicked: pane.model.up() }
+        IconBtn { icon: "arrow_back"; tip: qsTr("Back (Alt+←)"); enabled2: pane && pane.model.canBack; onClicked: pane.model.back() }
+        IconBtn { icon: "arrow_forward"; tip: qsTr("Forward (Alt+→)"); enabled2: pane && pane.model.canForward; onClicked: pane.model.forward() }
+        IconBtn { icon: "arrow_upward"; tip: qsTr("Up (Alt+↑)"); enabled2: pane && pane.model.canUp; onClicked: pane.model.up() }
       }
       PathBar { id: pathBar; pane: appWin.pane; anchors.left: nav.right; anchors.leftMargin: 8; anchors.right: search.left; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter }
       Field {
@@ -196,7 +197,7 @@ ApplicationWindow {
         Behavior on width { Anim {} }
         anchors.right: tools.left; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter
         icon: pane && pane.model.searchBusy ? "progress_activity" : "search"
-        placeholderText: "Buscar en " + (pane ? pane.model.title : "") + "  (Ctrl+F)"
+        placeholderText: qsTr("Search in %1  (Ctrl+F)").arg(pane ? pane.model.title : "")
         font.pointSize: 10
         onTextEdited: searchDebounce.restart()
         Timer { id: searchDebounce; interval: 220; onTriggered: if (appWin.pane) appWin.pane.model.searchQuery = search.text }
@@ -212,16 +213,16 @@ ApplicationWindow {
         Rectangle {
           height: 36; radius: 18; width: vrow.width + 8; color: Theme.containerHigh; anchors.verticalCenter: parent.verticalCenter
           Row { id: vrow; x: 4; anchors.verticalCenter: parent.verticalCenter; spacing: 0
-            IconBtn { size: 30; icon: "grid_view"; tip: "Cuadrícula (Ctrl+1)"; checked: Config.viewMode === "grid"; onClicked: Config.viewMode = "grid" }
-            IconBtn { size: 30; icon: "view_list"; tip: "Lista (Ctrl+2)"; checked: Config.viewMode === "list"; onClicked: Config.viewMode = "list" }
-            IconBtn { size: 30; icon: "view_column"; tip: "Columnas (Ctrl+3)"; checked: Config.viewMode === "columns"; onClicked: Config.viewMode = "columns" } }
+            IconBtn { size: 30; icon: "grid_view"; tip: qsTr("Grid (Ctrl+1)"); checked: Config.viewMode === "grid"; onClicked: Config.viewMode = "grid" }
+            IconBtn { size: 30; icon: "view_list"; tip: qsTr("List (Ctrl+2)"); checked: Config.viewMode === "list"; onClicked: Config.viewMode = "list" }
+            IconBtn { size: 30; icon: "view_column"; tip: qsTr("Columns (Ctrl+3)"); checked: Config.viewMode === "columns"; onClicked: Config.viewMode = "columns" } }
         }
         Item { width: 6; height: 1 }
-        IconBtn { icon: Config.showHidden ? "visibility" : "visibility_off"; tip: "Ficheros ocultos (Ctrl+H)"; checked: Config.showHidden; onClicked: Config.showHidden = !Config.showHidden }
-        IconBtn { icon: "vertical_split"; tip: "Vista dividida (F3)"; checked: tab && tab.split; onClicked: tab.toggleSplit() }
-        IconBtn { icon: "right_panel_open"; tip: "Vista previa (F9 · Espacio)"; checked: appWin.rightPanel === "preview"; onClicked: appWin.toggleRightPanel("preview") }
-        IconBtn { icon: "auto_awesome"; tip: "IA y agentes (Ctrl+I)"; checked: appWin.rightPanel === "ai"; onClicked: appWin.toggleRightPanel("ai") }
-        IconBtn { icon: "more_vert"; tip: "Más"; onClicked: { const p = mapToItem(appWin.contentItem, 0, height); ctx.openAt(p.x - 200, p.y, appWin.moreItems()) } }
+        IconBtn { icon: Config.showHidden ? "visibility" : "visibility_off"; tip: qsTr("Hidden files (Ctrl+H)"); checked: Config.showHidden; onClicked: Config.showHidden = !Config.showHidden }
+        IconBtn { icon: "vertical_split"; tip: qsTr("Split view (F3)"); checked: tab && tab.split; onClicked: tab.toggleSplit() }
+        IconBtn { icon: "right_panel_open"; tip: qsTr("Preview (F9 · Space)"); checked: appWin.rightPanel === "preview"; onClicked: appWin.toggleRightPanel("preview") }
+        IconBtn { icon: "auto_awesome"; tip: qsTr("AI and agents (Ctrl+I)"); checked: appWin.rightPanel === "ai"; onClicked: appWin.toggleRightPanel("ai") }
+        IconBtn { icon: "more_vert"; tip: qsTr("More"); onClicked: { const p = mapToItem(appWin.contentItem, 0, height); ctx.openAt(p.x - 200, p.y, appWin.moreItems()) } }
       }
     }
 
@@ -245,7 +246,7 @@ ApplicationWindow {
       Segmented {
         id: rseg
         x: 12; y: 10
-        options: [{ value: "preview", label: "Vista previa", icon: "visibility" }, { value: "ai", label: "IA", icon: "auto_awesome" }]
+        options: [{ value: "preview", label: qsTr("Preview"), icon: "visibility" }, { value: "ai", label: qsTr("AI"), icon: "auto_awesome" }]
         value: appWin.rightPanel
         onPicked: v => appWin.rightPanel = v
       }
@@ -268,41 +269,43 @@ ApplicationWindow {
       x: 18; anchors.verticalCenter: parent.verticalCenter; spacing: 14
       Txt {
         dim: true; font.pointSize: 8.5; anchors.verticalCenter: parent.verticalCenter
-        text: !pane ? "" : pane.model.loading ? "Cargando…" :
-              (pane.model.searching ? G.count(pane.model.count) + " resultados" : G.count(pane.model.count) + " elementos" + (pane.model.filter ? " (filtro «" + pane.model.filter + "»)" : ""))
-              + (pane.model.selectionCount > 0 ? "  ·  " + pane.model.selectionCount + " seleccionados" + (pane.model.selectionSize > 0 ? " · " + G.size(pane.model.selectionSize) : "") : "")
+        text: !pane ? "" : pane.model.loading ? qsTr("Loading…") :
+              (pane.model.searching ? qsTr("%1 results").arg(G.count(pane.model.count))
+               : pane.model.filter ? qsTr("%1 items (filter «%2»)").arg(G.count(pane.model.count)).arg(pane.model.filter)
+               : qsTr("%1 items").arg(G.count(pane.model.count)))
+              + (pane.model.selectionCount > 0 ? "  ·  " + qsTr("%1 selected").arg(pane.model.selectionCount) + (pane.model.selectionSize > 0 ? " · " + G.size(pane.model.selectionSize) : "") : "")
       }
       Txt { visible: FileOps.clipboardCount > 0; dim: true; font.pointSize: 8.5; anchors.verticalCenter: parent.verticalCenter
-            text: (FileOps.clipboardCut ? "✂ " : "⧉ ") + FileOps.clipboardCount + " en el portapapeles" }
-      Txt { visible: Ipc.pendingConfirmations > 0; font.pointSize: 8.5; color: Theme.tertiary; anchors.verticalCenter: parent.verticalCenter; text: "Un agente espera confirmación" }
+            text: (FileOps.clipboardCut ? "✂ " : "⧉ ") + qsTr("%1 on the clipboard").arg(FileOps.clipboardCount) }
+      Txt { visible: Ipc.pendingConfirmations > 0; font.pointSize: 8.5; color: Theme.tertiary; anchors.verticalCenter: parent.verticalCenter; text: qsTr("An agent is waiting for confirmation") }
     }
     Row {
       anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 10
       visible: FileOps.busy
-      Txt { text: FileOps.opLabel + (FileOps.speed ? " · " + FileOps.speed : "") + (FileOps.jobCount > 1 ? " · " + FileOps.jobCount + " tareas" : ""); font.pointSize: 8.5; anchors.verticalCenter: parent.verticalCenter }
+      Txt { text: FileOps.opLabel + (FileOps.speed ? " · " + FileOps.speed : "") + (FileOps.jobCount > 1 ? " · " + qsTr("%1 tasks").arg(FileOps.jobCount) : ""); font.pointSize: 8.5; anchors.verticalCenter: parent.verticalCenter }
       Rectangle {
         width: 180; height: 6; radius: 3; color: Theme.containerHighest; anchors.verticalCenter: parent.verticalCenter
         Rectangle { width: parent.width * Math.max(0.04, FileOps.progress); height: parent.height; radius: 3; color: Theme.primary; Behavior on width { Anim {} } }
       }
-      IconBtn { size: 24; icon: "close"; tip: "Cancelar"; onClicked: FileOps.cancelAll() }
+      IconBtn { size: 24; icon: "close"; tip: qsTr("Cancel"); onClicked: FileOps.cancelAll() }
     }
     Txt { visible: !FileOps.busy; anchors.right: parent.right; anchors.rightMargin: 18; anchors.verticalCenter: parent.verticalCenter; dim: true; font.pointSize: 8
-          text: pane && pane.model.repoBranch ? " " + pane.model.repoBranch + (pane.model.repoDirty > 0 ? " · " + pane.model.repoDirty + " cambios" : " · limpio") : "" }
+          text: pane && pane.model.repoBranch ? " " + pane.model.repoBranch + " · " + (pane.model.repoDirty > 0 ? qsTr("%1 changes").arg(pane.model.repoDirty) : qsTr("clean")) : "" }
   }
 
   function moreItems() {
     return [
-      { label: "Ventana nueva", icon: "open_in_new", run: () => FileOps.openInFileManagerWindow(pane.model.url) },
-      { label: "Pestaña nueva", icon: "tab", shortcut: "Ctrl+T", run: () => newTab() },
+      { label: qsTr("New window"), icon: "open_in_new", run: () => FileOps.openInFileManagerWindow(pane.model.url) },
+      { label: qsTr("New tab"), icon: "tab", shortcut: "Ctrl+T", run: () => newTab() },
       { sep: true },
-      { label: "Abrir terminal aquí", icon: "terminal", shortcut: "Ctrl+Alt+T", enabled: pane.model.isLocal, run: () => FileOps.openTerminal(pane.model.localPath) },
-      { label: "Abrir en " + G.appName(Config.editor), icon: "code", enabled: pane.model.isLocal, run: () => FileOps.openInEditor(pane.model.localPath) },
-      { label: "Copiar ruta", icon: "content_copy", run: () => FileOps.copyText(pane.model.isLocal ? pane.model.localPath : pane.model.url) },
+      { label: qsTr("Open terminal here"), icon: "terminal", shortcut: "Ctrl+Alt+T", enabled: pane.model.isLocal, run: () => FileOps.openTerminal(pane.model.localPath) },
+      { label: qsTr("Open in %1").arg(G.appName(Config.editor)), icon: "code", enabled: pane.model.isLocal, run: () => FileOps.openInEditor(pane.model.localPath) },
+      { label: qsTr("Copy path"), icon: "content_copy", run: () => FileOps.copyText(pane.model.isLocal ? pane.model.localPath : pane.model.url) },
       { sep: true },
-      { label: FileOps.canUndo ? "Deshacer: " + FileOps.undoText : "Nada que deshacer", icon: "undo", enabled: FileOps.canUndo, shortcut: "Ctrl+Z", run: () => FileOps.undo() },
-      { label: "Atajos de teclado", icon: "keyboard", shortcut: "F1", run: () => keysDlg.open() },
-      { label: "Ajustes…", icon: "settings", shortcut: "Ctrl+,", run: () => openSettings("") },
-      { label: "Acerca de Fūin " + AppInfo.version, icon: "info", run: () => aboutDlg.open() }
+      { label: FileOps.canUndo ? qsTr("Undo: %1").arg(FileOps.undoText) : qsTr("Nothing to undo"), icon: "undo", enabled: FileOps.canUndo, shortcut: "Ctrl+Z", run: () => FileOps.undo() },
+      { label: qsTr("Keyboard shortcuts"), icon: "keyboard", shortcut: "F1", run: () => keysDlg.open() },
+      { label: qsTr("Settings…"), icon: "settings", shortcut: "Ctrl+,", run: () => openSettings("") },
+      { label: qsTr("About Fūin %1").arg(AppInfo.version), icon: "info", run: () => aboutDlg.open() }
     ]
   }
 
@@ -314,12 +317,12 @@ ApplicationWindow {
   Modal {
     id: delDlg
     property var urls: []
-    title: "¿Eliminar definitivamente?"; icon: "delete_forever"
-    Txt { width: parent.width; wrapMode: Text.Wrap; text: delDlg.urls.length === 1 ? "«" + decodeURIComponent(String(delDlg.urls[0]).split("/").pop()) + "» se borrará sin pasar por la papelera. No se puede deshacer."
-                                                                              : delDlg.urls.length + " elementos se borrarán sin pasar por la papelera. No se puede deshacer." }
+    title: qsTr("Delete permanently?"); icon: "delete_forever"
+    Txt { width: parent.width; wrapMode: Text.Wrap; text: delDlg.urls.length === 1 ? qsTr("«%1» will be deleted without going through the trash. This cannot be undone.").arg(decodeURIComponent(String(delDlg.urls[0]).split("/").pop()))
+                                                                              : qsTr("%1 items will be deleted without going through the trash. This cannot be undone.").arg(delDlg.urls.length) }
     buttons: [
-      Btn { kind: "text"; text: "Cancelar"; onClicked: delDlg.close() },
-      Btn { kind: "danger"; icon: "delete_forever"; text: "Eliminar"; onClicked: { FileOps.deleteForever(delDlg.urls); delDlg.close() } }
+      Btn { kind: "text"; text: qsTr("Cancel"); onClicked: delDlg.close() },
+      Btn { kind: "danger"; icon: "delete_forever"; text: qsTr("Delete"); onClicked: { FileOps.deleteForever(delDlg.urls); delDlg.close() } }
     ]
     onOpened: delBtnFocus.forceActiveFocus()
     Item { id: delBtnFocus; focus: true; Keys.onReturnPressed: { FileOps.deleteForever(delDlg.urls); delDlg.close() } }
@@ -327,11 +330,11 @@ ApplicationWindow {
   }
   Modal {
     id: emptyDlg
-    title: "¿Vaciar la papelera?"; icon: "delete_sweep"
-    Txt { width: parent.width; wrapMode: Text.Wrap; text: "Todos los elementos de la papelera se borrarán para siempre." }
+    title: qsTr("Empty the trash?"); icon: "delete_sweep"
+    Txt { width: parent.width; wrapMode: Text.Wrap; text: qsTr("All items in the trash will be deleted forever.") }
     buttons: [
-      Btn { kind: "text"; text: "Cancelar"; onClicked: emptyDlg.close() },
-      Btn { kind: "danger"; icon: "delete_sweep"; text: "Vaciar"; onClicked: { FileOps.emptyTrash(); emptyDlg.close() } }
+      Btn { kind: "text"; text: qsTr("Cancel"); onClicked: emptyDlg.close() },
+      Btn { kind: "danger"; icon: "delete_sweep"; text: qsTr("Empty"); onClicked: { FileOps.emptyTrash(); emptyDlg.close() } }
     ]
   }
   Modal {
@@ -339,7 +342,7 @@ ApplicationWindow {
     property string mode: "rename"
     property string target: ""
     property string initial: ""
-    title: mode === "rename" ? "Renombrar" : mode === "folder" ? "Nueva carpeta" : "Nuevo archivo"
+    title: mode === "rename" ? qsTr("Rename") : mode === "folder" ? qsTr("New folder") : qsTr("New file")
     icon: mode === "rename" ? "edit" : mode === "folder" ? "create_new_folder" : "note_add"
     Field {
       id: nameField
@@ -347,10 +350,10 @@ ApplicationWindow {
       Keys.onReturnPressed: nameDlg.accept()
       Keys.onEnterPressed: nameDlg.accept()
     }
-    Txt { visible: nameField.text.indexOf("/") >= 0; text: "El nombre no puede contener «/»"; color: Theme.error; font.pointSize: 9 }
+    Txt { visible: nameField.text.indexOf("/") >= 0; text: qsTr("The name cannot contain «/»"); color: Theme.error; font.pointSize: 9 }
     buttons: [
-      Btn { kind: "text"; text: "Cancelar"; onClicked: nameDlg.close() },
-      Btn { kind: "filled"; text: nameDlg.mode === "rename" ? "Renombrar" : "Crear"; enabled2: nameField.text.trim() !== "" && nameField.text.indexOf("/") < 0; onClicked: nameDlg.accept() }
+      Btn { kind: "text"; text: qsTr("Cancel"); onClicked: nameDlg.close() },
+      Btn { kind: "filled"; text: nameDlg.mode === "rename" ? qsTr("Rename") : qsTr("Create"); enabled2: nameField.text.trim() !== "" && nameField.text.indexOf("/") < 0; onClicked: nameDlg.accept() }
     ]
     function accept() {
       const n = nameField.text.trim()
@@ -371,16 +374,16 @@ ApplicationWindow {
     id: propsDlg
     property var items: []
     readonly property var one: items.length === 1 ? items[0] : null
-    title: one ? one.name : items.length + " elementos"; icon: "info"
+    title: one ? one.name : qsTr("%1 items").arg(items.length); icon: "info"
     Repeater {
       model: propsDlg.one ? [
-        ["Tipo", propsDlg.one.mimeComment + "  (" + propsDlg.one.mimeType + ")"],
-        ["Ubicación", propsDlg.one.location],
-        ["Tamaño", propsDlg.one.isDir ? "—" : G.size(propsDlg.one.size) + "  (" + G.count(propsDlg.one.size) + " bytes)"],
-        ["Modificado", new Date(propsDlg.one.mtime).toLocaleString(Qt.locale("es_ES"))],
-        ["Enlace", propsDlg.one.isLink ? "Sí" : "No"],
-        ["Git", propsDlg.one.gitBranch ? propsDlg.one.gitBranch + (propsDlg.one.gitDirty ? " · " + propsDlg.one.gitDirty + " cambios" : "") : "—"]
-      ] : [["Total", G.size(propsDlg.items.reduce((a, b) => a + (b.isDir ? 0 : b.size), 0)) + " (sin contar carpetas)"]]
+        [qsTr("Type"), propsDlg.one.mimeComment + "  (" + propsDlg.one.mimeType + ")"],
+        [qsTr("Location"), propsDlg.one.location],
+        [qsTr("Size"), propsDlg.one.isDir ? "—" : qsTr("%1  (%2 bytes)").arg(G.size(propsDlg.one.size)).arg(G.count(propsDlg.one.size))],
+        [qsTr("Modified"), new Date(propsDlg.one.mtime).toLocaleString(Qt.locale())],
+        [qsTr("Link"), propsDlg.one.isLink ? qsTr("Yes") : qsTr("No")],
+        ["Git", propsDlg.one.gitBranch ? propsDlg.one.gitBranch + (propsDlg.one.gitDirty ? " · " + qsTr("%1 changes").arg(propsDlg.one.gitDirty) : "") : "—"]
+      ] : [[qsTr("Total"), qsTr("%1 (not counting folders)").arg(G.size(propsDlg.items.reduce((a, b) => a + (b.isDir ? 0 : b.size), 0)))]]
       Row {
         required property var modelData
         spacing: 12
@@ -388,51 +391,51 @@ ApplicationWindow {
         Txt { width: propsDlg.width - 160; text: modelData[1]; font.pointSize: 9.5; wrapMode: Text.WrapAnywhere }
       }
     }
-    buttons: [ Btn { kind: "tonal"; text: "Cerrar"; onClicked: propsDlg.close() } ]
+    buttons: [ Btn { kind: "tonal"; text: qsTr("Close"); onClicked: propsDlg.close() } ]
   }
   Modal {
     id: agentDlg
     property string reqId: ""
     property string detail: ""
     property string client: ""
-    title: "Un agente quiere hacer un cambio"; icon: "smart_toy"
+    title: qsTr("An agent wants to make a change"); icon: "smart_toy"
     closePolicy: Popup.NoAutoClose
-    Txt { width: parent.width; wrapMode: Text.Wrap; text: (agentDlg.client || "Un agente MCP") + " solicita:"; dim: true }
+    Txt { width: parent.width; wrapMode: Text.Wrap; text: qsTr("%1 requests:").arg(agentDlg.client || qsTr("An MCP agent")); dim: true }
     Rectangle { width: parent.width; height: adt.implicitHeight + 20; radius: 12; color: Theme.containerLowest
       Txt { id: adt; x: 12; y: 10; width: parent.width - 24; text: agentDlg.detail; mono: true; font.pointSize: 9; wrapMode: Text.WrapAnywhere } }
-    Txt { width: parent.width; wrapMode: Text.Wrap; font.pointSize: 9; dim: true; text: "Podrás deshacerlo con Ctrl+Z." }
+    Txt { width: parent.width; wrapMode: Text.Wrap; font.pointSize: 9; dim: true; text: qsTr("You can undo it with Ctrl+Z.") }
     buttons: [
-      Btn { kind: "text"; text: "Rechazar"; onClicked: { Ipc.resolve(agentDlg.reqId, false); agentDlg.close() } },
-      Btn { kind: "filled"; icon: "check"; text: "Permitir"; onClicked: { Ipc.resolve(agentDlg.reqId, true); agentDlg.close() } }
+      Btn { kind: "text"; text: qsTr("Reject"); onClicked: { Ipc.resolve(agentDlg.reqId, false); agentDlg.close() } },
+      Btn { kind: "filled"; icon: "check"; text: qsTr("Allow"); onClicked: { Ipc.resolve(agentDlg.reqId, true); agentDlg.close() } }
     ]
   }
   function askAgent(id, title, detail, client) {
-    agentDlg.reqId = id; agentDlg.title = title || "Un agente quiere hacer un cambio"; agentDlg.detail = detail; agentDlg.client = client
+    agentDlg.reqId = id; agentDlg.title = title ? qsTranslate("McpServer", title) : qsTr("An agent wants to make a change"); agentDlg.detail = detail; agentDlg.client = client
     agentDlg.open(); appWin.raise(); appWin.requestActivate()
   }
   Modal {
     id: keysDlg
-    title: "Atajos de teclado"; icon: "keyboard"
+    title: qsTr("Keyboard shortcuts"); icon: "keyboard"
     Grid {
       columns: 2; columnSpacing: 18; rowSpacing: 5
       Repeater {
-        model: ["Ctrl+L", "Editar ruta", "Ctrl+F", "Buscar (recursivo)", "Escribir", "Filtrar al vuelo", "Ctrl+T / Ctrl+W", "Abrir / cerrar pestaña",
-                "Ctrl+Tab", "Siguiente pestaña", "F3", "Vista dividida", "F5 / F6", "Copiar / mover al otro panel", "F9 · Espacio", "Vista previa",
-                "Ctrl+I", "Panel IA", "Ctrl+Mayús+I", "Copiar contexto para IA", "F2", "Renombrar", "Supr", "Mover a la papelera",
-                "Mayús+Supr", "Eliminar definitivamente", "Ctrl+Z", "Deshacer", "Ctrl+H", "Ocultos", "Ctrl+1/2/3", "Cuadrícula / lista / columnas",
-                "Ctrl+Mayús+N", "Nueva carpeta", "Ctrl+Mayús+C", "Copiar ruta", "Ctrl+Alt+T", "Terminal aquí", "Alt+←/→/↑", "Atrás / adelante / subir", "Ctrl+,", "Ajustes"]
+        model: ["Ctrl+L", qsTr("Edit path"), "Ctrl+F", qsTr("Search (recursive)"), qsTr("Typing"), qsTr("Filter as you type"), "Ctrl+T / Ctrl+W", qsTr("Open / close tab"),
+                "Ctrl+Tab", qsTr("Next tab"), "F3", qsTr("Split view"), "F5 / F6", qsTr("Copy / move to the other pane"), qsTr("F9 · Space"), qsTr("Preview"),
+                "Ctrl+I", qsTr("AI panel"), qsTr("Ctrl+Shift+I"), qsTr("Copy AI context"), "F2", qsTr("Rename"), qsTr("Del"), qsTr("Move to trash"),
+                qsTr("Shift+Del"), qsTr("Delete permanently"), "Ctrl+Z", qsTr("Undo"), "Ctrl+H", qsTr("Hidden files"), "Ctrl+1/2/3", qsTr("Grid / list / columns"),
+                qsTr("Ctrl+Shift+N"), qsTr("New folder"), qsTr("Ctrl+Shift+C"), qsTr("Copy path"), "Ctrl+Alt+T", qsTr("Terminal here"), "Alt+←/→/↑", qsTr("Back / forward / up"), "Ctrl+,", qsTr("Settings")]
         Txt { required property string modelData; required property int index; text: modelData; mono: index % 2 === 0; font.pointSize: 9; color: index % 2 === 0 ? Theme.primary : Theme.textMain }
       }
     }
-    buttons: [ Btn { kind: "tonal"; text: "Cerrar"; onClicked: keysDlg.close() } ]
+    buttons: [ Btn { kind: "tonal"; text: qsTr("Close"); onClicked: keysDlg.close() } ]
   }
   Modal {
     id: aboutDlg
     title: "Fūin " + AppInfo.version; icon: "folder_special"
-    Txt { width: parent.width; wrapMode: Text.Wrap; text: "Gestor de ficheros nativo (Qt 6 + KDE Frameworks / KIO) con vista previa de datos y modelos, contexto para IA y servidor MCP. Licencia MIT." }
+    Txt { width: parent.width; wrapMode: Text.Wrap; text: qsTr("Native file manager (Qt 6 + KDE Frameworks / KIO) with data and model previews, AI context and an MCP server. MIT licence.") }
     Txt { width: parent.width; wrapMode: Text.Wrap; dim: true; font.pointSize: 9
-          text: "Colores: " + (Theme.colorsSource || "tema integrado") + "\nAjustes: " + Config.configFile }
-    buttons: [ Btn { kind: "tonal"; text: "Cerrar"; onClicked: aboutDlg.close() } ]
+          text: qsTr("Colours: %1\nSettings: %2").arg(Theme.colorsSource || qsTr("built-in theme")).arg(Config.configFile) }
+    buttons: [ Btn { kind: "tonal"; text: qsTr("Close"); onClicked: aboutDlg.close() } ]
   }
 
   // ---------------------------------------------------------------- shortcuts
@@ -454,7 +457,7 @@ ApplicationWindow {
   Key { sequence: "Ctrl+V"; onActivated: pane.pasteHere() }
   Key { sequence: "Ctrl+A"; onActivated: pane.model.selectAll() }
   Key { sequence: "Ctrl+Z"; onActivated: FileOps.undo() }
-  Key { sequence: "Ctrl+Shift+C"; onActivated: { const p = pane.model.selectedPaths(); FileOps.copyText(p.length ? p.join("\n") : pane.model.localPath || pane.model.url); toast("Ruta copiada", "ok") } }
+  Key { sequence: "Ctrl+Shift+C"; onActivated: { const p = pane.model.selectedPaths(); FileOps.copyText(p.length ? p.join("\n") : pane.model.localPath || pane.model.url); toast(qsTr("Path copied"), "ok") } }
   Key { sequence: "Ctrl+Shift+N"; onActivated: askNew(pane.model.url, true) }
   Key { sequence: "Ctrl+Shift+I"; onActivated: copyContext(pane.model.selectionCount ? pane.model.selectedUrls() : [pane.model.url]) }
   Key { sequence: "Ctrl+I"; always: true; onActivated: toggleRightPanel("ai") }

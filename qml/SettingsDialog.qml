@@ -35,10 +35,10 @@ Popup {
       Row {
         spacing: 10; height: 40
         Icon { text: "settings"; color: Theme.primary; size: 18; anchors.verticalCenter: parent.verticalCenter }
-        Txt { text: "Ajustes"; font.pointSize: 14; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+        Txt { text: qsTr("Settings"); font.pointSize: 14; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
       }
       Repeater {
-        model: [{ value: "apps", label: "Aplicaciones por defecto", icon: "apps" }]
+        model: [{ value: "apps", label: qsTr("Default applications"), icon: "apps" }]
         Rectangle {
           id: nav
           required property var modelData
@@ -59,11 +59,11 @@ Popup {
       width: rail.width - 8
       spacing: 6
       Txt { width: parent.width; dim: true; font.pointSize: 8.5; elide: Text.ElideMiddle; text: Config.configFile }
-      Btn { kind: "outline"; compact: true; icon: "edit_document"; text: "Abrir " + Config.configFile.split("/").pop()
+      Btn { kind: "outline"; compact: true; icon: "edit_document"; text: qsTr("Open %1").arg(Config.configFile.split("/").pop())
             onClicked: { FileOps.openInEditor(Config.configFile); root.close() } }
     }
     Rectangle { id: divider; x: rail.width + 8; width: 1; height: parent.height; color: Theme.outlineVariant }
-    IconBtn { anchors.right: parent.right; y: 0; size: 32; icon: "close"; tip: "Cerrar (Esc)"; onClicked: root.close() }
+    IconBtn { anchors.right: parent.right; y: 0; size: 32; icon: "close"; tip: qsTr("Close (Esc)"); onClicked: root.close() }
     DefaultAppsPage {
       id: appsPage
       visible: root.section === "apps"

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "SecretGuard.h"
 
+#include <QCoreApplication>
 #include <QRegularExpression>
 #include <QStringDecoder>
 
@@ -23,26 +24,26 @@ QString SecretGuard::scanContent(const QByteArray &data)
         const char *label;
     };
     static const Pat pats[] = {
-        {R"(-----BEGIN [A-Z ]*PRIVATE KEY-----)", "clave privada"},
-        {R"(AKIA[0-9A-Z]{16})", "clave de AWS"},
-        {R"(\bgh[pousr]_[A-Za-z0-9]{36,})", "token de GitHub"},
-        {R"(\bgithub_pat_[A-Za-z0-9_]{40,})", "token de GitHub"},
-        {R"(\bsk-(ant-|proj-)?[A-Za-z0-9_\-]{24,})", "clave de API (OpenAI/Anthropic)"},
-        {R"(\bxox[baprs]-[A-Za-z0-9\-]{10,})", "token de Slack"},
-        {R"(\bAIza[0-9A-Za-z_\-]{35})", "clave de Google API"},
-        {R"(\bhf_[A-Za-z0-9]{30,})", "token de Hugging Face"},
-        {R"(\b(postgres|postgresql|mysql|mongodb(\+srv)?)://[^\s:/]+:[^\s@/]+@)", "URL con contraseña"},
+        {R"(-----BEGIN [A-Z ]*PRIVATE KEY-----)", QT_TRANSLATE_NOOP("SecretGuard", "private key")},
+        {R"(AKIA[0-9A-Z]{16})", QT_TRANSLATE_NOOP("SecretGuard", "AWS key")},
+        {R"(\bgh[pousr]_[A-Za-z0-9]{36,})", QT_TRANSLATE_NOOP("SecretGuard", "GitHub token")},
+        {R"(\bgithub_pat_[A-Za-z0-9_]{40,})", QT_TRANSLATE_NOOP("SecretGuard", "GitHub token")},
+        {R"(\bsk-(ant-|proj-)?[A-Za-z0-9_\-]{24,})", QT_TRANSLATE_NOOP("SecretGuard", "API key (OpenAI/Anthropic)")},
+        {R"(\bxox[baprs]-[A-Za-z0-9\-]{10,})", QT_TRANSLATE_NOOP("SecretGuard", "Slack token")},
+        {R"(\bAIza[0-9A-Za-z_\-]{35})", QT_TRANSLATE_NOOP("SecretGuard", "Google API key")},
+        {R"(\bhf_[A-Za-z0-9]{30,})", QT_TRANSLATE_NOOP("SecretGuard", "Hugging Face token")},
+        {R"(\b(postgres|postgresql|mysql|mongodb(\+srv)?)://[^\s:/]+:[^\s@/]+@)", QT_TRANSLATE_NOOP("SecretGuard", "URL with a password")},
     };
-    static QList<QPair<QRegularExpression, QString>> compiled = [] {
-        QList<QPair<QRegularExpression, QString>> out;
+    static QList<QPair<QRegularExpression, const char *>> compiled = [] {
+        QList<QPair<QRegularExpression, const char *>> out;
         for (const Pat &p : pats)
-            out.append({QRegularExpression(QString::fromLatin1(p.re)), QString::fromUtf8(p.label)});
+            out.append({QRegularExpression(QString::fromLatin1(p.re)), p.label});
         return out;
     }();
     const QString text = QString::fromUtf8(data.left(512 * 1024));
     for (const auto &c : std::as_const(compiled))
         if (c.first.match(text).hasMatch())
-            return c.second;
+            return QCoreApplication::translate("SecretGuard", c.second);
     return {};
 }
 

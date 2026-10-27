@@ -18,9 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CTest smoke tests for the command line: `fuin --version`, `--context` in Markdown and XML (a fixture `.env` stays
   out of the pack) and the MCP server (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing a secret). They
   run headless and replace the inline smoke step in CI ([#3](https://github.com/GalaStore/fuin/issues/3)).
+- Translations: the UI uses English source text with `qsTr()` / `tr()` and ships a Spanish translation
+  (`i18n/fuin_es.ts`) built with `qt_add_translations()`. Fūin follows the system locale and falls back to English;
+  building now needs `qt6-tools` ([#2](https://github.com/GalaStore/fuin/issues/2)).
 
 ### Changed
 
+- `fuin --mcp` and `fuin --context` output is always English: MCP tool titles, approval titles, inspector fields,
+  context pack headings and the `--context` summary line. Tool names and descriptions are unchanged
+  ([#2](https://github.com/GalaStore/fuin/issues/2)).
 - The PKGBUILD pins the sha256 of the v0.1.0 source tarball and comes with a generated `.SRCINFO`.
 
 ### Fixed

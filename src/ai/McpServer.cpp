@@ -111,54 +111,54 @@ bool ensureGui()
 QJsonArray McpServer::toolDefinitions()
 {
     return {
-        tool(u"fuin_get_current_view"_s, u"Vista actual"_s,
+        tool(u"fuin_get_current_view"_s, u"Current view"_s,
              u"Returns what the user is looking at in Fūin right now: the active folder, selected files, open tabs and the "
              "previewed file. Use it to resolve 'this folder' or 'these files'."_s,
              schema({}), true),
-        tool(u"fuin_list_directory"_s, u"Listar carpeta"_s,
+        tool(u"fuin_list_directory"_s, u"List folder"_s,
              u"Lists a directory (name, type, size, modified time, git branch for repos). Paths may use ~."_s,
              schema({{u"path"_s, str(u"Directory path"_s)}, {u"show_hidden"_s, boolean(u"Include dotfiles (default false)"_s)},
                      {u"limit"_s, integer(u"Max entries (default 500)"_s)}},
                     {u"path"_s}),
              true),
-        tool(u"fuin_read_file"_s, u"Leer archivo"_s,
+        tool(u"fuin_read_file"_s, u"Read file"_s,
              u"Reads a UTF-8 text file. Refuses binaries and files that look like secrets (.env, keys, tokens)."_s,
              schema({{u"path"_s, str(u"File path"_s)}, {u"offset"_s, integer(u"Byte offset (default 0)"_s)},
                      {u"max_bytes"_s, integer(u"Max bytes to return (default 65536, max 1048576)"_s)}},
                     {u"path"_s}),
              true),
-        tool(u"fuin_search"_s, u"Buscar"_s,
+        tool(u"fuin_search"_s, u"Search"_s,
              u"Finds files by name (fd) or, with content=true, by text inside files (ripgrep). Respects .gitignore."_s,
              schema({{u"query"_s, str(u"Text to search for"_s)}, {u"path"_s, str(u"Folder to search in (default: current view or ~)"_s)},
                      {u"content"_s, boolean(u"Search file contents instead of names"_s)}, {u"limit"_s, integer(u"Max results (default 100)"_s)}},
                     {u"query"_s}),
              true),
-        tool(u"fuin_inspect"_s, u"Inspeccionar"_s,
+        tool(u"fuin_inspect"_s, u"Inspect"_s,
              u"Structured metadata for a file: schema, row count, null counts and min/max for CSV/TSV/JSON/JSONL/Parquet; "
              "tensors, parameter count, dtype and quantization for .safetensors/.gguf/.onnx; dimensions for images; project type "
              "and README for folders."_s,
              schema({{u"path"_s, str(u"File or folder path"_s)}, {u"sample_rows"_s, integer(u"Rows to include for tables (default 10)"_s)}},
                     {u"path"_s}),
              true),
-        tool(u"fuin_context_pack"_s, u"Contexto para IA"_s,
+        tool(u"fuin_context_pack"_s, u"AI context"_s,
              u"Bundles files/folders into one Markdown or XML document (tree + contents). Respects .gitignore and skips binaries, "
              "lockfiles and secrets. Returns the document and a token estimate."_s,
              schema({{u"paths"_s, strArray(u"Files or folders"_s)}, {u"format"_s, QJsonObject{{u"type"_s, u"string"_s}, {u"enum"_s, QJsonArray{u"markdown"_s, u"xml"_s}}}}},
                     {u"paths"_s}),
              true),
-        tool(u"fuin_reveal"_s, u"Mostrar en Fūin"_s,
+        tool(u"fuin_reveal"_s, u"Show in Fūin"_s,
              u"Opens Fūin at a file or folder and selects it so the user can see it (starts Fūin if needed)."_s,
              schema({{u"path"_s, str(u"File or folder path"_s)}, {u"preview"_s, boolean(u"Also open the preview pane"_s)}}, {u"path"_s}), true),
-        tool(u"fuin_create_folder"_s, u"Crear carpeta"_s,
+        tool(u"fuin_create_folder"_s, u"Create folder"_s,
              u"Creates a folder. Requires 'Permitir escritura a agentes' in Fūin; the user must approve it in the UI. Undoable."_s,
              schema({{u"path"_s, str(u"New folder path"_s)}}, {u"path"_s}), false),
-        tool(u"fuin_move_to_trash"_s, u"Mover a la papelera"_s,
+        tool(u"fuin_move_to_trash"_s, u"Move to trash"_s,
              u"Moves files to the trash (recoverable, undoable). Requires write permission and user approval in the UI."_s,
              schema({{u"paths"_s, strArray(u"Paths to trash"_s)}}, {u"paths"_s}), false, true),
-        tool(u"fuin_copy"_s, u"Copiar"_s, u"Copies files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
+        tool(u"fuin_copy"_s, u"Copy"_s, u"Copies files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
              schema({{u"sources"_s, strArray(u"Files/folders to copy"_s)}, {u"destination"_s, str(u"Destination folder"_s)}}, {u"sources"_s, u"destination"_s}),
              false),
-        tool(u"fuin_move"_s, u"Mover"_s, u"Moves files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
+        tool(u"fuin_move"_s, u"Move"_s, u"Moves files into a folder. Requires write permission and user approval in the UI. Undoable."_s,
              schema({{u"sources"_s, strArray(u"Files/folders to move"_s)}, {u"destination"_s, str(u"Destination folder"_s)}}, {u"sources"_s, u"destination"_s}),
              false, true),
     };
@@ -414,7 +414,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
 
     // ---- writes: opt-in + explicit approval in the GUI
     if (!Config::instance()->mcpAllowWrite())
-        return textResult(u"Writes are disabled. Ask the user to enable them in Fūin → IA panel → «Permitir escritura a agentes»."_s, true);
+        return textResult(u"Writes are disabled. Ask the user to enable them in Fūin → AI panel → «Allow agents to write»."_s, true);
     if (!IpcClient::isRunning())
         return textResult(u"Fūin must be open so the user can approve changes. Call fuin_reveal first."_s, true);
     QJsonObject req{{u"cmd"_s, u"confirm"_s}};
@@ -423,7 +423,8 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
         if (path.isEmpty())
             return textResult(err, true);
         req.insert(u"action"_s, u"mkdir"_s);
-        req.insert(u"title"_s, u"Crear carpeta"_s);
+        // Titles are English source text; the GUI translates them in the "McpServer" context.
+        req.insert(u"title"_s, QString::fromLatin1(QT_TRANSLATE_NOOP("McpServer", "Create folder")));
         req.insert(u"detail"_s, path);
         req.insert(u"args"_s, QJsonObject{{u"path"_s, path}});
     } else {
@@ -439,7 +440,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
             return textResult(u"Nothing to do"_s, true);
         if (trash) {
             req.insert(u"action"_s, u"trash"_s);
-            req.insert(u"title"_s, u"Mover a la papelera"_s);
+            req.insert(u"title"_s, QString::fromLatin1(QT_TRANSLATE_NOOP("McpServer", "Move to trash")));
             req.insert(u"args"_s, QJsonObject{{u"paths"_s, QJsonArray::fromStringList(srcs)}});
             req.insert(u"detail"_s, srcs.join(u'\n'));
         } else {
@@ -448,7 +449,7 @@ QJsonObject McpServer::callTool(const QString &name, const QJsonObject &args)
                 return textResult(err, true);
             const bool move = name == "fuin_move"_L1;
             req.insert(u"action"_s, move ? u"move"_s : u"copy"_s);
-            req.insert(u"title"_s, move ? u"Mover ficheros"_s : u"Copiar ficheros"_s);
+            req.insert(u"title"_s, QString::fromLatin1(move ? QT_TRANSLATE_NOOP("McpServer", "Move files") : QT_TRANSLATE_NOOP("McpServer", "Copy files")));
             req.insert(u"args"_s, QJsonObject{{u"sources"_s, QJsonArray::fromStringList(srcs)}, {u"destination"_s, dest}});
             req.insert(u"detail"_s, srcs.join(u'\n') + u"\n→ "_s + dest);
         }

@@ -275,17 +275,17 @@ QString FolderModel::displayPath() const
 QString FolderModel::title() const
 {
     if (isTrash())
-        return QStringLiteral("Papelera");
+        return tr("Trash");
     if (m_url.scheme() == QLatin1String("remote"))
-        return QStringLiteral("Red");
+        return tr("Network");
     if (m_url.scheme() == QLatin1String("recentlyused"))
-        return QStringLiteral("Recientes");
+        return tr("Recent");
     if (m_url.isLocalFile()) {
         const QString p = m_url.toLocalFile();
         if (p == QDir::homePath())
-            return QStringLiteral("Inicio");
+            return tr("Home");
         if (p == QLatin1String("/"))
-            return QStringLiteral("Sistema");
+            return tr("System");
     }
     const QString name = m_url.fileName();
     return name.isEmpty() ? m_url.toDisplayString() : name;
@@ -312,8 +312,8 @@ QVariantList FolderModel::crumbs() const
         QUrl root = m_url;
         root.setPath(QStringLiteral("/"));
         const QString scheme = m_url.scheme();
-        const QString rootLabel = scheme == QLatin1String("trash") ? QStringLiteral("Papelera")
-            : scheme == QLatin1String("remote")                    ? QStringLiteral("Red")
+        const QString rootLabel = scheme == QLatin1String("trash") ? tr("Trash")
+            : scheme == QLatin1String("remote")                    ? tr("Network")
                                                                    : (m_url.host().isEmpty() ? scheme : m_url.host());
         add(rootLabel, root, scheme == QLatin1String("trash") ? QStringLiteral("delete") : QStringLiteral("lan"));
         QString acc;
@@ -329,7 +329,7 @@ QVariantList FolderModel::crumbs() const
     const QString home = QDir::homePath();
     QString acc, rest;
     if (p == home || p.startsWith(home + QLatin1Char('/'))) {
-        add(QStringLiteral("Inicio"), QUrl::fromLocalFile(home), QStringLiteral("home"));
+        add(tr("Home"), QUrl::fromLocalFile(home), QStringLiteral("home"));
         acc = home;
         rest = p.mid(home.size());
     } else {

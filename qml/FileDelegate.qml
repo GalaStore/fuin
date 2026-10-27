@@ -165,12 +165,12 @@ Item {
     Txt { visible: !it.compact; width: it.pane.colSize; height: parent.height; text: it.isDir ? "—" : G.size(it.size); dim: true; mono: true; font.pointSize: 9; horizontalAlignment: Text.AlignRight; rightPadding: 16 }
     Txt { visible: !it.compact; width: it.pane.colDate; height: parent.height; text: G.date(it.mtime); dim: true; font.pointSize: 9.5 }
     Txt { visible: !it.compact; width: it.pane.colType; height: parent.height; elide: Text.ElideRight; dim: true; font.pointSize: 9.5
-          text: it.location !== "" ? it.location : it.isDir ? "Carpeta" : (it.ext !== "" ? it.ext.toUpperCase() : "Archivo") }
+          text: it.location !== "" ? it.location : it.isDir ? qsTr("Folder") : (it.ext !== "" ? it.ext.toUpperCase() : qsTr("File")) }
   }
 
   ToolTip.visible: it.isSecret && ma.containsMouse
   ToolTip.delay: 700
-  ToolTip.text: "Posible secreto: no se incluye en el contexto para IA ni se comparte con agentes"
+  ToolTip.text: qsTr("Possible secret: it is not included in the AI context nor shared with agents")
 
   // ---- interaction
   Item {

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Fuin
-// "Aplicaciones por defecto": default application per file type. Everything comes from the system
+// "Default applications": default application per file type. Everything comes from the system
 // (MIME database, installed .desktop files, ~/.config/mimeapps.list); choosing an app writes there.
 Item {
   id: page
@@ -22,7 +22,7 @@ Item {
 
   Connections {
     target: DefaultApps
-    function onDefaultChanged(mime, app) { page.statusError = false; page.status = "«" + mime + "» se abrirá con " + app }
+    function onDefaultChanged(mime, app) { page.statusError = false; page.status = qsTr("«%1» will open with %2").arg(mime).arg(app) }
     function onFailed(text) { page.statusError = true; page.status = text }
     function onFilterChanged() {
       if (search.text !== DefaultApps.filter) search.text = DefaultApps.filter
@@ -38,17 +38,17 @@ Item {
     Row {
       spacing: 10
       Icon { text: "apps"; color: Theme.primary; size: 16; anchors.verticalCenter: parent.verticalCenter }
-      Txt { text: "Aplicaciones por defecto"; font.pointSize: 14; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+      Txt { text: qsTr("Default applications"); font.pointSize: 14; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
       Spinner { visible: DefaultApps.busy; width: 18; height: 18; anchors.verticalCenter: parent.verticalCenter }
     }
     Txt { width: parent.width; dim: true; font.pointSize: 9; wrapMode: Text.Wrap
-          text: "Se guardan en ~/.config/mimeapps.list y las usa todo el escritorio. El icono de terminal marca las aplicaciones que se abren en un terminal." }
+          text: qsTr("They are saved in ~/.config/mimeapps.list and used by the whole desktop. The terminal icon marks applications that open in a terminal.") }
     Item { width: 1; height: 6 }
     Field {
       id: search
       width: parent.width
       icon: "search"
-      placeholderText: "Buscar por tipo o extensión (md, py, image/png, vídeo…)"
+      placeholderText: qsTr("Search by type or extension (md, py, image/png, video…)")
       onTextChanged: filterDelay.restart()
       Keys.onDownPressed: { list.forceActiveFocus(); if (list.currentIndex < 0) list.currentIndex = 0 }
       Keys.onReturnPressed: if (list.count) { list.currentIndex = 0; page.expanded = DefaultApps.mimeTypeAt(0) }
@@ -126,7 +126,7 @@ Item {
               anchors.centerIn: parent
               spacing: 6
               SysIcon { visible: row.defaultId !== ""; name: row.defaultIcon; glyph: "apps"; size: 16; color: Theme.textOnSecondaryContainer; anchors.verticalCenter: parent.verticalCenter }
-              Txt { width: Math.min(implicitWidth, 200); text: row.defaultId !== "" ? row.defaultName : "Sin aplicación"; elide: Text.ElideRight; font.pointSize: 10
+              Txt { width: Math.min(implicitWidth, 200); text: row.defaultId !== "" ? row.defaultName : qsTr("No application"); elide: Text.ElideRight; font.pointSize: 10
                     color: row.defaultId !== "" ? Theme.textOnSecondaryContainer : Theme.textDim; anchors.verticalCenter: parent.verticalCenter }
               Icon { visible: row.defaultTerminal; text: "terminal"; size: 12; color: Theme.textOnSecondaryContainer; anchors.verticalCenter: parent.verticalCenter }
               Icon { text: row.open ? "expand_less" : "expand_more"; size: 13; color: Theme.textDim; anchors.verticalCenter: parent.verticalCenter }
@@ -169,10 +169,10 @@ Item {
               }
               ToolTip.visible: cs.containsMouse
               ToolTip.delay: 600
-              ToolTip.text: chip.modelData.id + (chip.modelData.terminal ? " · se abre en un terminal" : "") + (chip.modelData.isDefault ? " · actual" : "")
+              ToolTip.text: chip.modelData.id + (chip.modelData.terminal ? " · " + qsTr("opens in a terminal") : "") + (chip.modelData.isDefault ? " · " + qsTr("current") : "")
             }
           }
-          Txt { visible: row.apps.length === 0; text: "No hay aplicaciones instaladas para este tipo."; dim: true; font.pointSize: 9.5; height: 32 }
+          Txt { visible: row.apps.length === 0; text: qsTr("No applications installed for this type."); dim: true; font.pointSize: 9.5; height: 32 }
         }
       }
     }
@@ -182,8 +182,8 @@ Item {
     anchors.centerIn: list
     visible: DefaultApps.loaded && DefaultApps.count === 0
     icon: "search_off"
-    title: "Sin resultados"
-    hint: "Prueba con una extensión (md, py, png) o un tipo MIME (text/plain)."
+    title: qsTr("No results")
+    hint: qsTr("Try an extension (md, py, png) or a MIME type (text/plain).")
   }
   Spinner { anchors.centerIn: list; visible: !DefaultApps.loaded; width: 28; height: 28 }
 }

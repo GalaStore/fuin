@@ -20,7 +20,7 @@ if(ECM_FOUND)
   list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_FIND_MODULE_DIR})
 endif()
 
-find_package(Qt6 6.6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick QuickControls2 Concurrent Network)
+find_package(Qt6 6.6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick QuickControls2 Concurrent Network LinguistTools)
 find_package(KF6KIO 6.0 REQUIRED)
 find_package(KF6Solid 6.0 REQUIRED)
 find_package(KF6CoreAddons 6.0 REQUIRED)
@@ -67,6 +67,13 @@ file(GLOB FUIN_QML RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS qml/*.
 qt_add_resources(fuin fuin_ui
   PREFIX "/"
   FILES ${FUIN_QML} assets/tomoe.svg assets/konoha.svg assets/leaf.svg assets/fuin.svg)
+
+# The QML lives in a plain resource, not a QML module, so lupdate is pointed at it explicitly.
+qt_add_translations(fuin
+  TS_FILES i18n/fuin_es.ts
+  SOURCES ${FUIN_QML}
+  RESOURCE_PREFIX /i18n
+  LUPDATE_OPTIONS -no-obsolete -locations relative)
 
 if(FUIN_BUILD_TESTS)
   enable_testing()

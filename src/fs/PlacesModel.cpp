@@ -69,43 +69,44 @@ void PlacesModel::reload()
         out << e;
     };
     const QString home = QDir::homePath();
-    place(QStringLiteral("Lugares"), QStringLiteral("Inicio"), home, QStringLiteral("home"));
+    const QString places = tr("Places");
+    place(places, tr("Home"), home, QStringLiteral("home"));
     struct Std {
         QStandardPaths::StandardLocation loc;
         const char *name;
         const char *icon;
     };
     const Std stds[] = {
-        {QStandardPaths::DesktopLocation, "Escritorio", "desktop_windows"}, {QStandardPaths::DownloadLocation, "Descargas", "download"},
-        {QStandardPaths::DocumentsLocation, "Documentos", "description"},   {QStandardPaths::PicturesLocation, "Imágenes", "image"},
-        {QStandardPaths::MusicLocation, "Música", "music_note"},             {QStandardPaths::MoviesLocation, "Vídeos", "movie"},
+        {QStandardPaths::DesktopLocation, QT_TR_NOOP("Desktop"), "desktop_windows"}, {QStandardPaths::DownloadLocation, QT_TR_NOOP("Downloads"), "download"},
+        {QStandardPaths::DocumentsLocation, QT_TR_NOOP("Documents"), "description"}, {QStandardPaths::PicturesLocation, QT_TR_NOOP("Pictures"), "image"},
+        {QStandardPaths::MusicLocation, QT_TR_NOOP("Music"), "music_note"},         {QStandardPaths::MoviesLocation, QT_TR_NOOP("Videos"), "movie"},
     };
     for (const Std &s : stds) {
         const QString p = QStandardPaths::writableLocation(s.loc);
         if (!p.isEmpty() && p != home && QFileInfo(p).isDir())
-            place(QStringLiteral("Lugares"), QString::fromUtf8(s.name), p, QString::fromLatin1(s.icon));
+            place(places, tr(s.name), p, QString::fromLatin1(s.icon));
     }
-    place(QStringLiteral("Lugares"), QStringLiteral("Recientes"), QStringLiteral("recentlyused:/files"), QStringLiteral("schedule"));
+    place(places, tr("Recent"), QStringLiteral("recentlyused:/files"), QStringLiteral("schedule"));
     for (const QVariant &v : Config::instance()->extraPlaces()) {
         const QVariantMap m = v.toMap();
-        place(QStringLiteral("Lugares"), m.value(QStringLiteral("name")).toString(), m.value(QStringLiteral("path")).toString(),
+        place(places, m.value(QStringLiteral("name")).toString(), m.value(QStringLiteral("path")).toString(),
               m.value(QStringLiteral("icon")).toString());
     }
     const QStringList projects = Config::instance()->projectDirs();
     for (const QString &p : projects)
-        place(QStringLiteral("Proyectos"), projects.size() == 1 ? QStringLiteral("Proyectos") : QFileInfo(p).fileName(), p, QStringLiteral("terminal"));
+        place(tr("Projects"), projects.size() == 1 ? tr("Projects") : QFileInfo(p).fileName(), p, QStringLiteral("terminal"));
 
     // ---- drives
     {
         Entry root;
-        root.section = QStringLiteral("Discos");
-        root.name = QStringLiteral("Sistema");
+        root.section = tr("Drives");
+        root.name = tr("System");
         root.url = QUrl::fromLocalFile(QStringLiteral("/")).toString();
         root.icon = QStringLiteral("hard_drive");
         const QStorageInfo si(QStringLiteral("/"));
         if (si.bytesTotal() > 0) {
             root.usage = 1.0 - qreal(si.bytesAvailable()) / qreal(si.bytesTotal());
-            root.detail = KIO::convertSize(si.bytesAvailable()) + QStringLiteral(" libres de ") + KIO::convertSize(si.bytesTotal());
+            root.detail = tr("%1 free of %2").arg(KIO::convertSize(si.bytesAvailable()), KIO::convertSize(si.bytesTotal()));
         }
         out << root;
     }
@@ -119,7 +120,7 @@ void PlacesModel::reload()
             || mp.startsWith(QLatin1String("/var")) || mp.startsWith(QLatin1String("/.snapshots")))
             continue;
         Entry e;
-        e.section = QStringLiteral("Discos");
+        e.section = tr("Drives");
         e.udi = d.udi();
         e.name = d.description().isEmpty() ? d.product() : d.description();
         e.mounted = acc->isAccessible();
@@ -138,13 +139,13 @@ void PlacesModel::reload()
             const QStorageInfo si(mp);
             if (si.bytesTotal() > 0) {
                 e.usage = 1.0 - qreal(si.bytesAvailable()) / qreal(si.bytesTotal());
-                e.detail = KIO::convertSize(si.bytesAvailable()) + QStringLiteral(" libres de ") + KIO::convertSize(si.bytesTotal());
+                e.detail = tr("%1 free of %2").arg(KIO::convertSize(si.bytesAvailable()), KIO::convertSize(si.bytesTotal()));
             }
         }
         out << e;
     }
-    place(QStringLiteral("Red"), QStringLiteral("Red"), QStringLiteral("remote:/"), QStringLiteral("lan"));
-    place(QStringLiteral("Otros"), QStringLiteral("Papelera"), QStringLiteral("trash:/"), QStringLiteral("delete"));
+    place(tr("Network"), tr("Network"), QStringLiteral("remote:/"), QStringLiteral("lan"));
+    place(tr("Other"), tr("Trash"), QStringLiteral("trash:/"), QStringLiteral("delete"));
 
     beginResetModel();
     m_entries = out;
@@ -161,7 +162,7 @@ void PlacesModel::mount(const QString &udi)
     connect(acc, &Solid::StorageAccess::setupDone, this,
             [this, acc](Solid::ErrorType err, const QVariant &data, const QString &) {
                 if (err != Solid::NoError) {
-                    Q_EMIT message(QStringLiteral("No se pudo montar: ") + data.toString(), QStringLiteral("error"));
+                    Q_EMIT message(tr("Could not mount: %1").arg(data.toString()), QStringLiteral("error"));
                     return;
                 }
                 reload();
@@ -180,9 +181,9 @@ void PlacesModel::unmount(const QString &udi)
     connect(acc, &Solid::StorageAccess::teardownDone, this,
             [this](Solid::ErrorType err, const QVariant &data, const QString &) {
                 if (err != Solid::NoError)
-                    Q_EMIT message(QStringLiteral("No se pudo expulsar: ") + data.toString(), QStringLiteral("error"));
+                    Q_EMIT message(tr("Could not eject: %1").arg(data.toString()), QStringLiteral("error"));
                 else
-                    Q_EMIT message(QStringLiteral("Expulsado. Ya puedes retirarlo."), QStringLiteral("ok"));
+                    Q_EMIT message(tr("Ejected. You can now remove it."), QStringLiteral("ok"));
                 reload();
             },
             Qt::SingleShotConnection);
