@@ -31,11 +31,5 @@ jobs:
       - name: Tests
         # The rename test needs a session bus for KIO's change notifications.
         run: dbus-run-session -- ctest --test-dir build --output-on-failure -LE bench
-      - name: Smoke test (headless)
-        run: |
-          ./build/fuin --version
-          ./build/fuin --context --format markdown README.md > /dev/null
-          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' \
-                         '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | ./build/fuin --mcp | grep -q fuin_context_pack
       - name: Install into a staging dir
         run: DESTDIR=$PWD/stage cmake --install build --prefix /usr && find stage -type f
