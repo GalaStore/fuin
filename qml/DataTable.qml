@@ -21,8 +21,8 @@ Item {
       spacing: 6
       Repeater {
         model: [
-          { t: root.info.totalRows !== undefined && root.info.totalRows !== null ? G.count(root.info.totalRows) + " filas" : "", i: "table_rows" },
-          { t: root.cols.length + " columnas", i: "view_column" },
+          { t: root.info.totalRows !== undefined && root.info.totalRows !== null ? qsTr("%1 rows").arg(G.count(root.info.totalRows)) : "", i: "table_rows" },
+          { t: qsTr("%1 columns").arg(root.cols.length), i: "view_column" },
           { t: root.info.engine || "", i: "bolt" }
         ].filter(x => x.t !== "")
         Rectangle {
@@ -36,7 +36,7 @@ Item {
       }
     }
     Segmented {
-      options: [{ value: true, label: "Esquema", icon: "schema" }, { value: false, label: "Datos", icon: "table" }]
+      options: [{ value: true, label: qsTr("Schema"), icon: "schema" }, { value: false, label: qsTr("Data"), icon: "table" }]
       value: root.showSchema
       onPicked: v => root.showSchema = v
     }
@@ -55,7 +55,7 @@ Item {
     ScrollBar.vertical: Scroll {}
     footer: Txt {
       width: ListView.view ? ListView.view.width : 0; topPadding: 8; dim: true; font.pointSize: 8; wrapMode: Text.Wrap
-      text: root.info.exactStats ? "Estadísticas exactas del pie del Parquet (sin leer los datos)." : root.info.statsSample ? "Tipos y estadísticas inferidos de las primeras " + root.info.statsSample + " filas." : ""
+      text: root.info.exactStats ? qsTr("Exact statistics from the Parquet footer (without reading the data).") : root.info.statsSample ? qsTr("Types and statistics inferred from the first %1 rows.").arg(root.info.statsSample) : ""
     }
     delegate: Rectangle {
       required property var modelData
@@ -74,7 +74,7 @@ Item {
         Txt {
           visible: text !== ""
           width: parent.width; elide: Text.ElideRight; dim: true; mono: true; font.pointSize: 8
-          text: [modelData.nulls !== undefined ? "nulos " + G.count(modelData.nulls) : "",
+          text: [modelData.nulls !== undefined ? qsTr("nulls %1").arg(G.count(modelData.nulls)) : "",
                  modelData.min !== undefined ? "min " + modelData.min : "",
                  modelData.max !== undefined ? "max " + modelData.max : ""].filter(s => s).join("  ·  ")
         }

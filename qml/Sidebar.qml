@@ -72,7 +72,7 @@ Rectangle {
               }
             }
             IconBtn { id: ab; visible: entry.udi !== "" && (entry.removable && entry.mounted || !entry.mounted); icon: entry.mounted ? "eject" : "power_settings_new"
-                      tip: entry.mounted ? "Expulsar" : "Montar"; size: 26; anchors.right: parent.right; anchors.rightMargin: 4; anchors.verticalCenter: parent.verticalCenter
+                      tip: entry.mounted ? qsTr("Eject") : qsTr("Mount"); size: 26; anchors.right: parent.right; anchors.rightMargin: 4; anchors.verticalCenter: parent.verticalCenter
                       onClicked: entry.mounted ? Places.unmount(entry.udi) : Places.mount(entry.udi) }
             ToolTip.visible: entry.detail !== "" && sl.containsMouse
             ToolTip.delay: 700

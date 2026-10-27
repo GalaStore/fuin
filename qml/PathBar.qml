@@ -68,7 +68,7 @@ Rectangle {
       Txt { text: root.fm ? root.fm.repoBranch : ""; mono: true; font.pointSize: 9; color: Theme.textOnTertiaryContainer; anchors.verticalCenter: parent.verticalCenter }
       Txt { visible: !!root.fm && root.fm.repoDirty > 0; text: "●" + (root.fm ? root.fm.repoDirty : 0); mono: true; font.pointSize: 8.5; color: Theme.textOnTertiaryContainer; opacity: 0.8; anchors.verticalCenter: parent.verticalCenter } }
     ToolTip.visible: gh.hovered
-    ToolTip.text: root.fm ? "Repositorio git: " + AppInfo.prettyPath(root.fm.repoRoot) + (root.fm.repoDirty > 0 ? " · " + root.fm.repoDirty + " cambios sin confirmar" : " · limpio") : ""
+    ToolTip.text: root.fm ? qsTr("Git repository: %1").arg(AppInfo.prettyPath(root.fm.repoRoot)) + " · " + (root.fm.repoDirty > 0 ? qsTr("%1 uncommitted changes").arg(root.fm.repoDirty) : qsTr("clean")) : ""
     HoverHandler { id: gh }
   }
   TextField {
@@ -80,7 +80,7 @@ Rectangle {
     selectionColor: Theme.primary; selectedTextColor: Theme.textOnPrimary
     verticalAlignment: TextInput.AlignVCenter
     background: null
-    placeholderText: "Ruta o URL (~/Dev, sftp://servidor/, smb://, trash:/ …)"
+    placeholderText: qsTr("Path or URL (~/Dev, sftp://server/, smb://, trash:/ …)")
     placeholderTextColor: Theme.outline
     onAccepted: { root.pane.navigate(text.trim()); root.editing = false }
     Keys.onEscapePressed: { root.editing = false; root.pane.focusView() }

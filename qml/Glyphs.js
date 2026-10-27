@@ -1,5 +1,5 @@
 .pragma library
-// Material Symbols glyph + accent role for a file, and Spanish date/size helpers.
+// Material Symbols glyph + accent role for a file, and localized date/size helpers.
 
 function icon(kind, ext, name, isDir) {
   if (isDir) {
@@ -38,7 +38,10 @@ function tone(kind, isDir, isRepo) {
   return "textDim"
 }
 
-const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"]
+function month(i) {
+  return [qsTr("Jan"), qsTr("Feb"), qsTr("Mar"), qsTr("Apr"), qsTr("May"), qsTr("Jun"),
+          qsTr("Jul"), qsTr("Aug"), qsTr("Sep"), qsTr("Oct"), qsTr("Nov"), qsTr("Dec")][i]
+}
 function pad(n) { return n < 10 ? "0" + n : "" + n }
 function date(ms) {
   if (!ms || ms <= 0) return ""
@@ -46,10 +49,10 @@ function date(ms) {
   const hm = pad(d.getHours()) + ":" + pad(d.getMinutes())
   const day = 86400000
   const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  if (ms >= startToday) return "hoy " + hm
-  if (ms >= startToday - day) return "ayer " + hm
-  if (d.getFullYear() === now.getFullYear()) return d.getDate() + " " + MONTHS[d.getMonth()] + " " + hm
-  return d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear()
+  if (ms >= startToday) return qsTr("today %1").arg(hm)
+  if (ms >= startToday - day) return qsTr("yesterday %1").arg(hm)
+  if (d.getFullYear() === now.getFullYear()) return d.getDate() + " " + month(d.getMonth()) + " " + hm
+  return d.getDate() + " " + month(d.getMonth()) + " " + d.getFullYear()
 }
 
 function size(bytes) {
@@ -58,17 +61,17 @@ function size(bytes) {
   const u = ["KB", "MB", "GB", "TB"]
   let v = b / 1024, i = 0
   while (v >= 1024 && i < u.length - 1) { v /= 1024; i++ }
-  return (v >= 100 ? v.toFixed(0) : v.toFixed(1)).replace(".", ",") + " " + u[i]
+  return (v >= 100 ? v.toFixed(0) : v.toFixed(1)).replace(".", Qt.locale().decimalPoint) + " " + u[i]
 }
 
 function count(n) {
-  return Number(n || 0).toLocaleString(Qt.locale("es_ES"), "f", 0)
+  return Number(n || 0).toLocaleString(Qt.locale(), "f", 0)
 }
 
 // Display name for an editor/terminal command ("cursor" -> "Cursor").
 function appName(cmd) {
   const known = { cursor: "Cursor", code: "VS Code", codium: "VSCodium", zed: "Zed", kate: "Kate", nvim: "Neovim", kitty: "kitty", foot: "foot" }
-  if (!cmd) return "editor"
+  if (!cmd) return qsTr("editor")
   const base = String(cmd).split("/").pop().split(" ")[0]
   return known[base] || (base.charAt(0).toUpperCase() + base.slice(1))
 }

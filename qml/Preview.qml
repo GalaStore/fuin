@@ -33,11 +33,11 @@ Item {
       width: parent.width; wrapMode: Text.Wrap; dim: true; font.pointSize: 9
       text: {
         if (!entry) {
-          if (r.kind === "folder") return (r.dirs + r.files) + " elementos · carpeta actual" + (pane.model.repoBranch ? " ·  " + pane.model.repoBranch : "")
-          return (pane && pane.model.selectionCount > 1) ? pane.model.selectionCount + " elementos seleccionados · " + G.size(pane.model.selectionSize) : ""
+          if (r.kind === "folder") return qsTr("%1 items · current folder").arg(r.dirs + r.files) + (pane.model.repoBranch ? " ·  " + pane.model.repoBranch : "")
+          return (pane && pane.model.selectionCount > 1) ? qsTr("%1 items selected · %2").arg(pane.model.selectionCount).arg(G.size(pane.model.selectionSize)) : ""
         }
         const parts = []
-        if (entry.isDir) parts.push(r.kind === "folder" ? (r.dirs + r.files) + " elementos" : "Carpeta")
+        if (entry.isDir) parts.push(r.kind === "folder" ? qsTr("%1 items").arg(r.dirs + r.files) : qsTr("Folder"))
         else parts.push(G.size(entry.size))
         parts.push(G.date(entry.mtime))
         if (r.mime) parts.push(r.mime)
@@ -56,17 +56,17 @@ Item {
       Rectangle { visible: !!r.secret; height: 22; radius: 11; width: sr.implicitWidth + 14; color: Theme.errorContainer
         Row { id: sr; anchors.centerIn: parent; spacing: 4
           Icon { text: "key"; size: 10; color: Theme.textOnErrorContainer; anchors.verticalCenter: parent.verticalCenter }
-          Txt { text: "Posible secreto: " + (r.secret || ""); font.pointSize: 8.5; color: Theme.textOnErrorContainer; anchors.verticalCenter: parent.verticalCenter } } }
+          Txt { text: qsTr("Possible secret: %1").arg(r.secret || ""); font.pointSize: 8.5; color: Theme.textOnErrorContainer; anchors.verticalCenter: parent.verticalCenter } } }
     }
     // data / model actions
     Flow {
       width: parent.width; spacing: 6
       visible: kind === "table" || kind === "model" || (entry && entry.isDir) || kind === "text"
-      Btn { visible: root.kind === "table"; compact: true; kind: "tonal"; icon: "database"; text: "Copiar SQL"; onClicked: FileOps.copyText(pv.duckdbSql(entry.path)) }
-      Btn { visible: root.kind === "table" && AppInfo.hasDuckdb; compact: true; kind: "tonal"; icon: "terminal"; text: "Abrir en DuckDB"; onClicked: pane.win.openDuckdb(entry.path) }
-      Btn { visible: root.kind === "table" || root.kind === "model"; compact: true; kind: "text"; icon: "schema"; text: "Copiar esquema"; onClicked: FileOps.copyText(root.schemaMarkdown()) }
-      Btn { visible: !!(entry && entry.isDir); compact: true; kind: "tonal"; icon: "code"; text: "Abrir en " + G.appName(Config.editor); onClicked: FileOps.openInEditor(entry.url) }
-      Btn { visible: !!entry && !r.secret; compact: true; kind: "text"; icon: "auto_awesome"; text: "Contexto IA"; onClicked: pane.win.copyContext([entry.url]) }
+      Btn { visible: root.kind === "table"; compact: true; kind: "tonal"; icon: "database"; text: qsTr("Copy SQL"); onClicked: FileOps.copyText(pv.duckdbSql(entry.path)) }
+      Btn { visible: root.kind === "table" && AppInfo.hasDuckdb; compact: true; kind: "tonal"; icon: "terminal"; text: qsTr("Open in DuckDB"); onClicked: pane.win.openDuckdb(entry.path) }
+      Btn { visible: root.kind === "table" || root.kind === "model"; compact: true; kind: "text"; icon: "schema"; text: qsTr("Copy schema"); onClicked: FileOps.copyText(root.schemaMarkdown()) }
+      Btn { visible: !!(entry && entry.isDir); compact: true; kind: "tonal"; icon: "code"; text: qsTr("Open in %1").arg(G.appName(Config.editor)); onClicked: FileOps.openInEditor(entry.url) }
+      Btn { visible: !!entry && !r.secret; compact: true; kind: "text"; icon: "auto_awesome"; text: qsTr("AI context"); onClicked: pane.win.copyContext([entry.url]) }
     }
     Item { width: 1; height: 4 }
     ChakraLine { width: parent.width; height: 2; opacity: 0.6 }
@@ -75,11 +75,12 @@ Item {
   function schemaMarkdown() {
     const name = entry ? entry.name : ""
     if (r.kind === "table") {
-      let s = "Esquema de `" + name + "`" + (r.totalRows !== undefined ? " (" + r.totalRows + " filas)" : "") + "\n\n| columna | tipo | nulos | min | max |\n|---|---|---|---|---|\n"
+      let s = (r.totalRows !== undefined ? qsTr("Schema of `%1` (%2 rows)").arg(name).arg(r.totalRows) : qsTr("Schema of `%1`").arg(name))
+              + "\n\n" + qsTr("| column | type | nulls | min | max |") + "\n|---|---|---|---|---|\n"
       for (const c of r.columns || []) s += "| " + c.name + " | " + c.type + " | " + (c.nulls ?? "") + " | " + (c.min ?? "") + " | " + (c.max ?? "") + " |\n"
       return s
     }
-    let s = "Modelo `" + name + "`\n\n"
+    let s = qsTr("Model `%1`").arg(name) + "\n\n"
     for (const f of r.fields || []) s += "- " + f[0] + ": " + f[1] + "\n"
     return s
   }
@@ -114,7 +115,7 @@ Item {
         id: code
         readOnly: true
         selectByMouse: true
-        text: kind === "text" ? (r.text || "") + (r.truncated ? "\n\n… (vista previa recortada)" : "") : ""
+        text: kind === "text" ? (r.text || "") + (r.truncated ? "\n\n" + qsTr("… (preview truncated)") : "") : ""
         font.family: Theme.fontMono; font.pointSize: 9
         color: Theme.textMain
         selectionColor: Theme.primary; selectedTextColor: Theme.textOnPrimary
@@ -169,7 +170,7 @@ Item {
             Txt { id: fv; x: 124; width: parent.width - 134; anchors.verticalCenter: parent.verticalCenter; text: String(modelData[1]); font.pointSize: 9.5; mono: true; wrapMode: Text.WrapAnywhere }
           }
         }
-        Txt { visible: (r.tensors || []).length > 0; text: "Tensores"; topPadding: 10; font.pointSize: 9; font.weight: Font.DemiBold; dim: true }
+        Txt { visible: (r.tensors || []).length > 0; text: qsTr("Tensors"); topPadding: 10; font.pointSize: 9; font.weight: Font.DemiBold; dim: true }
         Repeater {
           model: kind === "model" ? (r.tensors || []).slice(0, 40) : []
           Row {
@@ -190,9 +191,9 @@ Item {
                || ((kind === "video" || kind === "pdf") && pimg.status !== Image.Ready))
       icon: kind === "error" ? "error" : kind === "folder" ? "folder_open" : kind === "audio" ? "music_note" : kind === "video" ? "movie" : kind === "pdf" ? "picture_as_pdf" : "draft"
       emblem: kind === "folder" ? "konoha" : "tomoe"
-      title: kind === "error" ? "Sin vista previa" : kind === "binary" ? "Archivo binario" : kind === "folder" ? (entry ? "Carpeta" : "Selecciona un archivo")
-           : kind === "video" || kind === "pdf" ? "Sin miniatura" : kind === "audio" ? "Audio" : ""
-      hint: kind === "error" ? (r.msg || "") : kind === "folder" ? (r.dirs + " carpetas · " + r.files + " ficheros") : (kind === "video" || kind === "pdf") ? "Instala ffmpegthumbs / kdegraphics-thumbnailers para miniaturas" : ""
+      title: kind === "error" ? qsTr("No preview") : kind === "binary" ? qsTr("Binary file") : kind === "folder" ? (entry ? qsTr("Folder") : qsTr("Select a file"))
+           : kind === "video" || kind === "pdf" ? qsTr("No thumbnail") : kind === "audio" ? qsTr("Audio") : ""
+      hint: kind === "error" ? (r.msg || "") : kind === "folder" ? qsTr("%1 folders · %2 files").arg(r.dirs).arg(r.files) : (kind === "video" || kind === "pdf") ? qsTr("Install ffmpegthumbs / kdegraphics-thumbnailers for thumbnails") : ""
     }
     Spinner { anchors.centerIn: parent; visible: pv.busy }
   }
