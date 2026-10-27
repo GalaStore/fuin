@@ -22,19 +22,23 @@ Arch ships Arrow/Parquet as shared libraries whose soname changes with each majo
 
 `-DFUIN_BUILD_TESTS=ON` builds `tests/`: `tst_foldermodel` (QTest, with a fatal `QAbstractItemModelTester`) covers
 listing order, hidden/filter, refresh moves, renames, mass deletes and selection; `bench_foldermodel` times listing
-folders in creation and shuffled order.
+folders in creation and shuffled order. The `smoke` tests (`tests/smoke.cmake`, a plain CMake script) run the built
+`fuin` headless: `--version`, `--context` in Markdown and XML on a generated fixture folder whose `.env` must stay out
+of the pack, and `--mcp` (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing the `.env`).
 
 ```sh
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DFUIN_BUILD_TESTS=ON
 cmake --build build
 dbus-run-session -- ctest --test-dir build --output-on-failure -LE bench   # what CI runs
+ctest --test-dir build -L smoke --output-on-failure                        # smoke tests only
 ctest --test-dir build -L bench --verbose                                  # benchmark, 1k and 10k
 ./build/tests/bench_foldermodel 100000                                     # any sizes as arguments
 ```
 
-The rename test needs a D-Bus session bus (KIO's rename notifications) and is skipped without one. Each test
-creates its own temporary directory. Changes to `FolderModel` should keep the tests green and come with the
-benchmark numbers before and after.
+The rename test needs a D-Bus session bus (KIO's rename notifications) and is skipped without one. The smoke tests set
+`QT_QPA_PLATFORM=offscreen` themselves and run with a throwaway `HOME`, so they need no display and never read your
+Fūin config. Each test creates its own temporary directory. Changes to `FolderModel` should keep the tests green and
+come with the benchmark numbers before and after.
 
 ## Code style
 
