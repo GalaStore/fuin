@@ -31,6 +31,7 @@
 #include <QQuickStyle>
 #include <QProcess>
 #include <QStandardPaths>
+#include <QTranslator>
 #include <QUrl>
 
 #include <iostream>
@@ -118,6 +119,10 @@ int main(int argc, char **argv)
     QApplication::setOrganizationDomain(u"galactuuus.github.io"_s);
     QApplication::setDesktopFileName(u"fuin"_s); // Wayland app_id / X11 class
     QApplication app(argc, argv);
+    // Only the GUI is translated: --mcp and --context return early above and always speak English.
+    auto *translator = new QTranslator(&app);
+    if (translator->load(QLocale(), u"fuin"_s, u"_"_s, u":/i18n"_s))
+        QCoreApplication::installTranslator(translator);
     app.setWindowIcon(QIcon::fromTheme(u"fuin"_s, QIcon(u":/assets/fuin.svg"_s)));
     QQuickStyle::setStyle(u"Basic"_s);
 
