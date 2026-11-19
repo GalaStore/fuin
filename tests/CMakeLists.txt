@@ -23,3 +23,6 @@ foreach(mode version context mcp)
                      -DWORK=${CMAKE_CURRENT_BINARY_DIR}/smoke_${mode} -P ${CMAKE_CURRENT_SOURCE_DIR}/smoke.cmake)
     set_tests_properties(smoke_${mode} PROPERTIES LABELS smoke ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endforeach()
+
+add_test(NAME release_notes COMMAND ${PROJECT_SOURCE_DIR}/.github/scripts/release-notes.sh 0.1.0 ${PROJECT_SOURCE_DIR}/CHANGELOG.md)
+set_tests_properties(release_notes PROPERTIES PASS_REGULAR_EXPRESSION "^First public release\\.\n")
