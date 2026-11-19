@@ -38,8 +38,8 @@ constexpr int kIdleExitMs = 10 * 60 * 1000;
 // Paths arrive as NUL-terminated byte strings in the file system encoding.
 QString bytesToPath(QByteArray b)
 {
-    if (b.endsWith('\0'))
-        b.chop(1);
+    if (const qsizetype nul = b.indexOf('\0'); nul >= 0)
+        b.truncate(nul);
     return QFile::decodeName(b);
 }
 
