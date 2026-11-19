@@ -9,6 +9,7 @@ pkgbase = fuin
 	makedepends = cmake
 	makedepends = ninja
 	makedepends = extra-cmake-modules
+	makedepends = qt6-tools
 	makedepends = git
 	depends = qt6-base
 	depends = qt6-declarative
@@ -31,6 +32,7 @@ pkgbase = fuin
 	optdepends = git: repository badges
 	optdepends = plasma-activities-stats: «Recientes» (recentlyused:/) place
 	optdepends = kitty: default terminal (any terminal works)
+	optdepends = xdg-desktop-portal: Fūin as the system file chooser (fuin --portal)
 	source = fuin-0.1.0.tar.gz::https://github.com/GalaStore/fuin/archive/refs/tags/v0.1.0.tar.gz
 	sha256sums = 7635fd95d72e288adcacb844716b9ff7f320d3990c189ecc19bfdb4e33cd6b15
 
