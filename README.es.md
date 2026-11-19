@@ -68,6 +68,21 @@ fuin --context . | wl-copy      # paquete de contexto al portapapeles
 claude mcp add --scope user fuin -- fuin --mcp   # conectar Claude Code
 ```
 
+### Selector de archivos del sistema (portal)
+
+Fūin puede ser el diálogo *Abrir* / *Guardar* de otras apps a través de xdg-desktop-portal (apps Flatpak y apps
+configuradas para usar el portal). La instalación añade `fuin.portal` y un servicio D-Bus que arranca
+`fuin --portal` cuando hace falta; funciona tanto en `/usr` como en `~/.local` (xdg-desktop-portal 1.22 también lee
+`~/.local/share/xdg-desktop-portal/portals`). Para elegirlo, en `~/.config/xdg-desktop-portal/portals.conf` (o en
+`<escritorio>-portals.conf`, p. ej. `hyprland-portals.conf`, que tiene prioridad si existe), dentro de `[preferred]`:
+
+```ini
+org.freedesktop.impl.portal.FileChooser=fuin
+```
+
+y reinicia el portal con `systemctl --user restart xdg-desktop-portal`. Se desactiva con `-DFUIN_WITH_PORTAL=OFF`.
+Detalles en el [README en inglés](README.md#system-file-chooser-portal).
+
 Configuración en `~/.config/fuin/fuin.conf` (terminal, editor, archivo de colores, animaciones,
 carpetas de proyectos, raíces y escritura MCP); ver el [README en inglés](README.md#configuration).
 
