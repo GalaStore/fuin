@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exits when idle. The install adds `fuin.portal` and a D-Bus service file (CMake option `FUIN_WITH_PORTAL`, `ON` on
   Linux); select it with `org.freedesktop.impl.portal.FileChooser=fuin` in `portals.conf`
   ([#39](https://github.com/GalaStore/fuin/issues/39)).
+- GitHub Releases: pushing a `v*` tag builds and tests on Arch Linux and publishes the release with the version's
+  `CHANGELOG.md` section as notes (`.github/scripts/release-notes.sh`). The release checklist is in
+  `CONTRIBUTING.md` ([#6](https://github.com/GalaStore/fuin/issues/6)).
 
 ### Changed
 
