@@ -40,7 +40,7 @@
 #include <iostream>
 
 #ifndef FUIN_VERSION
-#define FUIN_VERSION "0.1.0"
+#define FUIN_VERSION "0.2.0"
 #endif
 
 using namespace Qt::StringLiterals;
