@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Translations: the UI uses English source text with `qsTr()` / `tr()` and ships a Spanish translation
   (`i18n/fuin_es.ts`) built with `qt_add_translations()`. Fūin follows the system locale and falls back to English;
   building now needs `qt6-tools` ([#2](https://github.com/GalaStore/fuin/issues/2)).
+- System file chooser: `fuin --portal` implements the xdg-desktop-portal FileChooser backend in Fūin windows (open
+  files or a folder, save with overwrite confirmation, save several files, filters). D-Bus starts it on demand and it
+  exits when idle. The install adds `fuin.portal` and a D-Bus service file (CMake option `FUIN_WITH_PORTAL`, `ON` on
+  Linux); select it with `org.freedesktop.impl.portal.FileChooser=fuin` in `portals.conf`
+  ([#39](https://github.com/GalaStore/fuin/issues/39)).
 
 ### Changed
 
