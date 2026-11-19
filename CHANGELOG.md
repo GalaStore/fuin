@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-19
+
 ### Added
 
 - `CHANGELOG.md` ([#5](https://github.com/GalaStore/fuin/issues/5)).
@@ -80,5 +82,6 @@ First public release.
   terminal configured, Fūin provides the terminal it resolves (preferring `xdg-terminal-exec`) through its own
   `~/.config/fuinrc`, never `kdeglobals`. The error toast names the file and the application.
 
-[Unreleased]: https://github.com/GalaStore/fuin/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/GalaStore/fuin/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/GalaStore/fuin/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/GalaStore/fuin/releases/tag/v0.1.0

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 cmake_minimum_required(VERSION 3.22)
-project(fuin VERSION 0.1.0 DESCRIPTION "Keyboard-first, AI-aware file manager (KIO + Qt Quick)" LANGUAGES CXX)
+project(fuin VERSION 0.2.0 DESCRIPTION "Keyboard-first, AI-aware file manager (KIO + Qt Quick)" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
