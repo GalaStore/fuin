@@ -33,6 +33,8 @@ FocusScope {
     showHidden: Config.showHidden
     sortField: Config.sortField
     sortReversed: Config.sortReversed
+    typeFilter: pane.win ? pane.win.pickerPatterns : []
+    dirsOnly: !!(pane.win && pane.win.picking && pane.win.picker.directory)
     onSelectionChanged: pane.refreshCurrent()
     onLocationChanged: pane.refreshCurrent()
     onRevealRow: row => pane.positionAt(row)
@@ -64,11 +66,13 @@ FocusScope {
     const e = fm.get(i)
     if (!e || !e.url) return
     if (e.isDir) navigate(e.url)
+    else if (win.picking) win.pickerActivate(e)
     else FileOps.open(e.url)
   }
   function openSelection() {
     const items = fm.selectedItems()
     if (items.length === 1 && items[0].isDir) { navigate(items[0].url); return }
+    if (win.picking) { if (items.length) win.pickerActivate(items[0]); return }
     for (const e of items) if (!e.isDir) FileOps.open(e.url)
   }
   function handleDrop(d, destUrl) {
