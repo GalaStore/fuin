@@ -14,6 +14,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QLoggingCategory>
+#include <QMimeDatabase>
 #include <QStandardPaths>
 #include <QtConcurrent>
 
@@ -452,6 +453,21 @@ bool FolderModel::accepts(const KFileItem &it) const
         return false;
     if (!m_filter.isEmpty() && !it.text().contains(m_filter, Qt::CaseInsensitive))
         return false;
+    if ((!m_nameRx.isEmpty() || !m_mimeRx.isEmpty()) && !it.isDir()) {
+        const QString name = it.name();
+        if (std::ranges::any_of(m_nameRx, [&](const QRegularExpression &rx) { return rx.match(name).hasMatch(); }))
+            return true;
+        if (m_mimeRx.isEmpty())
+            return false;
+        // By name only: sniffing contents for every file would stall large folders.
+        static const QMimeDatabase db;
+        const QMimeType mime = db.mimeTypeForFile(name, QMimeDatabase::MatchExtension);
+        QStringList names = mime.allAncestors();
+        names.prepend(mime.name());
+        return std::ranges::any_of(m_mimeRx, [&](const QRegularExpression &rx) {
+            return std::ranges::any_of(names, [&](const QString &n) { return rx.match(n).hasMatch(); });
+        });
+    }
     return true;
 }
 
@@ -906,6 +922,20 @@ void FolderModel::setDirsOnly(bool v)
     if (v == m_dirsOnly)
         return;
     m_dirsOnly = v;
+    Q_EMIT optionsChanged();
+    rebuild();
+}
+
+void FolderModel::setTypeFilter(const QStringList &patterns)
+{
+    if (patterns == m_typeFilter)
+        return;
+    m_typeFilter = patterns;
+    m_nameRx.clear();
+    m_mimeRx.clear();
+    for (const QString &p : patterns) {
+        (p.contains(u'/') ? m_mimeRx : m_nameRx) << QRegularExpression::fromWildcard(p, Qt::CaseInsensitive);
+    }
     Q_EMIT optionsChanged();
     rebuild();
 }

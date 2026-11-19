@@ -79,6 +79,7 @@ cmake --install build
 |---|---|---|
 | `FUIN_WITH_PARQUET` | `ON` | Parquet previews if Arrow/Parquet C++ is found |
 | `FUIN_WITH_SYNTAX` | `ON` | Syntax highlighting if KSyntaxHighlighting is found |
+| `FUIN_WITH_PORTAL` | `ON` (Linux) | Build `fuin --portal` and install its portal and D-Bus service files |
 | `FUIN_BUILD_TESTS` | `OFF` | Build the CTest tests and the listing benchmark (never installed) |
 
 > **Arch Linux and Arrow updates:** Fūin links against Apache Arrow/Parquet, whose soname changes with every major
@@ -105,6 +106,7 @@ fuin --preview ~/data.parquet # …and show the preview
 fuin --new-window
 fuin --context [--format markdown|xml] paths… | wl-copy   # context pack to stdout
 fuin --mcp                    # MCP server on stdio
+fuin --portal                 # file chooser portal backend (started by D-Bus, not by hand)
 ```
 
 ### Connect an agent (MCP)
@@ -125,6 +127,29 @@ Tools: `fuin_get_current_view`, `fuin_list_directory`, `fuin_read_file`, `fuin_s
 `fuin_inspect`, `fuin_context_pack`, `fuin_reveal`, and (write, confirmation required)
 `fuin_create_folder`, `fuin_copy`, `fuin_move`, `fuin_move_to_trash`.
 Agents only see paths under `mcp/roots` (default: your home folder).
+
+### System file chooser (portal)
+
+Fūin can be the *Open* / *Save* dialog of other apps through xdg-desktop-portal: Flatpak apps, and apps set to use
+the portal (for example Firefox with `widget.use-xdg-desktop-portal.file-picker = 1`). The install adds two files:
+
+- `share/xdg-desktop-portal/portals/fuin.portal`
+- `share/dbus-1/services/org.freedesktop.impl.portal.desktop.fuin.service`, which starts `fuin --portal` on demand
+  (it exits after 10 idle minutes)
+
+Both work under `/usr` (package) and under `~/.local`: xdg-desktop-portal 1.22 also reads
+`~/.local/share/xdg-desktop-portal/portals`. Older versions only read `/usr/share/xdg-desktop-portal/portals`, so copy
+`fuin.portal` there with `sudo`. Do not set `XDG_DESKTOP_PORTAL_DIR`: it hides every other portal.
+
+Then pick Fūin for the FileChooser in `~/.config/xdg-desktop-portal/portals.conf`, or in `<desktop>-portals.conf`
+(for example `hyprland-portals.conf`), which wins when it exists. Keep your other `[preferred]` lines:
+
+```ini
+[preferred]
+org.freedesktop.impl.portal.FileChooser=fuin
+```
+
+and restart the portal: `systemctl --user restart xdg-desktop-portal`. Only local folders can be picked.
 
 ### Keyboard
 

@@ -10,6 +10,7 @@
 #include <QHash>
 #include <QPointer>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QSet>
 #include <QTimer>
 #include <QUrl>
@@ -47,6 +48,8 @@ class FolderModel : public QAbstractListModel
     Q_PROPERTY(QString sortField READ sortField WRITE setSortField NOTIFY optionsChanged)
     Q_PROPERTY(bool sortReversed READ sortReversed WRITE setSortReversed NOTIFY optionsChanged)
     Q_PROPERTY(bool dirsOnly READ dirsOnly WRITE setDirsOnly NOTIFY optionsChanged)
+    // File chooser filters: globs ("*.png") or MIME types ("image/*"); folders always pass.
+    Q_PROPERTY(QStringList typeFilter READ typeFilter WRITE setTypeFilter NOTIFY optionsChanged)
     Q_PROPERTY(int selectionCount READ selectionCount NOTIFY selectionChanged)
     Q_PROPERTY(qint64 selectionSize READ selectionSize NOTIFY selectionChanged)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
@@ -112,6 +115,8 @@ public:
     void setSortReversed(bool v);
     bool dirsOnly() const { return m_dirsOnly; }
     void setDirsOnly(bool v);
+    QStringList typeFilter() const { return m_typeFilter; }
+    void setTypeFilter(const QStringList &patterns);
     int selectionCount() const { return int(m_sel.size()); }
     qint64 selectionSize() const;
     int currentIndex() const { return m_current; }
@@ -206,6 +211,8 @@ private:
     QString m_sortField = QStringLiteral("name");
     bool m_sortReversed = false;
     bool m_dirsOnly = false;
+    QStringList m_typeFilter;
+    QList<QRegularExpression> m_nameRx, m_mimeRx;
     QCollator m_collator;
 
     QSet<QUrl> m_sel;

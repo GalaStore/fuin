@@ -194,6 +194,26 @@ private Q_SLOTS:
         QCOMPARE(m.names(), expected);
     }
 
+    void typeFilter()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        for (const char *n : {"a.png", "B.PNG", "c.jpg", "d.txt", "e.tar.gz", "notes"})
+            createFile(dir.filePath(QString::fromLatin1(n)));
+        QDir(dir.path()).mkdir(u"sub.d"_s);
+        Model m;
+        QVERIFY(m.list(dir.path()));
+
+        m.setTypeFilter({u"*.png"_s});
+        QCOMPARE(m.names(), (QStringList{u"sub.d"_s, u"a.png"_s, u"B.PNG"_s}));
+        m.setTypeFilter({u"image/*"_s});
+        QCOMPARE(m.names(), (QStringList{u"sub.d"_s, u"a.png"_s, u"B.PNG"_s, u"c.jpg"_s}));
+        m.setTypeFilter({u"text/plain"_s, u"*.gz"_s});
+        QCOMPARE(m.names(), (QStringList{u"sub.d"_s, u"d.txt"_s, u"e.tar.gz"_s}));
+        m.setTypeFilter({});
+        QCOMPARE(m.rowCount(), 7);
+    }
+
     void refreshMovesByTime_data()
     {
         QTest::addColumn<int>("moved");

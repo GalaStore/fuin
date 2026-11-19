@@ -10,12 +10,18 @@ ApplicationWindow {
   property string startUrl: ""
   property string revealUrl: ""
   property bool startPreview: false
+  // Set when the window is the system file chooser (`fuin --portal`): the FileChooser request.
+  property var picker: null
+  readonly property bool picking: !!picker
+  readonly property var pickerPatterns: picking ? pickerBar.item.patterns : []
   signal closing2()
+  signal picked(bool accepted, var urls, int filter)
 
-  width: 1320; height: 820
+  width: picking ? 1080 : 1320; height: picking ? 700 : 820
   minimumWidth: 720; minimumHeight: 460
   visible: true
-  title: (pane ? pane.model.title : "") + " — Fūin"
+  title: picking ? (picker.title || (picker.mode === "open" ? (picker.directory ? qsTr("Select folder") : qsTr("Open file")) : qsTr("Save file"))) + " — Fūin"
+                 : (pane ? pane.model.title : "") + " — Fūin"
   color: Theme.surface
 
   property var tabs: []
@@ -84,9 +90,17 @@ ApplicationWindow {
     if (a.setDefault) DefaultApps.setDefault(a.setDefault[0], a.setDefault[1])
     if (a.closeSettings) settingsDlg.close()
     if (a.approve !== undefined && agentDlg.opened) { Ipc.resolve(agentDlg.reqId, a.approve); agentDlg.close() }
+    if (picking) {
+      if (a.pickName !== undefined) pickerBar.item.name = a.pickName
+      if (a.pickFilter !== undefined) pickerBar.item.filterIndex = a.pickFilter
+      if (a.pickAccept) pickerBar.item.accept()
+      if (a.overwrite !== undefined && overwriteDlg.opened) { if (a.overwrite) overwriteDlg.confirm(); else overwriteDlg.close() }
+      if (a.pickCancel) appWin.close()
+    }
     if (a.grab) Qt.callLater(() => AppInfo.grabWindow(appWin, a.grab))
   }
   function toast(text, kind) { toaster.show(text, kind) }
+  function pickerActivate(entry) { if (picking) pickerBar.item.activate(entry) }
 
   // ---------------------------------------------------------------- actions used by panes
   function copyContext(urls) { packer.build(urls, Config.contextFormat, true) }
@@ -143,11 +157,19 @@ ApplicationWindow {
   Rectangle { anchors.fill: parent; color: Theme.surface }
   Watermark { kind: "konoha"; width: 520; height: 520; x: -150; y: parent.height - 360; opacity: 0.025 }
 
-  Sidebar { id: side; win: appWin; x: 0; y: 0; width: 236; height: parent.height - status.height }
+  Sidebar { id: side; win: appWin; x: 0; y: 0; width: 236; height: parent.height - status.height - pickerBar.height }
+
+  Loader {
+    id: pickerBar
+    active: appWin.picking
+    anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: status.top
+    height: item ? item.height : 0
+    sourceComponent: PickerBar { win: appWin; request: appWin.picker; onPicked: (accepted, urls, filter) => appWin.picked(accepted, urls, filter) }
+  }
 
   Item {
     id: main
-    anchors.left: side.right; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: status.top
+    anchors.left: side.right; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: pickerBar.top
     anchors.rightMargin: 10
 
     // tab strip
@@ -371,6 +393,19 @@ ApplicationWindow {
     onClosed: if (appWin.pane) appWin.pane.focusView()
   }
   Modal {
+    id: overwriteDlg
+    property string name: ""
+    property var onYes: null
+    title: qsTr("Replace «%1»?").arg(name); icon: "warning"
+    Txt { width: parent.width; wrapMode: Text.Wrap; text: qsTr("A file with this name already exists here. Saving will overwrite it.") }
+    buttons: [
+      Btn { kind: "text"; text: qsTr("Cancel"); onClicked: overwriteDlg.close() },
+      Btn { kind: "danger"; text: qsTr("Replace"); onClicked: overwriteDlg.confirm() }
+    ]
+    function confirm() { const f = onYes; close(); if (f) f() }
+  }
+  function confirmOverwrite(name, onYes) { overwriteDlg.name = name; overwriteDlg.onYes = onYes; overwriteDlg.open() }
+  Modal {
     id: propsDlg
     property var items: []
     readonly property var one: items.length === 1 ? items[0] : null
@@ -440,7 +475,7 @@ ApplicationWindow {
 
   // ---------------------------------------------------------------- shortcuts
   readonly property bool typing: !!activeFocusItem && activeFocusItem.cursorPosition !== undefined
-  readonly property bool modalOpen: delDlg.opened || nameDlg.opened || propsDlg.opened || agentDlg.opened || emptyDlg.opened || keysDlg.opened || aboutDlg.opened || settingsDlg.opened || ctx.visible
+  readonly property bool modalOpen: delDlg.opened || nameDlg.opened || propsDlg.opened || agentDlg.opened || overwriteDlg.opened || emptyDlg.opened || keysDlg.opened || aboutDlg.opened || settingsDlg.opened || ctx.visible
   component Key: Shortcut { property bool always: false; enabled: !appWin.modalOpen && (always || !appWin.typing); context: Qt.WindowShortcut }
   Key { sequence: "Ctrl+L"; always: true; onActivated: pathBar.edit() }
   Key { sequence: "Ctrl+F"; always: true; onActivated: { search.forceActiveFocus(); search.selectAll() } }
@@ -478,10 +513,11 @@ ApplicationWindow {
   Key { sequence: "Ctrl+Alt+T"; always: true; onActivated: FileOps.openTerminal(pane.model.localPath) }
   Key { sequence: "F1"; always: true; onActivated: keysDlg.open() }
   Key { sequence: "Ctrl+,"; always: true; onActivated: openSettings("") }
-  Key { sequence: "Ctrl+Q"; always: true; onActivated: Qt.quit() }
+  Key { sequence: "Ctrl+Q"; always: true; onActivated: picking ? appWin.close() : Qt.quit() }
 
   Component.onCompleted: {
     newTab(startUrl || AppInfo.toUrl(AppInfo.homePath))
+    if (picking && picker.mode === "save") Qt.callLater(() => pickerBar.item.focusName())
     if (revealUrl) Qt.callLater(() => reveal(revealUrl, startPreview))
   }
   onClosing: closing2()

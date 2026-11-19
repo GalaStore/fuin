@@ -28,7 +28,7 @@ class IpcServer : public QObject
     Q_PROPERTY(int pendingConfirmations READ pendingConfirmations NOTIFY pendingChanged)
 public:
     explicit IpcServer(FileOps *ops, QObject *parent = nullptr);
-    bool listen();
+    bool listen(const QString &path = {}); // default: the GUI's single-instance socket
     bool listening() const { return m_server.isListening(); }
     QString socketPath() const;
     int pendingConfirmations() const { return int(m_pending.size()); }

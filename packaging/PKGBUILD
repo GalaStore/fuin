@@ -8,7 +8,7 @@ url="https://github.com/GalaStore/fuin"
 license=('MIT')
 depends=('qt6-base' 'qt6-declarative' 'qt6-svg' 'kio' 'kio-extras' 'solid' 'kcoreaddons' 'kservice' 'syntax-highlighting'
          'ttf-material-symbols-variable' 'hicolor-icon-theme')
-makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'git')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools' 'git')
 optdepends=('arrow: Parquet previews (schema, statistics, rows)'
             'kdegraphics-thumbnailers: PDF thumbnails'
             'ffmpegthumbs: video thumbnails'
@@ -18,7 +18,8 @@ optdepends=('arrow: Parquet previews (schema, statistics, rows)'
             'duckdb: «Abrir en DuckDB» for CSV/Parquet/JSON'
             'git: repository badges'
             'plasma-activities-stats: «Recientes» (recentlyused:/) place'
-            'kitty: default terminal (any terminal works)')
+            'kitty: default terminal (any terminal works)'
+            'xdg-desktop-portal: Fūin as the system file chooser (fuin --portal)')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('7635fd95d72e288adcacb844716b9ff7f320d3990c189ecc19bfdb4e33cd6b15')
 
