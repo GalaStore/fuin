@@ -61,7 +61,7 @@ sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-
 sudo pacman -S --needed arrow fd ripgrep git duckdb kdegraphics-thumbnailers ffmpegthumbs kimageformats plasma-activities-stats
 ```
 
-Then either build the package (`cd packaging && makepkg -si`, once a release tag exists) or build from source:
+Then either build the package (`cd packaging && makepkg -si`, which builds the latest release) or build from source:
 
 ### From source (any distro)
 

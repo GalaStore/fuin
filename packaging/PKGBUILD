@@ -1,6 +1,6 @@
 # Maintainer: Galactus <https://github.com/Galactuuus>
 pkgname=fuin
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Keyboard-first file manager (Qt 6 + KIO) with data/model previews, AI context packs and an MCP server"
 arch=('x86_64' 'aarch64')
@@ -21,7 +21,7 @@ optdepends=('arrow: Parquet previews (schema, statistics, rows)'
             'kitty: default terminal (any terminal works)'
             'xdg-desktop-portal: Fūin as the system file chooser (fuin --portal)')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('7635fd95d72e288adcacb844716b9ff7f320d3990c189ecc19bfdb4e33cd6b15')
+sha256sums=('e3129c6c8730a0310dd6d1f99228784e40b440f63199d98ca7db531895faaeea')
 
 build() {
   cmake -S "$pkgname-$pkgver" -B build -G Ninja \
