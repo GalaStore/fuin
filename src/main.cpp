@@ -16,6 +16,7 @@
 #include "preview/Previewer.h"
 #ifdef FUIN_WITH_PORTAL
 #include "portal/FileChooserPortal.h"
+#include "portal/PortalLook.h"
 #endif
 
 #include <KConfig>
@@ -38,6 +39,7 @@
 #include <QUrl>
 
 #include <iostream>
+#include <string_view>
 
 #ifndef FUIN_VERSION
 #define FUIN_VERSION "0.2.0"
@@ -148,18 +150,28 @@ static int runPortal(QApplication &app)
 {
     // Picker windows come and go; the process stays until the portal's idle timer ends it.
     app.setQuitOnLastWindowClosed(false);
-    IpcServer *ipc = registerQmlTypes(&app);
     auto *portal = new FileChooserPortal(&app);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "Portal", portal);
-
-    QQmlApplicationEngine engine;
-    setupEngine(engine, app);
-    engine.load(QUrl(u"qrc:/qml/PortalRoot.qml"_s));
-    if (engine.rootObjects().isEmpty() || !portal->registerOnBus())
+    // xdg-desktop-portal activates us while it starts and blocks until the name appears, so own it
+    // before anything slow; the QML side is built on the first request.
+    if (!portal->registerOnBus())
         return 1;
-    // Never the GUI's socket: agents must keep talking to the file manager, not to a picker.
-    if (qEnvironmentVariableIntValue("FUIN_DEV") == 1)
-        ipc->listen(QFileInfo(Config::socketPath()).absolutePath() + u"/fuin-portal.sock"_s);
+
+    QQmlApplicationEngine *engine = nullptr;
+    QObject::connect(portal, &FileChooserPortal::requested, &app, [&app, portal, &engine](const QVariantMap &req) {
+        if (!engine) {
+            IpcServer *ipc = registerQmlTypes(&app);
+            qmlRegisterSingletonInstance("Fuin", 1, 0, "Portal", portal);
+            engine = new QQmlApplicationEngine(&app);
+            setupEngine(*engine, app);
+            engine->load(QUrl(u"qrc:/qml/PortalRoot.qml"_s));
+            // Never the GUI's socket: agents must keep talking to the file manager, not to a picker.
+            if (qEnvironmentVariableIntValue("FUIN_DEV") == 1)
+                ipc->listen(QFileInfo(Config::socketPath()).absolutePath() + u"/fuin-portal.sock"_s);
+        }
+        QObject *root = engine->rootObjects().value(0);
+        if (!root || !QMetaObject::invokeMethod(root, "open", Q_ARG(QVariant, req)))
+            portal->respond(req.value(u"id"_s).toString(), false, {}, -1);
+    });
     return app.exec();
 }
 #endif
@@ -172,12 +184,30 @@ int main(int argc, char **argv)
             return runHeadless(argc, argv);
     }
 
+#ifdef FUIN_WITH_PORTAL
+    // xdg-desktop-portal starts `fuin --portal` and waits for it, so anything in QApplication's
+    // constructor that calls the portal (app ID registration, a portal-aware platform theme such as
+    // qt6ct or xdgdesktopportal) blocks until D-Bus activation times out, about 25 s.
+    QByteArray platformTheme;
+    bool portalMode = false;
+    for (int i = 1; i < argc && !portalMode; ++i)
+        portalMode = std::string_view(argv[i]) == "--portal";
+    if (portalMode) {
+        platformTheme = qgetenv("QT_QPA_PLATFORMTHEME");
+        qputenv("QT_NO_XDG_DESKTOP_PORTAL", "1");
+        qputenv("QT_QPA_PLATFORMTHEME", "generic");
+    }
+#endif
     QApplication::setApplicationName(u"fuin"_s);
     QApplication::setApplicationDisplayName(u"Fūin"_s);
     QApplication::setApplicationVersion(QString::fromLatin1(FUIN_VERSION));
     QApplication::setOrganizationDomain(u"galactuuus.github.io"_s);
     QApplication::setDesktopFileName(u"fuin"_s); // Wayland app_id / X11 class
     QApplication app(argc, argv);
+#ifdef FUIN_WITH_PORTAL
+    if (portalMode)
+        PortalLook::apply(platformTheme);
+#endif
     // Only the GUI is translated: --mcp and --context return early above and always speak English.
     auto *translator = new QTranslator(&app);
     if (translator->load(QLocale(), u"fuin"_s, u"_"_s, u":/i18n"_s))
@@ -204,12 +234,12 @@ int main(int argc, char **argv)
     p.addPositionalArgument(u"url"_s, u"Folder, file or KIO URL to open."_s, u"[url]"_s);
     p.process(app);
 
-    ensureKioTerminal();
-    QObject::connect(Config::instance(), &Config::terminalChanged, [] { ensureKioTerminal(true); });
 #ifdef FUIN_WITH_PORTAL
     if (p.isSet(portal))
         return runPortal(app);
 #endif
+    ensureKioTerminal();
+    QObject::connect(Config::instance(), &Config::terminalChanged, [] { ensureKioTerminal(true); });
 
     const QString start = argToUrl(p.positionalArguments().value(0));
     const QString revealUrl = p.isSet(reveal) ? argToUrl(p.value(reveal)) : p.isSet(preview) ? argToUrl(p.value(preview)) : QString();

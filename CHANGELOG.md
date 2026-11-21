@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   restart ([#8](https://github.com/GalaStore/fuin/issues/8)).
 - Spanish translation for the file chooser (portal) strings.
 
+### Fixed
+
+- `fuin --portal` no longer delays login by about 25 s. Qt's start-up called the portal (app ID registration and
+  portal-aware platform themes such as qt6ct), which was itself waiting for Fūin, so both hung until D-Bus activation
+  timed out. Portal mode now keeps Qt away from the portal, takes its bus name before loading the picker (built on
+  the first request) and reads the qt6ct icons, style, font and palette itself
+  ([#39](https://github.com/GalaStore/fuin/issues/39)).
+
 ## [0.2.0] - 2026-11-19
 
 ### Added

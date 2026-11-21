@@ -68,7 +68,7 @@ endif()
 
 if(FUIN_WITH_PORTAL)
   find_package(Qt6 REQUIRED COMPONENTS DBus)
-  target_sources(fuin PRIVATE src/portal/FileChooserPortal.cpp)
+  target_sources(fuin PRIVATE src/portal/FileChooserPortal.cpp src/portal/PortalLook.cpp)
   target_link_libraries(fuin PRIVATE Qt6::DBus)
   target_compile_definitions(fuin PRIVATE FUIN_WITH_PORTAL)
 endif()
