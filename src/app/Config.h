@@ -89,7 +89,8 @@ public:
     // Drops a key from fuin.conf so its built-in default (or the desktop shell's value) applies again.
     Q_INVOKABLE void resetToDefault(const QString &key);
     Q_INVOKABLE bool isDir(const QString &path) const;
-    Q_INVOKABLE bool hasProgram(const QString &command) const;
+    Q_INVOKABLE bool isFile(const QString &path) const;
+    Q_INVOKABLE bool hasProgram(const QString &program) const;
 
     // MIME types of files opened from Fūin, most recent first (feeds "Aplicaciones por defecto").
     QStringList openedMimeTypes() const;

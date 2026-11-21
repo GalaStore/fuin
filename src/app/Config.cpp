@@ -6,7 +6,6 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QProcess>
 #include <QStandardPaths>
 
 namespace {
@@ -369,9 +368,10 @@ void Config::setAnimationSpeed(qreal speed)
 }
 
 bool Config::isDir(const QString &path) const { return QFileInfo(expand(path)).isDir(); }
+bool Config::isFile(const QString &path) const { return QFileInfo(expand(path)).isFile(); }
 
-bool Config::hasProgram(const QString &command) const
+bool Config::hasProgram(const QString &program) const
 {
-    const QString program = QProcess::splitCommand(command).value(0);
-    return !program.isEmpty() && !QStandardPaths::findExecutable(expand(program)).isEmpty();
+    const QString p = expand(program);
+    return !p.isEmpty() && !QStandardPaths::findExecutable(p).isEmpty();
 }

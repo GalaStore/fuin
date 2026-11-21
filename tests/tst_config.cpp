@@ -25,11 +25,11 @@ private Q_SLOTS:
     {
         Config *c = Config::instance();
         QSignalSpy terminal(c, &Config::terminalChanged);
-        c->setTerminalSetting(QStringLiteral("  my-term -e  "));
-        QCOMPARE(c->terminalSetting(), QStringLiteral("my-term -e"));
-        QCOMPARE(c->terminal(), QStringLiteral("my-term -e"));
+        c->setTerminalSetting(QStringLiteral("  my-term  "));
+        QCOMPARE(c->terminalSetting(), QStringLiteral("my-term"));
+        QCOMPARE(c->terminal(), QStringLiteral("my-term"));
         QCOMPARE(terminal.count(), 1);
-        c->setTerminalSetting(QStringLiteral("my-term -e"));
+        c->setTerminalSetting(QStringLiteral("my-term"));
         QCOMPARE(terminal.count(), 1);
         c->setTerminalSetting(QString());
         QVERIFY(c->terminalSetting().isEmpty());
@@ -99,7 +99,10 @@ private Q_SLOTS:
         Config *c = Config::instance();
         QVERIFY(c->isDir(QStringLiteral("~")));
         QVERIFY(!c->isDir(QStringLiteral("/no/such/dir")));
-        QVERIFY(c->hasProgram(QStringLiteral("sh -c true")));
+        QVERIFY(c->isFile(c->configFile()));
+        QVERIFY(!c->isFile(QStringLiteral("~")));
+        QVERIFY(c->hasProgram(QStringLiteral("sh")));
+        QVERIFY(c->hasProgram(QStringLiteral(" /bin/sh ")));
         QVERIFY(!c->hasProgram(QStringLiteral("no-such-program-fuin")));
         QVERIFY(!c->hasProgram(QString()));
     }
