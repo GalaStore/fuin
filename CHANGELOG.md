@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Unit tests for the preview parsers (`tst_inspector`: CSV/TSV, JSON, JSON Lines, safetensors, GGUF v2/v3, ONNX and,
+  with Arrow, Parquet) and for the secret guard (`tst_secretguard`: every file name and token pattern, positive and
+  negative). CI runs them with and without Parquet ([#7](https://github.com/GalaStore/fuin/issues/7)).
+
 ## [0.2.0] - 2026-11-19
 
 ### Added
