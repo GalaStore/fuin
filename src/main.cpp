@@ -16,6 +16,7 @@
 #include "preview/Previewer.h"
 #ifdef FUIN_WITH_PORTAL
 #include "portal/FileChooserPortal.h"
+#include "portal/PortalLook.h"
 #endif
 
 #include <KConfig>
@@ -203,6 +204,10 @@ int main(int argc, char **argv)
     QApplication::setOrganizationDomain(u"galactuuus.github.io"_s);
     QApplication::setDesktopFileName(u"fuin"_s); // Wayland app_id / X11 class
     QApplication app(argc, argv);
+#ifdef FUIN_WITH_PORTAL
+    if (portalMode)
+        PortalLook::apply(platformTheme);
+#endif
     // Only the GUI is translated: --mcp and --context return early above and always speak English.
     auto *translator = new QTranslator(&app);
     if (translator->load(QLocale(), u"fuin"_s, u"_"_s, u":/i18n"_s))
