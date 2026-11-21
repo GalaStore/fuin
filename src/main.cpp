@@ -60,11 +60,12 @@ static QString argToUrl(const QString &arg)
 // Plasma that key is usually unset or names a terminal that is not installed, so opening a text
 // file whose default app is vim fails. Point KIO at the terminal Fūin already resolves. The write
 // goes to Fūin's own ~/.config/fuinrc and never to kdeglobals, which belongs to the desktop.
-static void ensureKioTerminal()
+// When the user picks a terminal in Ajustes, it replaces whatever KIO had configured.
+static void ensureKioTerminal(bool chosen = false)
 {
     const KConfigGroup effective(KSharedConfig::openConfig(), u"General"_s);
     const QString configured = QProcess::splitCommand(effective.readPathEntry("TerminalApplication", QString())).value(0);
-    if (!configured.isEmpty() && !QStandardPaths::findExecutable(configured).isEmpty())
+    if (!chosen && !configured.isEmpty() && !QStandardPaths::findExecutable(configured).isEmpty())
         return;
     const QString terminal = Config::instance()->terminal();
     if (terminal.isEmpty())
@@ -204,6 +205,7 @@ int main(int argc, char **argv)
     p.process(app);
 
     ensureKioTerminal();
+    QObject::connect(Config::instance(), &Config::terminalChanged, [] { ensureKioTerminal(true); });
 #ifdef FUIN_WITH_PORTAL
     if (p.isSet(portal))
         return runPortal(app);

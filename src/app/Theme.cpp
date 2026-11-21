@@ -86,6 +86,11 @@ Theme::Theme(QObject *parent)
     connect(&m_watcher, &QFileSystemWatcher::fileChanged, &m_debounce, qOverload<>(&QTimer::start));
     connect(&m_watcher, &QFileSystemWatcher::directoryChanged, &m_debounce, qOverload<>(&QTimer::start));
     connect(Config::instance(), &Config::changed, this, &Theme::loadMotion);
+    connect(Config::instance(), &Config::themeFilesChanged, this, [this] {
+        loadColors();
+        loadMotion();
+        rewatch();
+    });
 
     m_fade.setStartValue(0.0);
     m_fade.setEndValue(1.0);
