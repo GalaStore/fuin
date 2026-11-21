@@ -148,18 +148,28 @@ static int runPortal(QApplication &app)
 {
     // Picker windows come and go; the process stays until the portal's idle timer ends it.
     app.setQuitOnLastWindowClosed(false);
-    IpcServer *ipc = registerQmlTypes(&app);
     auto *portal = new FileChooserPortal(&app);
-    qmlRegisterSingletonInstance("Fuin", 1, 0, "Portal", portal);
-
-    QQmlApplicationEngine engine;
-    setupEngine(engine, app);
-    engine.load(QUrl(u"qrc:/qml/PortalRoot.qml"_s));
-    if (engine.rootObjects().isEmpty() || !portal->registerOnBus())
+    // xdg-desktop-portal activates us while it starts and blocks until the name appears, so own it
+    // before anything slow; the QML side is built on the first request.
+    if (!portal->registerOnBus())
         return 1;
-    // Never the GUI's socket: agents must keep talking to the file manager, not to a picker.
-    if (qEnvironmentVariableIntValue("FUIN_DEV") == 1)
-        ipc->listen(QFileInfo(Config::socketPath()).absolutePath() + u"/fuin-portal.sock"_s);
+
+    QQmlApplicationEngine *engine = nullptr;
+    QObject::connect(portal, &FileChooserPortal::requested, &app, [&app, portal, &engine](const QVariantMap &req) {
+        if (!engine) {
+            IpcServer *ipc = registerQmlTypes(&app);
+            qmlRegisterSingletonInstance("Fuin", 1, 0, "Portal", portal);
+            engine = new QQmlApplicationEngine(&app);
+            setupEngine(*engine, app);
+            engine->load(QUrl(u"qrc:/qml/PortalRoot.qml"_s));
+            // Never the GUI's socket: agents must keep talking to the file manager, not to a picker.
+            if (qEnvironmentVariableIntValue("FUIN_DEV") == 1)
+                ipc->listen(QFileInfo(Config::socketPath()).absolutePath() + u"/fuin-portal.sock"_s);
+        }
+        QObject *root = engine->rootObjects().value(0);
+        if (!root || !QMetaObject::invokeMethod(root, "open", Q_ARG(QVariant, req)))
+            portal->respond(req.value(u"id"_s).toString(), false, {}, -1);
+    });
     return app.exec();
 }
 #endif
@@ -204,12 +214,12 @@ int main(int argc, char **argv)
     p.addPositionalArgument(u"url"_s, u"Folder, file or KIO URL to open."_s, u"[url]"_s);
     p.process(app);
 
-    ensureKioTerminal();
-    QObject::connect(Config::instance(), &Config::terminalChanged, [] { ensureKioTerminal(true); });
 #ifdef FUIN_WITH_PORTAL
     if (p.isSet(portal))
         return runPortal(app);
 #endif
+    ensureKioTerminal();
+    QObject::connect(Config::instance(), &Config::terminalChanged, [] { ensureKioTerminal(true); });
 
     const QString start = argToUrl(p.positionalArguments().value(0));
     const QString revealUrl = p.isSet(reveal) ? argToUrl(p.value(reveal)) : p.isSet(preview) ? argToUrl(p.value(preview)) : QString();
