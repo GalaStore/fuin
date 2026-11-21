@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: MIT
 #include "preview/Inspector.h"
 
+#include <cstring>
+
 #include <QDir>
 #include <QFile>
 #include <QTemporaryDir>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTest>
+#include <QtEndian>
 
 using namespace Qt::StringLiterals;
 
@@ -17,6 +23,122 @@ QVariantMap column(const QVariantMap &table, int i)
 QVariantList row(const QVariantMap &table, int i)
 {
     return table.value(u"rows"_s).toList().value(i).toList();
+}
+
+// Value of a model header field by its label; invalid when absent.
+QVariant field(const QVariantMap &model, const QString &label)
+{
+    for (const QVariant &f : model.value(u"fields"_s).toList())
+        if (f.toList().value(0).toString() == label)
+            return f.toList().value(1);
+    return {};
+}
+
+template<typename T>
+void put(QByteArray &b, T v)
+{
+    v = qToLittleEndian(v);
+    b.append(reinterpret_cast<const char *>(&v), sizeof v);
+}
+
+struct Gguf {
+    QByteArray kv, tensors;
+    quint64 nKv = 0, nTensors = 0;
+
+    static void str(QByteArray &b, const QByteArray &s)
+    {
+        put<quint64>(b, quint64(s.size()));
+        b += s;
+    }
+    Gguf &string(const QByteArray &key, const QByteArray &value)
+    {
+        str(kv, key);
+        put<quint32>(kv, 8);
+        str(kv, value);
+        ++nKv;
+        return *this;
+    }
+    Gguf &u32(const QByteArray &key, quint32 value)
+    {
+        str(kv, key);
+        put<quint32>(kv, 4);
+        put<quint32>(kv, value);
+        ++nKv;
+        return *this;
+    }
+    Gguf &f32(const QByteArray &key, float value)
+    {
+        quint32 bits;
+        std::memcpy(&bits, &value, 4);
+        str(kv, key);
+        put<quint32>(kv, 6);
+        put<quint32>(kv, bits);
+        ++nKv;
+        return *this;
+    }
+    Gguf &strings(const QByteArray &key, const QList<QByteArray> &values)
+    {
+        str(kv, key);
+        put<quint32>(kv, 9);
+        put<quint32>(kv, 8);
+        put<quint64>(kv, quint64(values.size()));
+        for (const QByteArray &v : values)
+            str(kv, v);
+        ++nKv;
+        return *this;
+    }
+    Gguf &i32s(const QByteArray &key, int n)
+    {
+        str(kv, key);
+        put<quint32>(kv, 9);
+        put<quint32>(kv, 5);
+        put<quint64>(kv, quint64(n));
+        for (int i = 0; i < n; ++i)
+            put<qint32>(kv, i);
+        ++nKv;
+        return *this;
+    }
+    Gguf &tensor(const QByteArray &name, const QList<quint64> &dims, quint32 type)
+    {
+        str(tensors, name);
+        put<quint32>(tensors, quint32(dims.size()));
+        for (quint64 d : dims)
+            put<quint64>(tensors, d);
+        put<quint32>(tensors, type);
+        put<quint64>(tensors, 0);
+        ++nTensors;
+        return *this;
+    }
+    QByteArray bytes(quint32 version) const
+    {
+        QByteArray b = "GGUF";
+        put<quint32>(b, version);
+        put<quint64>(b, nTensors);
+        put<quint64>(b, nKv);
+        return b + kv + tensors;
+    }
+};
+
+// Protocol Buffers wire format, enough for an ONNX ModelProto header.
+QByteArray varint(quint64 v)
+{
+    QByteArray b;
+    do {
+        char c = char(v & 0x7f);
+        v >>= 7;
+        if (v)
+            c |= char(0x80);
+        b += c;
+    } while (v);
+    return b;
+}
+QByteArray pbInt(int field, quint64 v)
+{
+    return varint(quint64(field) << 3) + varint(v);
+}
+QByteArray pbBytes(int field, const QByteArray &v)
+{
+    return varint((quint64(field) << 3) | 2) + varint(quint64(v.size())) + v;
 }
 }
 
@@ -51,6 +173,12 @@ private Q_SLOTS:
     void dispatch();
     void dispatchSecrets();
     void folder();
+    void safetensors();
+    void safetensorsInvalid();
+    void gguf_data();
+    void gguf();
+    void ggufInvalid();
+    void onnx();
 };
 
 void TestInspector::csvSniffsDelimiter_data()
@@ -249,6 +377,113 @@ void TestInspector::folder()
     QCOMPARE(t.value(u"files"_s).toInt(), 3);
     QCOMPARE(t.value(u"project"_s).toStringList(), (QStringList{u"Python"_s, u"CMake/C++"_s}));
     QCOMPARE(t.value(u"readme"_s).toString(), u"# Hi\n"_s);
+}
+
+void TestInspector::safetensors()
+{
+    const QJsonObject header{
+        {u"__metadata__"_s, QJsonObject{{u"format"_s, u"pt"_s}}},
+        {u"w"_s, QJsonObject{{u"dtype"_s, u"F16"_s}, {u"shape"_s, QJsonArray{2, 3}}, {u"data_offsets"_s, QJsonArray{0, 12}}}},
+        {u"b"_s, QJsonObject{{u"dtype"_s, u"F32"_s}, {u"shape"_s, QJsonArray{3}}, {u"data_offsets"_s, QJsonArray{12, 24}}}},
+    };
+    const QByteArray json = QJsonDocument(header).toJson(QJsonDocument::Compact);
+    QByteArray file;
+    put<quint64>(file, quint64(json.size()));
+    file += json + QByteArray(24, '\0');
+
+    const QVariantMap m = Inspector::inspect(write(u"tiny.safetensors"_s, file));
+    QCOMPARE(m.value(u"kind"_s).toString(), u"model"_s);
+    QCOMPARE(m.value(u"format"_s).toString(), u"safetensors"_s);
+    QCOMPARE(m.value(u"params"_s).toDouble(), 9.0);
+    QCOMPARE(field(m, u"Tensors"_s).toInt(), 2);
+    QCOMPARE(field(m, u"Parameters"_s).toString(), u"9"_s);
+    QCOMPARE(field(m, u"Types"_s).toString(), u"F16 67% · F32 33%"_s);
+    QCOMPARE(field(m, u"format"_s).toString(), u"pt"_s);
+    const QVariantList tensors = m.value(u"tensors"_s).toList();
+    QCOMPARE(tensors.size(), 2);
+    QCOMPARE(tensors.at(1).toMap().value(u"shape"_s).toString(), u"[2, 3]"_s);
+}
+
+void TestInspector::safetensorsInvalid()
+{
+    QCOMPARE(Inspector::inspectSafetensors(write(u"short.safetensors"_s, "abc")).value(u"msg"_s).toString(), u"Incomplete header"_s);
+    QByteArray zero;
+    put<quint64>(zero, 0);
+    QCOMPARE(Inspector::inspectSafetensors(write(u"zero.safetensors"_s, zero)).value(u"msg"_s).toString(), u"Invalid safetensors header"_s);
+}
+
+void TestInspector::gguf_data()
+{
+    QTest::addColumn<quint32>("version");
+    QTest::newRow("v2") << 2u;
+    QTest::newRow("v3") << 3u;
+}
+
+void TestInspector::gguf()
+{
+    QFETCH(quint32, version);
+    Gguf g;
+    g.string("general.architecture", "llama")
+        .string("general.name", "Tiny")
+        .u32("general.file_type", 15)
+        .u32("llama.context_length", 2048)
+        .u32("llama.block_count", 2)
+        .f32("llama.rope.freq_base", 10000.0f)
+        .strings("tokenizer.ggml.tokens", {"<s>", "</s>"})
+        .i32s("tokenizer.ggml.token_type", 3)
+        .string("tokenizer.ggml.model", "gpt2")
+        .tensor("token_embd.weight", {4, 2}, 0)
+        .tensor("blk.0.attn_q.weight", {8}, 12);
+
+    const QVariantMap m = Inspector::inspect(write(u"tiny.gguf"_s, g.bytes(version)));
+    QCOMPARE(m.value(u"kind"_s).toString(), u"model"_s);
+    QCOMPARE(m.value(u"format"_s).toString(), u"gguf"_s);
+    QCOMPARE(field(m, u"Format"_s).toString(), u"GGUF v%1"_s.arg(version));
+    QCOMPARE(field(m, u"Name"_s).toString(), u"Tiny"_s);
+    QCOMPARE(field(m, u"Architecture"_s).toString(), u"llama"_s);
+    QCOMPARE(field(m, u"Quantization"_s).toString(), u"Q4_K_M"_s);
+    QCOMPARE(field(m, u"Context"_s).toUInt(), 2048u);
+    QCOMPARE(field(m, u"Layers"_s).toUInt(), 2u);
+    QCOMPARE(field(m, u"Tokenizer"_s).toString(), u"gpt2"_s);
+    QCOMPARE(field(m, u"Tensors"_s).toDouble(), 2.0);
+    QCOMPARE(field(m, u"Parameters"_s).toString(), u"16"_s);
+    QCOMPARE(field(m, u"Tensor types"_s).toString(), u"F32 50% · Q4_K 50%"_s);
+    QCOMPARE(m.value(u"params"_s).toDouble(), 16.0);
+    const QVariantList tensors = m.value(u"tensors"_s).toList();
+    QCOMPARE(tensors.size(), 2);
+    QCOMPARE(tensors.at(0).toMap().value(u"shape"_s).toString(), u"[4, 2]"_s);
+    QCOMPARE(tensors.at(1).toMap().value(u"dtype"_s).toString(), u"Q4_K"_s);
+}
+
+void TestInspector::ggufInvalid()
+{
+    QCOMPARE(Inspector::inspectGguf(write(u"magic.gguf"_s, "GGML\x03\0\0\0")).value(u"msg"_s).toString(), u"Not a GGUF file"_s);
+    QCOMPARE(Inspector::inspectGguf(write(u"v1.gguf"_s, Gguf().bytes(1))).value(u"msg"_s).toString(), u"GGUF v1 is not supported"_s);
+
+    // A file cut inside the tensor table still shows the metadata but no parameter count.
+    Gguf g;
+    g.string("general.name", "Cut").tensor("t", {4}, 0);
+    const QVariantMap cut = Inspector::inspectGguf(write(u"cut.gguf"_s, g.bytes(3).chopped(6)));
+    QCOMPARE(cut.value(u"kind"_s).toString(), u"model"_s);
+    QCOMPARE(field(cut, u"Name"_s).toString(), u"Cut"_s);
+    QVERIFY(!field(cut, u"Parameters"_s).isValid());
+}
+
+void TestInspector::onnx()
+{
+    const QByteArray model = pbInt(1, 8) + pbBytes(2, "pytorch") + pbBytes(3, "2.4.0") + pbBytes(4, "ai.test") + pbInt(5, 3)
+                             + pbBytes(6, "tiny test model") + pbBytes(7, QByteArray(5000, '\x01')) + pbBytes(8, pbInt(2, 17))
+                             + pbBytes(8, pbBytes(1, "com.microsoft") + pbInt(2, 1));
+    const QVariantMap m = Inspector::inspect(write(u"tiny.onnx"_s, model));
+    QCOMPARE(m.value(u"kind"_s).toString(), u"model"_s);
+    QCOMPARE(m.value(u"format"_s).toString(), u"onnx"_s);
+    QCOMPARE(field(m, u"IR version"_s).toDouble(), 8.0);
+    QCOMPARE(field(m, u"Producer"_s).toString(), u"pytorch"_s);
+    QCOMPARE(field(m, u"Producer version"_s).toString(), u"2.4.0"_s);
+    QCOMPARE(field(m, u"Domain"_s).toString(), u"ai.test"_s);
+    QCOMPARE(field(m, u"Model version"_s).toDouble(), 3.0);
+    QCOMPARE(field(m, u"Description"_s).toString(), u"tiny test model"_s);
+    QCOMPARE(field(m, u"Opsets"_s).toString(), u"ai.onnx 17, com.microsoft 1"_s);
 }
 
 QTEST_GUILESS_MAIN(TestInspector)
