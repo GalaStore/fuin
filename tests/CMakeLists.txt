@@ -26,7 +26,7 @@ if(FUIN_WITH_PORTAL)
     target_compile_definitions(tst_portallook PRIVATE QT_NO_CAST_FROM_ASCII QT_NO_KEYWORDS)
     target_link_libraries(tst_portallook PRIVATE Qt6::Widgets Qt6::Test)
     add_test(NAME tst_portallook COMMAND tst_portallook)
-    set_tests_properties(tst_portallook PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+    set_tests_properties(tst_portallook PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QPA_PLATFORMTHEME=generic;QT_NO_XDG_DESKTOP_PORTAL=1")
 
     add_test(NAME smoke_portal
              COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/portal_startup.sh $<TARGET_FILE:fuin> ${PROJECT_SOURCE_DIR}/packaging/fuin.portal
