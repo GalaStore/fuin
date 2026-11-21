@@ -12,6 +12,10 @@ add_executable(tst_foldermodel tst_foldermodel.cpp)
 target_link_libraries(tst_foldermodel PRIVATE fuin_foldermodel Qt6::Test Qt6::DBus)
 add_test(NAME tst_foldermodel COMMAND tst_foldermodel)
 
+add_executable(tst_secretguard tst_secretguard.cpp)
+target_link_libraries(tst_secretguard PRIVATE fuin_foldermodel Qt6::Test)
+add_test(NAME tst_secretguard COMMAND tst_secretguard)
+
 add_executable(bench_foldermodel bench_foldermodel.cpp)
 target_link_libraries(bench_foldermodel PRIVATE fuin_foldermodel)
 add_test(NAME bench_foldermodel COMMAND bench_foldermodel)
