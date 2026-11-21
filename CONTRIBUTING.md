@@ -30,7 +30,9 @@ pattern; token-shaped strings are built at run time so no literal looks like a r
 throwaway config under `~/.qttest`. `bench_foldermodel` times listing
 folders in creation and shuffled order. The `smoke` tests (`tests/smoke.cmake`, a plain CMake script) run the built
 `fuin` headless: `--version`, `--context` in Markdown and XML on a generated fixture folder whose `.env` must stay out
-of the pack, and `--mcp` (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing the `.env`).
+of the pack, and `--mcp` (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing the `.env`). `smoke_portal`
+(`tests/portal_startup.sh`) starts the real xdg-desktop-portal frontend on a private session bus and requires it
+to get the FileChooser version from `fuin --portal` within 2 s; it is skipped when xdg-desktop-portal is not installed.
 
 ```sh
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DFUIN_BUILD_TESTS=ON

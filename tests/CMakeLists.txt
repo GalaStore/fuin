@@ -27,6 +27,11 @@ if(FUIN_WITH_PORTAL)
     target_link_libraries(tst_portallook PRIVATE Qt6::Widgets Qt6::Test)
     add_test(NAME tst_portallook COMMAND tst_portallook)
     set_tests_properties(tst_portallook PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+
+    add_test(NAME smoke_portal
+             COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/portal_startup.sh $<TARGET_FILE:fuin> ${PROJECT_SOURCE_DIR}/packaging/fuin.portal
+                     ${CMAKE_CURRENT_BINARY_DIR}/smoke_portal)
+    set_tests_properties(smoke_portal PROPERTIES LABELS smoke SKIP_RETURN_CODE 77 TIMEOUT 60)
 endif()
 
 add_library(fuin_inspector STATIC ${S}/preview/Inspector.cpp)
