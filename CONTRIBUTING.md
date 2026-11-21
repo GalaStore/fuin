@@ -25,7 +25,9 @@ listing order, hidden/filter, refresh moves, renames, mass deletes and selection
 parsers on small fixtures generated in the test (CSV delimiter sniffing and column statistics, JSON, JSON Lines,
 safetensors, GGUF v2/v3 and ONNX headers, and Parquet footer statistics when built with Arrow, or the "built without
 Parquet" error otherwise). `tst_secretguard` has a positive and a negative case for every secret file name and token
-pattern; token-shaped strings are built at run time so no literal looks like a real key. `bench_foldermodel` times listing
+pattern; token-shaped strings are built at run time so no literal looks like a real key. `tst_config` covers the
+`fuin.conf` accessors behind *Ajustes* (automatic values, empty lists, restoring defaults, change signals) against a
+throwaway config under `~/.qttest`. `bench_foldermodel` times listing
 folders in creation and shuffled order. The `smoke` tests (`tests/smoke.cmake`, a plain CMake script) run the built
 `fuin` headless: `--version`, `--context` in Markdown and XML on a generated fixture folder whose `.env` must stay out
 of the pack, and `--mcp` (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing the `.env`).
