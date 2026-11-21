@@ -16,6 +16,10 @@ add_executable(tst_secretguard tst_secretguard.cpp)
 target_link_libraries(tst_secretguard PRIVATE fuin_foldermodel Qt6::Test)
 add_test(NAME tst_secretguard COMMAND tst_secretguard)
 
+add_executable(tst_config tst_config.cpp)
+target_link_libraries(tst_config PRIVATE fuin_foldermodel Qt6::Test)
+add_test(NAME tst_config COMMAND tst_config)
+
 add_library(fuin_inspector STATIC ${S}/preview/Inspector.cpp)
 target_link_libraries(fuin_inspector PUBLIC fuin_foldermodel)
 if(FUIN_WITH_PARQUET AND Arrow_FOUND AND Parquet_FOUND)
