@@ -12,6 +12,21 @@ add_executable(tst_foldermodel tst_foldermodel.cpp)
 target_link_libraries(tst_foldermodel PRIVATE fuin_foldermodel Qt6::Test Qt6::DBus)
 add_test(NAME tst_foldermodel COMMAND tst_foldermodel)
 
+add_executable(tst_secretguard tst_secretguard.cpp)
+target_link_libraries(tst_secretguard PRIVATE fuin_foldermodel Qt6::Test)
+add_test(NAME tst_secretguard COMMAND tst_secretguard)
+
+add_library(fuin_inspector STATIC ${S}/preview/Inspector.cpp)
+target_link_libraries(fuin_inspector PUBLIC fuin_foldermodel)
+if(FUIN_WITH_PARQUET AND Arrow_FOUND AND Parquet_FOUND)
+    target_link_libraries(fuin_inspector PUBLIC Parquet::parquet_shared Arrow::arrow_shared)
+    target_compile_definitions(fuin_inspector PUBLIC FUIN_HAVE_PARQUET)
+endif()
+
+add_executable(tst_inspector tst_inspector.cpp)
+target_link_libraries(tst_inspector PRIVATE fuin_inspector Qt6::Test)
+add_test(NAME tst_inspector COMMAND tst_inspector)
+
 add_executable(bench_foldermodel bench_foldermodel.cpp)
 target_link_libraries(bench_foldermodel PRIVATE fuin_foldermodel)
 add_test(NAME bench_foldermodel COMMAND bench_foldermodel)
