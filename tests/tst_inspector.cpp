@@ -3,6 +3,12 @@
 
 #include <cstring>
 
+#ifdef FUIN_HAVE_PARQUET
+#include <arrow/api.h>
+#include <arrow/io/file.h>
+#include <parquet/arrow/writer.h>
+#endif
+
 #include <QDir>
 #include <QFile>
 #include <QTemporaryDir>
@@ -179,6 +185,7 @@ private Q_SLOTS:
     void gguf();
     void ggufInvalid();
     void onnx();
+    void parquet();
 };
 
 void TestInspector::csvSniffsDelimiter_data()
@@ -484,6 +491,54 @@ void TestInspector::onnx()
     QCOMPARE(field(m, u"Model version"_s).toDouble(), 3.0);
     QCOMPARE(field(m, u"Description"_s).toString(), u"tiny test model"_s);
     QCOMPARE(field(m, u"Opsets"_s).toString(), u"ai.onnx 17, com.microsoft 1"_s);
+}
+
+void TestInspector::parquet()
+{
+    const QString path = m_dir.filePath(u"tiny.parquet"_s);
+#ifndef FUIN_HAVE_PARQUET
+    QVERIFY(!Inspector::hasParquet());
+    write(u"tiny.parquet"_s, "PAR1");
+    const QVariantMap off = Inspector::inspect(path);
+    QCOMPARE(off.value(u"kind"_s).toString(), u"error"_s);
+    QCOMPARE(off.value(u"msg"_s).toString(), u"Built without Parquet support (Apache Arrow)."_s);
+#else
+    QVERIFY(Inspector::hasParquet());
+    arrow::Int64Builder ids;
+    arrow::StringBuilder names;
+    QVERIFY(ids.Append(3).ok() && ids.AppendNull().ok() && ids.Append(7).ok());
+    QVERIFY(names.Append("b").ok() && names.Append("a").ok() && names.Append("c").ok());
+    std::shared_ptr<arrow::Array> idArray, nameArray;
+    QVERIFY(ids.Finish(&idArray).ok() && names.Finish(&nameArray).ok());
+    const auto table = arrow::Table::Make(arrow::schema({arrow::field("id", arrow::int64()), arrow::field("name", arrow::utf8())}),
+                                          {idArray, nameArray});
+    auto out = arrow::io::FileOutputStream::Open(path.toStdString());
+    QVERIFY(out.ok());
+    QVERIFY(parquet::arrow::WriteTable(*table, arrow::default_memory_pool(), *out, 2).ok());
+    QVERIFY((*out)->Close().ok());
+
+    const QVariantMap t = Inspector::inspect(path);
+    QCOMPARE(t.value(u"kind"_s).toString(), u"table"_s);
+    QCOMPARE(t.value(u"format"_s).toString(), u"parquet"_s);
+    QCOMPARE(t.value(u"totalRows"_s).toDouble(), 3.0);
+    QVERIFY(t.value(u"exactStats"_s).toBool());
+    QCOMPARE(field(t, u"Row groups"_s).toInt(), 2);
+
+    const QVariantMap id = column(t, 0), name = column(t, 1);
+    QCOMPARE(id.value(u"name"_s).toString(), u"id"_s);
+    QCOMPARE(id.value(u"type"_s).toString(), u"int64"_s);
+    QCOMPARE(id.value(u"nulls"_s).toDouble(), 1.0);
+    QCOMPARE(id.value(u"min"_s).toString(), u"3"_s);
+    QCOMPARE(id.value(u"max"_s).toString(), u"7"_s);
+    QCOMPARE(name.value(u"type"_s).toString(), u"string"_s);
+    QCOMPARE(name.value(u"min"_s).toString(), u"a"_s);
+    QCOMPARE(name.value(u"max"_s).toString(), u"c"_s);
+
+    QCOMPARE(t.value(u"rows"_s).toList().size(), 3);
+    QCOMPARE(row(t, 0).value(1).toString(), u"b"_s);
+    QVERIFY(row(t, 1).value(0).isNull());
+    QCOMPARE(row(t, 2).value(0).toString(), u"7"_s);
+#endif
 }
 
 QTEST_GUILESS_MAIN(TestInspector)
