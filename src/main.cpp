@@ -38,6 +38,7 @@
 #include <QUrl>
 
 #include <iostream>
+#include <string_view>
 
 #ifndef FUIN_VERSION
 #define FUIN_VERSION "0.2.0"
@@ -182,6 +183,20 @@ int main(int argc, char **argv)
             return runHeadless(argc, argv);
     }
 
+#ifdef FUIN_WITH_PORTAL
+    // xdg-desktop-portal starts `fuin --portal` and waits for it, so anything in QApplication's
+    // constructor that calls the portal (app ID registration, a portal-aware platform theme such as
+    // qt6ct or xdgdesktopportal) blocks until D-Bus activation times out, about 25 s.
+    QByteArray platformTheme;
+    bool portalMode = false;
+    for (int i = 1; i < argc && !portalMode; ++i)
+        portalMode = std::string_view(argv[i]) == "--portal";
+    if (portalMode) {
+        platformTheme = qgetenv("QT_QPA_PLATFORMTHEME");
+        qputenv("QT_NO_XDG_DESKTOP_PORTAL", "1");
+        qputenv("QT_QPA_PLATFORMTHEME", "generic");
+    }
+#endif
     QApplication::setApplicationName(u"fuin"_s);
     QApplication::setApplicationDisplayName(u"Fūin"_s);
     QApplication::setApplicationVersion(QString::fromLatin1(FUIN_VERSION));
