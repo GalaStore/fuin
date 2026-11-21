@@ -21,7 +21,11 @@ Arch ships Arrow/Parquet as shared libraries whose soname changes with each majo
 ## Tests
 
 `-DFUIN_BUILD_TESTS=ON` builds `tests/`: `tst_foldermodel` (QTest, with a fatal `QAbstractItemModelTester`) covers
-listing order, hidden/filter, refresh moves, renames, mass deletes and selection; `bench_foldermodel` times listing
+listing order, hidden/filter, refresh moves, renames, mass deletes and selection. `tst_inspector` checks the preview
+parsers on small fixtures generated in the test (CSV delimiter sniffing and column statistics, JSON, JSON Lines,
+safetensors, GGUF v2/v3 and ONNX headers, and Parquet footer statistics when built with Arrow, or the "built without
+Parquet" error otherwise). `tst_secretguard` has a positive and a negative case for every secret file name and token
+pattern; token-shaped strings are built at run time so no literal looks like a real key. `bench_foldermodel` times listing
 folders in creation and shuffled order. The `smoke` tests (`tests/smoke.cmake`, a plain CMake script) run the built
 `fuin` headless: `--version`, `--context` in Markdown and XML on a generated fixture folder whose `.env` must stay out
 of the pack, and `--mcp` (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing the `.env`).
