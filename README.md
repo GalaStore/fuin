@@ -190,14 +190,19 @@ roots=~
 allowWrite=false
 ```
 
-**Ajustes** (⋮ menu or Ctrl+,) has an *Aplicaciones por defecto* page: the default application for each
-file type, with every installed candidate. Changes go to `~/.config/mimeapps.list` (the XDG standard, shared
-with every desktop app) and KSycoca is rebuilt. The file context menu's *Cambiar app por defecto…* opens it on
-that file's type.
+**Ajustes** (⋮ menu or Ctrl+,) edits every key above without opening the file: *General* (terminal and
+editor, showing what automatic detection picks), *Places* (project folders and extra places), *Appearance*
+(animations, speed, colours file and shell settings file) and *Agents (MCP)* (roots and the write permission).
+Changes are saved to `fuin.conf` and apply right away; clearing a field or *Restore defaults* removes the key.
+Fūin only reads the shell settings file and never writes to it.
+
+Its *Aplicaciones por defecto* page sets the default application for each file type, with every installed
+candidate. Changes go to `~/.config/mimeapps.list` (the XDG standard, shared with every desktop app) and KSycoca
+is rebuilt. The file context menu's *Cambiar app por defecto…* opens it on that file's type.
 
 Outside Plasma, KIO's `TerminalApplication` (used for `Terminal=true` apps such as vim) is usually unset and
 defaults to Konsole. On start, if it is missing or not installed, Fūin writes its own terminal to
-`~/.config/fuinrc` (never `kdeglobals`).
+`~/.config/fuinrc` (never `kdeglobals`); choosing a terminal in *Ajustes* updates it too.
 
 The colours file may also be given with `FUIN_COLORS=/path/colors.json`. Both flat role maps
 (`{"primary": "#…", "surface": "#…"}`, snake_case or camelCase) and matugen's `{"colors": {"dark": {…}}}` work.

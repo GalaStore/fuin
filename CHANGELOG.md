@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit tests for the preview parsers (`tst_inspector`: CSV/TSV, JSON, JSON Lines, safetensors, GGUF v2/v3, ONNX and,
   with Arrow, Parquet) and for the secret guard (`tst_secretguard`: every file name and token pattern, positive and
   negative). CI runs them with and without Parquet ([#7](https://github.com/GalaStore/fuin/issues/7)).
+- *Ajustes* has *General*, *Places*, *Appearance* and *Agents (MCP)* sections for every documented `fuin.conf`
+  key: terminal and editor (showing the auto-detected default), project folders and extra places, animations and
+  speed, the colours and shell settings files, and the MCP roots and write permission. Changes apply without a
+  restart ([#8](https://github.com/GalaStore/fuin/issues/8)).
+- Spanish translation for the file chooser (portal) strings.
 
 ## [0.2.0] - 2026-11-19
 

@@ -44,6 +44,36 @@ QString configPath()
     migrateLegacyState();
     return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/fuin/fuin.conf");
 }
+
+
+const QStringList &defaultProjects()
+{
+    static const QStringList l{QStringLiteral("~/Dev"), QStringLiteral("~/Projects"), QStringLiteral("~/src"), QStringLiteral("~/code")};
+    return l;
+}
+
+const QStringList &defaultExtraPlaces()
+{
+    static const QStringList l{QStringLiteral("Fondos|~/Wallpapers|wallpaper"), QStringLiteral("Fondos|~/Pictures/Wallpapers|wallpaper"),
+                               QStringLiteral("Modelos IA|~/.cache/huggingface/hub|neurology"),
+                               QStringLiteral("Modelos Ollama|~/.ollama/models|neurology")};
+    return l;
+}
+
+const QStringList &defaultMcpRoots()
+{
+    static const QStringList l{QStringLiteral("~")};
+    return l;
+}
+
+QStringList nonEmpty(const QStringList &l)
+{
+    QStringList out;
+    for (const QString &s : l)
+        if (!s.trimmed().isEmpty())
+            out << s.trimmed();
+    return out;
+}
 }
 
 Config *Config::instance()
@@ -96,6 +126,51 @@ void Config::set(const QString &key, const QVariant &v)
     Q_EMIT changed();
 }
 
+void Config::setText(const QString &key, const QString &v)
+{
+    const QString t = v.trimmed();
+    if (t.isEmpty()) {
+        resetToDefault(key);
+        return;
+    }
+    if (m_settings.value(key).toString() == t)
+        return;
+    m_settings.setValue(key, t);
+    m_settings.sync();
+    notifyKey(key);
+}
+
+void Config::setList(const QString &key, const QStringList &v)
+{
+    const QStringList l = nonEmpty(v);
+    if (m_settings.contains(key) && nonEmpty(m_settings.value(key).toStringList()) == l)
+        return;
+    // An empty list is kept as an empty value: "none" is a valid choice, unlike a missing key.
+    m_settings.setValue(key, l.isEmpty() ? QVariant(QString()) : QVariant(l));
+    m_settings.sync();
+    notifyKey(key);
+}
+
+void Config::resetToDefault(const QString &key)
+{
+    if (!m_settings.contains(key))
+        return;
+    m_settings.remove(key);
+    m_settings.sync();
+    notifyKey(key);
+}
+
+void Config::notifyKey(const QString &key)
+{
+    if (key.startsWith(QLatin1String("places/")))
+        Q_EMIT placesChanged();
+    else if (key.startsWith(QLatin1String("theme/")))
+        Q_EMIT themeFilesChanged();
+    else if (key == QLatin1String("apps/terminal"))
+        Q_EMIT terminalChanged();
+    Q_EMIT changed();
+}
+
 void Config::sync()
 {
     m_settings.sync();
@@ -133,7 +208,7 @@ QString Config::ollamaUrl() const { return value(QStringLiteral("ai/ollamaUrl"),
 QStringList Config::mcpRoots() const
 {
     QSettings fresh(configPath(), QSettings::IniFormat);
-    const QStringList raw = fresh.value(QStringLiteral("mcp/roots"), QStringList{QStringLiteral("~")}).toStringList();
+    const QStringList raw = fresh.value(QStringLiteral("mcp/roots"), defaultMcpRoots()).toStringList();
     QStringList out;
     for (const QString &r : raw) {
         const QString p = QDir::cleanPath(expand(r));
@@ -203,9 +278,12 @@ static QString firstInPath(const QStringList &candidates)
 
 QString Config::terminal() const
 {
-    const QString set = value(QStringLiteral("apps/terminal"), QString()).toString();
-    if (!set.isEmpty())
-        return set;
+    const QString set = terminalSetting();
+    return set.isEmpty() ? terminalDetected() : set;
+}
+
+QString Config::terminalDetected() const
+{
     // Explicit choices first (desktop-shell settings, $TERMINAL), then the desktop-agnostic
     // xdg-terminal-exec launcher, then well-known terminals.
     return firstInPath({shellApp(QStringLiteral("terminal")), qEnvironmentVariable("TERMINAL"), QStringLiteral("xdg-terminal-exec"),
@@ -215,18 +293,19 @@ QString Config::terminal() const
 
 QString Config::editor() const
 {
-    const QString set = value(QStringLiteral("apps/editor"), QString()).toString();
-    if (!set.isEmpty())
-        return set;
+    const QString set = editorSetting();
+    return set.isEmpty() ? editorDetected() : set;
+}
+
+QString Config::editorDetected() const
+{
     return firstInPath({shellApp(QStringLiteral("editor")), QStringLiteral("cursor"), QStringLiteral("code"), QStringLiteral("codium"), QStringLiteral("zed"),
                         QStringLiteral("kate")});
 }
 
 QStringList Config::projectDirs() const
 {
-    const QStringList raw = value(QStringLiteral("places/projects"),
-                                  QStringList{QStringLiteral("~/Dev"), QStringLiteral("~/Projects"), QStringLiteral("~/src"), QStringLiteral("~/code")})
-                                .toStringList();
+    const QStringList raw = value(QStringLiteral("places/projects"), defaultProjects()).toStringList();
     QStringList out;
     for (const QString &r : raw) {
         const QString p = expand(r);
@@ -239,11 +318,7 @@ QStringList Config::projectDirs() const
 QVariantList Config::extraPlaces() const
 {
     // name|path|icon entries; only existing folders are shown.
-    const QStringList raw = value(QStringLiteral("places/extra"),
-                                  QStringList{QStringLiteral("Fondos|~/Wallpapers|wallpaper"), QStringLiteral("Fondos|~/Pictures/Wallpapers|wallpaper"),
-                                              QStringLiteral("Modelos IA|~/.cache/huggingface/hub|neurology"),
-                                              QStringLiteral("Modelos Ollama|~/.ollama/models|neurology")})
-                                .toStringList();
+    const QStringList raw = value(QStringLiteral("places/extra"), defaultExtraPlaces()).toStringList();
     QVariantList out;
     QStringList seenNames;
     for (const QString &r : raw) {
@@ -258,4 +333,45 @@ QVariantList Config::extraPlaces() const
                            {QStringLiteral("icon"), f.size() > 2 ? f.at(2) : QStringLiteral("folder")}};
     }
     return out;
+}
+
+QString Config::terminalSetting() const { return value(QStringLiteral("apps/terminal"), QString()).toString(); }
+void Config::setTerminalSetting(const QString &v) { setText(QStringLiteral("apps/terminal"), v); }
+QString Config::editorSetting() const { return value(QStringLiteral("apps/editor"), QString()).toString(); }
+void Config::setEditorSetting(const QString &v) { setText(QStringLiteral("apps/editor"), v); }
+QStringList Config::projectsSetting() const { return nonEmpty(value(QStringLiteral("places/projects"), defaultProjects()).toStringList()); }
+void Config::setProjectsSetting(const QStringList &v) { setList(QStringLiteral("places/projects"), v); }
+QStringList Config::extraPlacesSetting() const { return nonEmpty(value(QStringLiteral("places/extra"), defaultExtraPlaces()).toStringList()); }
+void Config::setExtraPlacesSetting(const QStringList &v) { setList(QStringLiteral("places/extra"), v); }
+QStringList Config::mcpRootsSetting() const { return nonEmpty(value(QStringLiteral("mcp/roots"), defaultMcpRoots()).toStringList()); }
+void Config::setMcpRootsSetting(const QStringList &v) { setList(QStringLiteral("mcp/roots"), v); }
+QString Config::colorsFileSetting() const { return value(QStringLiteral("theme/colorsFile"), QString()).toString(); }
+void Config::setColorsFileSetting(const QString &v) { setText(QStringLiteral("theme/colorsFile"), v); }
+QString Config::shellSettingsFileSetting() const { return value(QStringLiteral("theme/shellSettingsFile"), QString()).toString(); }
+void Config::setShellSettingsFileSetting(const QString &v) { setText(QStringLiteral("theme/shellSettingsFile"), v); }
+
+bool Config::motionOverridden() const
+{
+    return m_settings.contains(QStringLiteral("appearance/animations")) || m_settings.contains(QStringLiteral("appearance/animationSpeed"));
+}
+
+void Config::setAnimations(bool on)
+{
+    set(QStringLiteral("appearance/animations"), on);
+    m_settings.sync();
+}
+
+void Config::setAnimationSpeed(qreal speed)
+{
+    set(QStringLiteral("appearance/animationSpeed"), qBound<qreal>(0.1, speed, 5.0));
+    m_settings.sync();
+}
+
+bool Config::isDir(const QString &path) const { return QFileInfo(expand(path)).isDir(); }
+bool Config::isFile(const QString &path) const { return QFileInfo(expand(path)).isFile(); }
+
+bool Config::hasProgram(const QString &program) const
+{
+    const QString p = expand(program);
+    return !p.isEmpty() && !QStandardPaths::findExecutable(p).isEmpty();
 }

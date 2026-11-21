@@ -23,6 +23,7 @@ PlacesModel::PlacesModel(QObject *parent)
     connect(n, &Solid::DeviceNotifier::deviceRemoved, this, &PlacesModel::reload);
     m_usageTimer.setInterval(30000);
     connect(&m_usageTimer, &QTimer::timeout, this, &PlacesModel::reload);
+    connect(Config::instance(), &Config::placesChanged, this, &PlacesModel::reload);
     m_usageTimer.start();
     reload();
 }

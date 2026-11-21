@@ -86,10 +86,13 @@ Detalles en el [README en inglés](README.md#system-file-chooser-portal).
 Configuración en `~/.config/fuin/fuin.conf` (terminal, editor, archivo de colores, animaciones,
 carpetas de proyectos, raíces y escritura MCP); ver el [README en inglés](README.md#configuration).
 
-**Ajustes** (menú ⋮ o Ctrl+,) incluye *Aplicaciones por defecto*: la aplicación por defecto de cada tipo de
-archivo y todas las instaladas que lo admiten. Se guarda en `~/.config/mimeapps.list` (estándar XDG, común a
-todo el escritorio). Fuera de Plasma, Fūin indica a KIO qué terminal usar para apps como vim en
-`~/.config/fuinrc` (nunca en `kdeglobals`).
+**Ajustes** (menú ⋮ o Ctrl+,) permite cambiar todas esas claves sin abrir el archivo: *General* (terminal y
+editor, con lo que detecta el modo automático), *Lugares* (carpetas de proyectos y lugares adicionales),
+*Apariencia* (animaciones, velocidad, archivo de colores y de ajustes del shell) y *Agentes (MCP)* (raíces y
+permiso de escritura). Los cambios se guardan en `fuin.conf` y se aplican al momento. También incluye
+*Aplicaciones por defecto*: la aplicación por defecto de cada tipo de archivo y todas las instaladas que lo
+admiten. Se guarda en `~/.config/mimeapps.list` (estándar XDG, común a todo el escritorio). Fuera de Plasma,
+Fūin indica a KIO qué terminal usar para apps como vim en `~/.config/fuinrc` (nunca en `kdeglobals`).
 
 ## Hoja de ruta
 

@@ -2,6 +2,49 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="es_ES" sourcelanguage="en">
 <context>
+    <name>AgentsSettingsPage</name>
+    <message>
+        <location filename="../qml/AgentsSettingsPage.qml" line="+4"/>
+        <source>Agents (MCP)</source>
+        <translation>Agentes (MCP)</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>What AI agents connected through «fuin --mcp» may see and do. Changes apply to the next request, without restarting the agent.</source>
+        <translation>Lo que pueden ver y hacer los agentes de IA conectados con «fuin --mcp». Los cambios se aplican en la siguiente petición, sin reiniciar el agente.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Allow agents to write</source>
+        <translation>Permitir escritura a agentes</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Create, copy, move and move to the trash. Every change asks for your confirmation and can be undone.</source>
+        <translation>Crear, copiar, mover y enviar a la papelera. Cada cambio te pide confirmación y se puede deshacer.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Roots</source>
+        <translation>Raíces</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Agents can only reach files inside these folders. Secret files stay hidden either way.</source>
+        <translation>Los agentes solo llegan a los archivos de dentro de estas carpetas. Los archivos secretos siguen ocultos igualmente.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No roots: agents cannot reach any file.</source>
+        <translation>Sin raíces: los agentes no pueden llegar a ningún archivo.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Add folder</source>
+        <translation>Añadir carpeta</translation>
+    </message>
+</context>
+<context>
     <name>AiPanel</name>
     <message>
         <location filename="../qml/AiPanel.qml" line="+33"/>
@@ -132,14 +175,29 @@
 <context>
     <name>AppWindow</name>
     <message>
-        <location filename="../qml/AppWindow.qml" line="+108"/>
-        <location line="+237"/>
-        <location line="+81"/>
+        <location filename="../qml/AppWindow.qml" line="+23"/>
+        <source>Select folder</source>
+        <translation>Seleccionar carpeta</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open file</source>
+        <translation>Abrir archivo</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Save file</source>
+        <translation>Guardar archivo</translation>
+    </message>
+    <message>
+        <location line="+100"/>
+        <location line="+245"/>
+        <location line="+94"/>
         <source>New folder</source>
         <translation>Nueva carpeta</translation>
     </message>
     <message>
-        <location line="-318"/>
+        <location line="-339"/>
         <source>new.txt</source>
         <translation>nuevo.txt</translation>
     </message>
@@ -160,12 +218,12 @@
     </message>
     <message>
         <location line="+4"/>
-        <location line="+305"/>
+        <location line="+326"/>
         <source>Undo</source>
         <translation>Deshacer</translation>
     </message>
     <message>
-        <location line="-248"/>
+        <location line="-261"/>
         <source>New tab (Ctrl+T)</source>
         <translation>Pestaña nueva (Ctrl+T)</translation>
     </message>
@@ -231,12 +289,12 @@
     </message>
     <message>
         <location line="+24"/>
-        <location line="+174"/>
+        <location line="+187"/>
         <source>Preview</source>
         <translation>Vista previa</translation>
     </message>
     <message>
-        <location line="-174"/>
+        <location line="-187"/>
         <source>AI</source>
         <translation>IA</translation>
     </message>
@@ -257,12 +315,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+102"/>
+        <location line="+115"/>
         <source>%1 items</source>
         <translation>%1 elementos</translation>
     </message>
     <message>
-        <location line="-101"/>
+        <location line="-114"/>
         <source>%1 selected</source>
         <translation>%1 seleccionados</translation>
     </message>
@@ -286,17 +344,18 @@
         <location line="+34"/>
         <location line="+12"/>
         <location line="+19"/>
+        <location line="+25"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location line="-62"/>
-        <location line="+92"/>
+        <location line="-87"/>
+        <location line="+105"/>
         <source>%1 changes</source>
         <translation>%1 cambios</translation>
     </message>
     <message>
-        <location line="-92"/>
+        <location line="-105"/>
         <source>clean</source>
         <translation>limpio</translation>
     </message>
@@ -322,12 +381,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+123"/>
+        <location line="+136"/>
         <source>Copy path</source>
         <translation>Copiar ruta</translation>
     </message>
     <message>
-        <location line="-121"/>
+        <location line="-134"/>
         <source>Undo: %1</source>
         <translation>Deshacer: %1</translation>
     </message>
@@ -338,12 +397,12 @@
     </message>
     <message>
         <location line="+1"/>
-        <location line="+112"/>
+        <location line="+125"/>
         <source>Keyboard shortcuts</source>
         <translation>Atajos de teclado</translation>
     </message>
     <message>
-        <location line="-111"/>
+        <location line="-124"/>
         <source>Settings…</source>
         <translation>Ajustes…</translation>
     </message>
@@ -390,12 +449,12 @@
     <message>
         <location line="+8"/>
         <location line="+11"/>
-        <location line="+68"/>
+        <location line="+81"/>
         <source>Rename</source>
         <translation>Renombrar</translation>
     </message>
     <message>
-        <location line="-79"/>
+        <location line="-92"/>
         <source>New file</source>
         <translation>Nuevo archivo</translation>
     </message>
@@ -410,7 +469,22 @@
         <translation>Crear</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+21"/>
+        <source>Replace «%1»?</source>
+        <translation>¿Reemplazar «%1»?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A file with this name already exists here. Saving will overwrite it.</source>
+        <translation>Ya existe aquí un archivo con este nombre. Al guardar se sobrescribirá.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Replace</source>
+        <translation>Reemplazar</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
@@ -633,6 +707,85 @@ Ajustes: %2</translation>
         <location line="+23"/>
         <source>Path copied</source>
         <translation>Ruta copiada</translation>
+    </message>
+</context>
+<context>
+    <name>AppearanceSettingsPage</name>
+    <message>
+        <location filename="../qml/AppearanceSettingsPage.qml" line="+4"/>
+        <source>Appearance</source>
+        <translation>Apariencia</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Motion and colours. Without values here, Fūin follows the desktop shell settings file, if there is one.</source>
+        <translation>Animaciones y colores. Sin valores aquí, Fūin sigue el archivo de ajustes del shell de escritorio, si lo hay.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Animations</source>
+        <translation>Animaciones</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>On</source>
+        <translation>Activadas</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Off</source>
+        <translation>Desactivadas</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Animation speed</source>
+        <translation>Velocidad de las animaciones</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Higher is faster.</source>
+        <translation>Cuanto más alto, más rápido.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Use the desktop shell values</source>
+        <translation>Usar los valores del shell de escritorio</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Colours file</source>
+        <translation>Archivo de colores</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>A Material 3 palette in JSON, such as the one matugen writes. It is watched, so new wallpapers recolour Fūin live.</source>
+        <translation>Una paleta Material 3 en JSON, como la que escribe matugen. Se vigila, así que un fondo nuevo cambia los colores de Fūin al momento.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+10"/>
+        <source>Automatic: %1</source>
+        <translation>Automático: %1</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <source>File not found; the built-in colours are used.</source>
+        <translation>Archivo no encontrado; se usan los colores integrados.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Desktop shell settings file</source>
+        <translation>Archivo de ajustes del shell de escritorio</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Optional JSON with «appearance.animations», «appearance.animationSpeed» and default «apps». Fūin only reads it.</source>
+        <translation>JSON opcional con «appearance.animations», «appearance.animationSpeed» y las «apps» por defecto. Fūin solo lo lee.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>File not found.</source>
+        <translation>Archivo no encontrado.</translation>
     </message>
 </context>
 <context>
@@ -1074,7 +1227,7 @@ Ajustes: %2</translation>
 <context>
     <name>FolderModel</name>
     <message>
-        <location filename="../src/fs/FolderModel.cpp" line="+278"/>
+        <location filename="../src/fs/FolderModel.cpp" line="+279"/>
         <location line="+37"/>
         <source>Trash</source>
         <translation>Papelera</translation>
@@ -1105,7 +1258,7 @@ Ajustes: %2</translation>
 <context>
     <name>FolderPane</name>
     <message>
-        <location filename="../qml/FolderPane.qml" line="+144"/>
+        <location filename="../qml/FolderPane.qml" line="+148"/>
         <source>Restore</source>
         <translation>Restaurar</translation>
     </message>
@@ -1363,6 +1516,57 @@ Ajustes: %2</translation>
         <location line="+10"/>
         <source>%1 of %2</source>
         <translation>%1 de %2</translation>
+    </message>
+</context>
+<context>
+    <name>GeneralSettingsPage</name>
+    <message>
+        <location filename="../qml/GeneralSettingsPage.qml" line="+4"/>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Programs Fūin starts for you. Leave a field empty to detect one automatically.</source>
+        <translation>Programas que Fūin abre por ti. Deja un campo vacío para detectarlo automáticamente.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Terminal</source>
+        <translation>Terminal</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Used by «Open terminal here» and for applications that run in a terminal. A program name or a full path, without arguments.</source>
+        <translation>Lo usan «Abrir terminal aquí» y las aplicaciones que se ejecutan en un terminal. Un nombre de programa o una ruta completa, sin argumentos.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <location line="+10"/>
+        <source>Automatic: %1</source>
+        <translation>Automático: %1</translation>
+    </message>
+    <message>
+        <location line="-10"/>
+        <location line="+10"/>
+        <source>Automatic: none found</source>
+        <translation>Automático: no se encontró ninguno</translation>
+    </message>
+    <message>
+        <location line="-9"/>
+        <location line="+10"/>
+        <source>Not found in PATH.</source>
+        <translation>No está en el PATH.</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <source>Editor</source>
+        <translation>Editor</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Used by «Open in…» for folders and to open fuin.conf. A program name or a full path, without arguments.</source>
+        <translation>Lo usan «Abrir en…» para carpetas y para abrir fuin.conf. Un nombre de programa o una ruta completa, sin argumentos.</translation>
     </message>
 </context>
 <context>
@@ -1670,6 +1874,29 @@ Ajustes: %2</translation>
     </message>
 </context>
 <context>
+    <name>ListSetting</name>
+    <message>
+        <location filename="../qml/ListSetting.qml" line="+11"/>
+        <source>Add</source>
+        <translation>Añadir</translation>
+    </message>
+    <message>
+        <location line="+58"/>
+        <source>This folder does not exist; it is hidden until it does.</source>
+        <translation>Esta carpeta no existe; se oculta hasta que exista.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Remove</source>
+        <translation>Quitar</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore defaults</source>
+        <translation>Restaurar valores por defecto</translation>
+    </message>
+</context>
+<context>
     <name>McpServer</name>
     <message>
         <location filename="../src/ai/McpServer.cpp" line="+427"/>
@@ -1716,9 +1943,50 @@ Ajustes: %2</translation>
     </message>
 </context>
 <context>
+    <name>PickerBar</name>
+    <message>
+        <location filename="../qml/PickerBar.qml" line="+75"/>
+        <source>File name</source>
+        <translation>Nombre del archivo</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+20"/>
+        <source>Saving %n file(s) in the selected folder</source>
+        <translation>
+            <numerusform>Guardando %n archivo en la carpeta seleccionada</numerusform>
+            <numerusform>Guardando %n archivos en la carpeta seleccionada</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Only local folders can be picked</source>
+        <translation>Solo se pueden elegir carpetas locales</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Save</source>
+        <translation>Guardar</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Select folder</source>
+        <translation>Seleccionar carpeta</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Open</source>
+        <translation>Abrir</translation>
+    </message>
+</context>
+<context>
     <name>PlacesModel</name>
     <message>
-        <location filename="../src/fs/PlacesModel.cpp" line="+148"/>
+        <location filename="../src/fs/PlacesModel.cpp" line="+149"/>
         <location filename="../qml/Sidebar.qml" line="+41"/>
         <location line="+4"/>
         <source>Other</source>
@@ -1817,6 +2085,59 @@ Ajustes: %2</translation>
         <location line="+0"/>
         <source>Videos</source>
         <translation>Vídeos</translation>
+    </message>
+</context>
+<context>
+    <name>PlacesSettingsPage</name>
+    <message>
+        <location filename="../qml/PlacesSettingsPage.qml" line="+4"/>
+        <source>Places</source>
+        <translation>Lugares</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Folders shown in the sidebar. Folders that do not exist are skipped, so one list can serve several machines.</source>
+        <translation>Carpetas de la barra lateral. Las que no existen se omiten, así que una misma lista sirve para varios equipos.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Project folders</source>
+        <translation>Carpetas de proyectos</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shown under «Projects». With a single folder the entry is just called «Projects».</source>
+        <translation>Aparecen en «Proyectos». Con una sola carpeta, la entrada se llama simplemente «Proyectos».</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Add folder</source>
+        <translation>Añadir carpeta</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Extra places</source>
+        <translation>Lugares adicionales</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Shown under «Places». The icon is a Material Symbols name such as «wallpaper» or «neurology»; empty means «folder».</source>
+        <translation>Aparecen en «Lugares». El icono es un nombre de Material Symbols como «wallpaper» o «neurology»; vacío equivale a «folder».</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Name</source>
+        <translation>Nombre</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Icon</source>
+        <translation>Icono</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Add place</source>
+        <translation>Añadir lugar</translation>
     </message>
 </context>
 <context>
@@ -1983,19 +2304,47 @@ Ajustes: %2</translation>
     </message>
 </context>
 <context>
+    <name>SettingField</name>
+    <message>
+        <location filename="../qml/SettingField.qml" line="+26"/>
+        <source>Use the automatic value</source>
+        <translation>Usar el valor automático</translation>
+    </message>
+</context>
+<context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../qml/SettingsDialog.qml" line="+38"/>
+        <location filename="../qml/SettingsDialog.qml" line="+40"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
+        <source>General</source>
+        <translation>General</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Places</source>
+        <translation>Lugares</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Appearance</source>
+        <translation>Apariencia</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Agents (MCP)</source>
+        <translation>Agentes (MCP)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Default applications</source>
         <translation>Aplicaciones por defecto</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+22"/>
         <source>Open %1</source>
         <translation>Abrir %1</translation>
     </message>
