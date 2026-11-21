@@ -86,6 +86,7 @@ ApplicationWindow {
     if (a.context) copyContext(a.context)
     if (a.key) keysDlg.open()
     if (a.settings !== undefined) openSettings(a.settings)
+    if (a.settingsSection) settingsDlg.section = a.settingsSection
     if (a.settingsFilter !== undefined) DefaultApps.filter = a.settingsFilter
     if (a.setDefault) DefaultApps.setDefault(a.setDefault[0], a.setDefault[1])
     if (a.closeSettings) settingsDlg.close()
