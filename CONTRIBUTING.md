@@ -27,8 +27,9 @@ safetensors, GGUF v2/v3 and ONNX headers, and Parquet footer statistics when bui
 Parquet" error otherwise). `tst_secretguard` has a positive and a negative case for every secret file name and token
 pattern; token-shaped strings are built at run time so no literal looks like a real key. `tst_config` covers the
 `fuin.conf` accessors behind *Ajustes* (automatic values, empty lists, restoring defaults, change signals) against a
-throwaway config under `~/.qttest`. `bench_foldermodel` times listing
-folders in creation and shuffled order. The `smoke` tests (`tests/smoke.cmake`, a plain CMake script) run the built
+throwaway config under `~/.qttest`. `tst_terminal` checks the terminal launch arguments of `src/platform/Terminal.cpp`, and `tst_foldermodel` also
+covers the git branch and dirty count of a folder (it creates a throwaway repository and is skipped without `git`).
+`bench_foldermodel` times listing folders in creation and shuffled order. The `smoke` tests (`tests/smoke.cmake`, a plain CMake script) run the built
 `fuin` headless: `--version`, `--context` in Markdown and XML on a generated fixture folder whose `.env` must stay out
 of the pack, and `--mcp` (initialize, the 11 `fuin_*` tools, `fuin_read_file` refusing the `.env`). `smoke_portal`
 (`tests/portal_startup.sh`) starts the real xdg-desktop-portal frontend on a private session bus and requires it
