@@ -114,9 +114,8 @@ ApplicationWindow {
   function openDuckdb(path) {
     const dir = path.substring(0, path.lastIndexOf("/")) || "/"
     const view = "CREATE VIEW t AS " + duckSql(path).replace(" LIMIT 100;", ";")
-    FileOps.openTerminal(dir, "duckdb -cmd " + shq(view + " SUMMARIZE t;"))
+    FileOps.openTerminal(dir, ["duckdb", "-cmd", view + " SUMMARIZE t;"])
   }
-  function shq(s) { return "'" + s.replace(/'/g, "'\\''") + "'" }
   function confirmDelete(urls) { delDlg.urls = urls; delDlg.open() }
   function confirmEmptyTrash() { emptyDlg.open() }
   function askRename(url, name) { nameDlg.mode = "rename"; nameDlg.target = url; nameDlg.initial = name; nameDlg.open() }

@@ -14,6 +14,6 @@ struct Launch {
 
 QString detect();
 
-Launch launch(const QString &terminal, const QString &dir, const QString &command);
+Launch launch(const QString &terminal, const QString &dir, const QStringList &command);
 
 }

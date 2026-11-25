@@ -431,7 +431,7 @@ bool FileOps::hasProgram(const QString &name) const
     return !QStandardPaths::findExecutable(name).isEmpty();
 }
 
-void FileOps::openTerminal(const QString &dir, const QString &command)
+void FileOps::openTerminal(const QString &dir, const QStringList &command)
 {
     QString d = dir;
     const QUrl u = toUrl(dir);

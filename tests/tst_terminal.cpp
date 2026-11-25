@@ -31,7 +31,7 @@ private Q_SLOTS:
 #else
         QFETCH(QString, terminal);
         QFETCH(QStringList, args);
-        const Terminal::Launch l = Terminal::launch(terminal, u"/work"_s, QString());
+        const Terminal::Launch l = Terminal::launch(terminal, u"/work"_s, QStringList());
         QCOMPARE(l.program, terminal);
         QCOMPARE(l.args, args);
         QCOMPARE(l.workingDirectory, u"/work"_s);
@@ -42,11 +42,11 @@ private Q_SLOTS:
     {
         QTest::addColumn<QString>("terminal");
         QTest::addColumn<QStringList>("tail");
-        QTest::newRow("kitty") << u"kitty"_s << QStringList{u"-e"_s, u"sh"_s, u"-c"_s, u"ls"_s};
-        QTest::newRow("konsole") << u"konsole"_s << QStringList{u"-e"_s, u"sh"_s, u"-c"_s, u"ls"_s};
-        QTest::newRow("gnome-terminal") << u"gnome-terminal"_s << QStringList{u"--"_s, u"sh"_s, u"-c"_s, u"ls"_s};
-        QTest::newRow("wezterm") << u"wezterm"_s << QStringList{u"sh"_s, u"-c"_s, u"ls"_s};
-        QTest::newRow("xdg-terminal-exec") << u"xdg-terminal-exec"_s << QStringList{u"sh"_s, u"-c"_s, u"ls"_s};
+        QTest::newRow("kitty") << u"kitty"_s << QStringList{u"-e"_s, u"ls"_s, u"-la"_s, u"a b"_s};
+        QTest::newRow("konsole") << u"konsole"_s << QStringList{u"-e"_s, u"ls"_s, u"-la"_s, u"a b"_s};
+        QTest::newRow("gnome-terminal") << u"gnome-terminal"_s << QStringList{u"--"_s, u"ls"_s, u"-la"_s, u"a b"_s};
+        QTest::newRow("wezterm") << u"wezterm"_s << QStringList{u"ls"_s, u"-la"_s, u"a b"_s};
+        QTest::newRow("xdg-terminal-exec") << u"xdg-terminal-exec"_s << QStringList{u"ls"_s, u"-la"_s, u"a b"_s};
     }
 
     void commandArguments()
@@ -56,7 +56,7 @@ private Q_SLOTS:
 #else
         QFETCH(QString, terminal);
         QFETCH(QStringList, tail);
-        const QStringList args = Terminal::launch(terminal, u"/work"_s, u"ls"_s).args;
+        const QStringList args = Terminal::launch(terminal, u"/work"_s, {u"ls"_s, u"-la"_s, u"a b"_s}).args;
         QVERIFY(args.size() >= tail.size());
         QCOMPARE(args.mid(args.size() - tail.size()), tail);
 #endif

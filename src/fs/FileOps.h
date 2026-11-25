@@ -62,7 +62,7 @@ public:
     Q_INVOKABLE QVariantList openWithApps(const QString &mimeType) const;
     Q_INVOKABLE void openWith(const QString &storageId, const QStringList &urls);
     Q_INVOKABLE void openWithDialog(const QStringList &urls);
-    Q_INVOKABLE void openTerminal(const QString &dir, const QString &command = QString());
+    Q_INVOKABLE void openTerminal(const QString &dir, const QStringList &command = {});
     Q_INVOKABLE void openInEditor(const QString &path);
     Q_INVOKABLE void openInFileManagerWindow(const QString &url);
     Q_INVOKABLE bool hasProgram(const QString &name) const;

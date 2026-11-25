@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Fuin
+import "Glyphs.js" as G
 // "Default applications": default application per file type. Everything comes from the system
 // (MIME database, installed .desktop files, ~/.config/mimeapps.list); choosing an app writes there.
 Item {
@@ -106,7 +107,7 @@ Item {
           id: head
           width: parent.width; height: 54
           StateLayer { id: hl; radius: 14; onClicked: { list.currentIndex = row.index; page.expanded = row.open ? "" : row.mimeType } }
-          SysIcon { id: mic; x: 12; anchors.verticalCenter: parent.verticalCenter; name: row.iconName; glyph: "description"; size: 26 }
+          SysIcon { id: mic; x: 12; anchors.verticalCenter: parent.verticalCenter; name: row.iconName; glyph: G.mimeIcon(row.mimeType); size: 26 }
           Column {
             anchors.left: mic.right; anchors.leftMargin: 12; anchors.right: pill.left; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter
             spacing: 2
