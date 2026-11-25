@@ -27,7 +27,7 @@ safetensors, GGUF v2/v3 and ONNX headers, and Parquet footer statistics when bui
 Parquet" error otherwise). `tst_secretguard` has a positive and a negative case for every secret file name and token
 pattern; token-shaped strings are built at run time so no literal looks like a real key. `tst_config` covers the
 `fuin.conf` accessors behind *Ajustes* (automatic values, empty lists, restoring defaults, change signals) against a
-throwaway config under `~/.qttest`. `tst_terminal` checks the terminal launch arguments of `src/platform/Terminal.cpp`, and `tst_foldermodel` also
+throwaway config under `~/.qttest`. `tst_icons` checks the bundled icon font against the icons used in the QML. `tst_terminal` checks the terminal launch arguments of `src/platform/Terminal.cpp`, and `tst_foldermodel` also
 covers the git branch and dirty count of a folder (it creates a throwaway repository and is skipped without `git`).
 `bench_foldermodel` times listing folders in creation and shuffled order. The `smoke` tests (`tests/smoke.cmake`, a plain CMake script) run the built
 `fuin` headless: `--version`, `--context` in Markdown and XML on a generated fixture folder whose `.env` must stay out
@@ -60,6 +60,15 @@ come with the benchmark numbers before and after.
 - Code and comments in English. UI strings are English source text wrapped in `qsTr()` (QML) or `tr()` /
   `QCoreApplication::translate()` (C++); see [Translations](#translations).
 - Format C++ with `clang-format` (WebKit-ish, 4 spaces, 160 columns) if you have it.
+
+## Icons
+
+Icons are Material Symbols written as ligature names (`Icon { text: "folder_open" }`). Fūin bundles only the ones it
+uses, as `assets/fonts/FuinIcons.ttf`, so no system font is needed. After using a new icon name in `qml/` or `src/`, run
+`tools/subset-icons.sh` (it needs the full *Material Symbols Rounded* variable font, by default the one from the Arch
+package `ttf-material-symbols-variable`, and installs `fonttools` into a throwaway virtual environment) and commit
+`assets/fonts/FuinIcons.ttf` and `assets/fonts/icons.txt`. `tst_icons` fails when an icon used in the QML is missing from
+the subset. The font is © Google, Apache-2.0 (`assets/fonts/LICENSE-MaterialSymbols.txt`).
 
 ## Translations
 

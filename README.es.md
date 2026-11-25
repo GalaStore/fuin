@@ -36,7 +36,7 @@ aquí, tus ficheros.
 
 ```sh
 sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-declarative qt6-svg qt6-tools \
-  kio kio-extras solid kcoreaddons kservice syntax-highlighting ttf-material-symbols-variable
+  kio kio-extras solid kcoreaddons kservice syntax-highlighting
 sudo pacman -S --needed arrow fd ripgrep git duckdb kdegraphics-thumbnailers ffmpegthumbs kimageformats plasma-activities-stats  # opcional
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/.local
 cmake --build build && cmake --install build
@@ -45,8 +45,8 @@ cmake --build build && cmake --install build
 > **Nota (Arch):** si una actualización cambia el *soname* de Arrow (p. ej. `libarrow.so.2500` → `.2600`),
 > Fūin deja de arrancar con «cannot open shared object file»: vuelve a compilar e instalar con los comandos de arriba.
 
-Otras distribuciones: CMake ≥ 3.22, C++20, Qt ≥ 6.6, KDE Frameworks 6 (KIO, Solid, CoreAddons, Service) y la
-fuente *Material Symbols Rounded*. Detalles en el [README en inglés](README.md#from-source-any-distro).
+Otras distribuciones: CMake ≥ 3.22, C++20, Qt ≥ 6.6, KDE Frameworks 6 (KIO, Solid, CoreAddons, Service). La
+fuente de iconos va incluida. Detalles en el [README en inglés](README.md#from-source-any-distro).
 
 ### Tests
 
@@ -100,4 +100,5 @@ Consulta [ROADMAP.md](ROADMAP.md) y el [issue fijado «Roadmap»](https://github
 
 ## Licencia
 
-[MIT](LICENSE).
+[MIT](LICENSE). La fuente de iconos incluida (`assets/fonts/FuinIcons.ttf`) es un subconjunto de Material Symbols
+Rounded, © Google, Apache-2.0; ver [assets/fonts/LICENSE-MaterialSymbols.txt](assets/fonts/LICENSE-MaterialSymbols.txt).

@@ -56,7 +56,7 @@ server so coding agents can see (and, with your permission, act on) the folder y
 
 ```sh
 sudo pacman -S --needed base-devel cmake ninja extra-cmake-modules qt6-base qt6-declarative qt6-svg qt6-tools \
-  kio kio-extras solid kcoreaddons kservice syntax-highlighting ttf-material-symbols-variable
+  kio kio-extras solid kcoreaddons kservice syntax-highlighting
 # optional but recommended
 sudo pacman -S --needed arrow fd ripgrep git duckdb kdegraphics-thumbnailers ffmpegthumbs kimageformats plasma-activities-stats
 ```
@@ -66,8 +66,8 @@ Then either build the package (`cd packaging && makepkg -si`, which builds the l
 ### From source (any distro)
 
 Requirements: CMake ≥ 3.22, a C++20 compiler, Qt ≥ 6.6 (Core, Gui, Widgets, Qml, Quick, QuickControls2,
-Concurrent, Network, Svg), KDE Frameworks 6 (KIO, Solid, CoreAddons, Service; SyntaxHighlighting optional),
-the *Material Symbols Rounded* font. Optional: Apache Arrow/Parquet C++ for Parquet previews.
+Concurrent, Network, Svg), KDE Frameworks 6 (KIO, Solid, CoreAddons, Service; SyntaxHighlighting optional).
+Optional: Apache Arrow/Parquet C++ for Parquet previews. The icon font is bundled.
 
 ```sh
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/.local
@@ -232,4 +232,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and pull requests are welcom
 
 ## License
 
-[MIT](LICENSE). Material Symbols (used as an icon font, not bundled) are © Google, Apache-2.0.
+[MIT](LICENSE). The bundled icon font (`assets/fonts/FuinIcons.ttf`) is a subset of Material Symbols Rounded,
+© Google, Apache-2.0; see [assets/fonts/LICENSE-MaterialSymbols.txt](assets/fonts/LICENSE-MaterialSymbols.txt).
