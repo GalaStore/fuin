@@ -61,7 +61,7 @@ Item {
           spacing: 8
           Btn { kind: "filled"; icon: "content_copy"; text: win && win.contextPack.busy ? qsTr("Preparing…") : qsTr("Copy context"); enabled2: root.targets.length > 0 && !(win && win.contextPack.busy)
                 onClicked: win.copyContext(root.targets) }
-          Btn { kind: "text"; icon: "terminal"; text: "CLI"; onClicked: FileOps.copyText("fuin --context " + root.targets.map(u => "'" + AppInfo.toLocal(u) + "'").join(" ") + " | wl-copy") }
+          Btn { kind: "text"; icon: "terminal"; text: "CLI"; onClicked: FileOps.copyText("fuin --context " + root.targets.map(u => "'" + AppInfo.toLocal(u) + "'").join(" ")) }
         }
         // result
         Column {
