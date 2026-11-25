@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "FileOps.h"
 #include "../app/Config.h"
+#include "../app/Format.h"
 
 #include <KApplicationTrader>
 #include <KConfigGroup>
@@ -73,7 +74,7 @@ void FileOps::undo()
 
 QString FileOps::humanSize(double bytes) const
 {
-    return KIO::convertSize(KIO::filesize_t(qMax(0.0, bytes)));
+    return Format::dataSize(qint64(qMax(0.0, bytes)));
 }
 
 // ---------------------------------------------------------------- job tracking
@@ -84,7 +85,7 @@ void FileOps::track(KJob *job, const QString &label, const QString &doneText, bo
     m_jobs.insert(job);
     connect(job, &KJob::percentChanged, this, &FileOps::recompute);
     connect(job, &KJob::speed, this, [this](KJob *, unsigned long bps) {
-        m_speed = bps ? KIO::convertSize(bps) + QStringLiteral("/s") : QString();
+        m_speed = bps ? Format::dataSize(qint64(bps)) + QStringLiteral("/s") : QString();
         Q_EMIT progressChanged();
     });
     if (auto *cj = qobject_cast<KIO::CopyJob *>(job)) {
