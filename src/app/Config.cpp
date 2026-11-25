@@ -108,10 +108,14 @@ QString Config::expand(const QString &path)
 
 QString Config::socketPath()
 {
+#ifdef Q_OS_WIN
+    return QStringLiteral("fuin-") + qEnvironmentVariable("USERNAME", QStringLiteral("user"));
+#else
     QString dir = QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation);
     if (dir.isEmpty())
         dir = QDir::tempPath();
     return dir + QStringLiteral("/fuin.sock");
+#endif
 }
 
 QVariant Config::value(const QString &key, const QVariant &def) const

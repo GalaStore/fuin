@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Local IPC between the running GUI and other Fūin processes (CLI `--reveal`, the MCP
-// server). Unix socket at $XDG_RUNTIME_DIR/fuin.sock (user-only), one JSON line per request.
+// server). Unix socket at $XDG_RUNTIME_DIR/fuin.sock, or the named pipe fuin-<user> on Windows (user-only),
+// one JSON line per request.
 #pragma once
 
 #include <QHash>
