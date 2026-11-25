@@ -25,13 +25,13 @@ QString detect()
     return firstInPath({QStringLiteral("wt.exe"), QStringLiteral("cmd.exe")});
 }
 
-Launch launch(const QString &terminal, const QString &dir, const QString &command)
+Launch launch(const QString &terminal, const QString &dir, const QStringList &command)
 {
     const QString bin = QFileInfo(terminal).fileName().toLower();
     if (bin == QLatin1String("wt.exe") || bin == QLatin1String("wt")) {
         Launch l{terminal, {QStringLiteral("-d"), dir}, dir};
         if (!command.isEmpty())
-            l.args << QStringLiteral("cmd.exe") << QStringLiteral("/k") << command;
+            l.args << command;
         return l;
     }
     if (bin == QLatin1String("cmd.exe") || bin == QLatin1String("cmd")) {
@@ -65,11 +65,14 @@ static QString appleScriptQuote(const QString &s)
     return QLatin1Char('"') + q + QLatin1Char('"');
 }
 
-Launch launch(const QString &terminal, const QString &dir, const QString &command)
+Launch launch(const QString &terminal, const QString &dir, const QStringList &command)
 {
     if (command.isEmpty())
         return {QStringLiteral("open"), {QStringLiteral("-a"), terminal, dir}, dir};
-    const QString script = QStringLiteral("cd %1 && %2").arg(shellQuote(dir), command);
+    QStringList quoted;
+    for (const QString &word : command)
+        quoted << shellQuote(word);
+    const QString script = QStringLiteral("cd %1 && %2").arg(shellQuote(dir), quoted.join(QLatin1Char(' ')));
     return {QStringLiteral("osascript"),
             {QStringLiteral("-e"), QStringLiteral("tell application %1 to activate").arg(appleScriptQuote(terminal)), QStringLiteral("-e"),
              QStringLiteral("tell application %1 to do script %2").arg(appleScriptQuote(terminal), appleScriptQuote(script))},
@@ -84,7 +87,7 @@ QString detect()
                         QStringLiteral("alacritty"), QStringLiteral("wezterm"), QStringLiteral("konsole"), QStringLiteral("gnome-terminal")});
 }
 
-Launch launch(const QString &terminal, const QString &dir, const QString &command)
+Launch launch(const QString &terminal, const QString &dir, const QStringList &command)
 {
     const QString bin = QFileInfo(terminal).fileName();
     Launch l{terminal, {}, dir};
@@ -104,7 +107,7 @@ Launch launch(const QString &terminal, const QString &dir, const QString &comman
             l.args << QStringLiteral("--");
         else if (bin != QLatin1String("wezterm") && bin != QLatin1String("xdg-terminal-exec"))
             l.args << QStringLiteral("-e");
-        l.args << QStringLiteral("sh") << QStringLiteral("-c") << command;
+        l.args << command;
     }
     return l;
 }
