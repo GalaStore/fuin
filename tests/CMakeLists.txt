@@ -2,7 +2,7 @@
 find_package(Qt6 REQUIRED COMPONENTS Test DBus)
 
 set(S ${PROJECT_SOURCE_DIR}/src)
-add_library(fuin_foldermodel STATIC ${S}/fs/FolderModel.cpp ${S}/fs/FileKind.cpp ${S}/app/Config.cpp ${S}/ai/SecretGuard.cpp)
+add_library(fuin_foldermodel STATIC ${S}/fs/FolderModel.cpp ${S}/fs/FileKind.cpp ${S}/app/Config.cpp ${S}/ai/SecretGuard.cpp ${S}/platform/Terminal.cpp)
 target_include_directories(fuin_foldermodel PUBLIC ${S})
 target_compile_definitions(fuin_foldermodel PUBLIC QT_NO_CAST_FROM_ASCII QT_NO_URL_CAST_FROM_STRING QT_NO_KEYWORDS)
 target_compile_options(fuin_foldermodel PUBLIC ${FUIN_WARNING_FLAGS})
@@ -15,6 +15,10 @@ add_test(NAME tst_foldermodel COMMAND tst_foldermodel)
 add_executable(tst_secretguard tst_secretguard.cpp)
 target_link_libraries(tst_secretguard PRIVATE fuin_foldermodel Qt6::Test)
 add_test(NAME tst_secretguard COMMAND tst_secretguard)
+
+add_executable(tst_terminal tst_terminal.cpp)
+target_link_libraries(tst_terminal PRIVATE fuin_foldermodel Qt6::Test)
+add_test(NAME tst_terminal COMMAND tst_terminal)
 
 add_executable(tst_config tst_config.cpp)
 target_link_libraries(tst_config PRIVATE fuin_foldermodel Qt6::Test)

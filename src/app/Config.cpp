@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #include "Config.h"
+#include "../platform/Terminal.h"
 
 #include <QDir>
 #include <QFile>
@@ -284,11 +285,9 @@ QString Config::terminal() const
 
 QString Config::terminalDetected() const
 {
-    // Explicit choices first (desktop-shell settings, $TERMINAL), then the desktop-agnostic
-    // xdg-terminal-exec launcher, then well-known terminals.
-    return firstInPath({shellApp(QStringLiteral("terminal")), qEnvironmentVariable("TERMINAL"), QStringLiteral("xdg-terminal-exec"),
-                        QStringLiteral("kitty"), QStringLiteral("foot"),
-                        QStringLiteral("alacritty"), QStringLiteral("wezterm"), QStringLiteral("konsole"), QStringLiteral("gnome-terminal")});
+    // Explicit choice from the desktop-shell settings first, then what the platform offers.
+    const QString fromShell = firstInPath({shellApp(QStringLiteral("terminal"))});
+    return fromShell.isEmpty() ? Terminal::detect() : fromShell;
 }
 
 QString Config::editor() const

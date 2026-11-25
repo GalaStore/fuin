@@ -2,6 +2,7 @@
 #include "FileOps.h"
 #include "../app/Config.h"
 #include "../app/Format.h"
+#include "../platform/Terminal.h"
 
 #include <KApplicationTrader>
 #include <KConfigGroup>
@@ -443,27 +444,8 @@ void FileOps::openTerminal(const QString &dir, const QString &command)
         Q_EMIT notify(tr("No terminal found"), QStringLiteral("error"), false);
         return;
     }
-    const QString bin = QFileInfo(term).fileName();
-    QStringList args;
-    if (bin == QLatin1String("kitty"))
-        args << QStringLiteral("--directory") << d;
-    else if (bin == QLatin1String("foot") || bin == QLatin1String("alacritty"))
-        args << QStringLiteral("--working-directory") << d;
-    else if (bin == QLatin1String("konsole"))
-        args << QStringLiteral("--workdir") << d;
-    else if (bin == QLatin1String("wezterm"))
-        args << QStringLiteral("start") << QStringLiteral("--cwd") << d;
-    else if (bin == QLatin1String("gnome-terminal"))
-        args << QStringLiteral("--working-directory=") + d;
-    // xdg-terminal-exec: the working directory is inherited and the command follows directly.
-    if (!command.isEmpty()) {
-        if (bin == QLatin1String("gnome-terminal"))
-            args << QStringLiteral("--");
-        else if (bin != QLatin1String("wezterm") && bin != QLatin1String("xdg-terminal-exec"))
-            args << QStringLiteral("-e");
-        args << QStringLiteral("sh") << QStringLiteral("-c") << command;
-    }
-    if (!QProcess::startDetached(term, args, d))
+    const Terminal::Launch l = Terminal::launch(term, d, command);
+    if (!QProcess::startDetached(l.program, l.args, l.workingDirectory))
         Q_EMIT notify(tr("Could not open %1").arg(term), QStringLiteral("error"), false);
 }
 

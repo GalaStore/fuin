@@ -39,6 +39,7 @@ add_executable(fuin
   src/preview/Inspector.cpp src/preview/Previewer.cpp src/preview/CodeHighlighter.cpp
   src/ai/SecretGuard.cpp src/ai/ContextPacker.cpp src/ai/McpServer.cpp
   src/ipc/Ipc.cpp
+  src/platform/Terminal.cpp
 )
 target_compile_definitions(fuin PRIVATE FUIN_VERSION="${PROJECT_VERSION}" QT_NO_CAST_FROM_ASCII QT_NO_URL_CAST_FROM_STRING QT_NO_KEYWORDS)
 if(MSVC)
