@@ -9,7 +9,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QLocale>
+#include <QProcess>
 #include <QStandardPaths>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -312,6 +314,65 @@ private Q_SLOTS:
         QCOMPARE(m.names(), survivors);
         QCOMPARE(m.selectedNames(), (QSet<QString>{u"f11"_s, u"f1999"_s}));
         QCOMPARE(m.currentName(), u"f1501"_s);
+    }
+
+    void gitStatus()
+    {
+        if (QStandardPaths::findExecutable(u"git"_s).isEmpty())
+            QSKIP("git is not installed");
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        const QString root = QFileInfo(dir.path()).canonicalFilePath();
+        const auto git = [&](const QStringList &args) {
+            QProcess p;
+            p.setWorkingDirectory(root);
+            p.start(u"git"_s, QStringList{u"-c"_s, u"user.name=t"_s, u"-c"_s, u"user.email=t@example.com"_s, u"-c"_s, u"commit.gpgsign=false"_s} + args);
+            return p.waitForFinished(kTimeout) && p.exitCode() == 0;
+        };
+        const auto write = [&](const QString &name, const QByteArray &data) {
+            QFile f(root + u'/' + name);
+            return f.open(QIODevice::WriteOnly) && f.write(data) == data.size();
+        };
+        const auto repoState = [&](Model &m) {
+            QSignalSpy spy(&m, &FolderModel::repoChanged);
+            m.navigate(root);
+            QTRY_VERIFY_WITH_TIMEOUT(spy.count() >= 2 || m.repoDirty() >= 0, kTimeout);
+        };
+
+        {
+            Model m;
+            QVERIFY(m.list(root));
+            QTest::qWait(300);
+            QCOMPARE(m.repoRoot(), QString());
+            QCOMPARE(m.repoDirty(), -1);
+        }
+
+        QVERIFY(git({u"init"_s, u"-q"_s, u"-b"_s, u"main"_s}));
+        QVERIFY(write(u"tracked.txt"_s, "one"));
+        QVERIFY(git({u"add"_s, u"."_s}));
+        QVERIFY(git({u"commit"_s, u"-q"_s, u"-m"_s, u"first"_s}));
+        QVERIFY(write(u"tracked.txt"_s, "two"));
+        QVERIFY(write(u"new.txt"_s, "new"));
+        {
+            Model m;
+            repoState(m);
+            QCOMPARE(m.repoRoot(), root);
+            QCOMPARE(m.repoBranch(), u"main"_s);
+            QCOMPARE(m.repoDirty(), 2);
+        }
+
+        QVERIFY(git({u"checkout"_s, u"-q"_s, u"--detach"_s}));
+        QProcess rev;
+        rev.setWorkingDirectory(root);
+        rev.start(u"git"_s, {u"rev-parse"_s, u"HEAD"_s});
+        QVERIFY(rev.waitForFinished(kTimeout));
+        const QString sha = QString::fromUtf8(rev.readAllStandardOutput()).trimmed().left(7);
+        {
+            Model m;
+            repoState(m);
+            QCOMPARE(m.repoBranch(), sha);
+            QCOMPARE(m.repoDirty(), 2);
+        }
     }
 
     void selectionSurvivesListing_data() { listing_data(); }

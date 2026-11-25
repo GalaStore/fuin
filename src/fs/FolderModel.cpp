@@ -1244,31 +1244,53 @@ void FolderModel::updateRepo()
         m_repoProc->kill();
         m_repoProc->deleteLater();
     }
-    auto *p = new QProcess(this);
-    m_repoProc = p;
     const QUrl forUrl = m_url;
-    // one call: toplevel, branch, then the porcelain status (NUL-free, line based)
-    connect(p, &QProcess::finished, this, [this, p, forUrl](int code) {
-        p->deleteLater();
-        if (m_repoProc == p)
+    const QString dir = m_url.toLocalFile();
+    const auto git = [dir](const QStringList &args) {
+        auto *proc = new QProcess;
+        proc->setWorkingDirectory(dir);
+        proc->start(QStringLiteral("git"), QStringList{QStringLiteral("--no-optional-locks")} + args);
+        return proc;
+    };
+
+    auto *root = git({QStringLiteral("rev-parse"), QStringLiteral("--show-toplevel")});
+    root->setParent(this);
+    m_repoProc = root;
+    connect(root, &QProcess::finished, this, [this, root, forUrl, git](int code) {
+        root->deleteLater();
+        if (m_repoProc == root)
             m_repoProc = nullptr;
         if (code != 0 || forUrl != m_url)
             return;
-        const QStringList lines = QString::fromUtf8(p->readAllStandardOutput()).split(QLatin1Char('\n'));
-        if (lines.size() < 2)
+        const QString top = QString::fromUtf8(root->readAllStandardOutput()).trimmed();
+        if (top.isEmpty())
             return;
-        m_repoRoot = lines.at(0).trimmed();
-        m_repoBranch = lines.at(1).trimmed();
-        int dirty = 0;
-        for (int i = 2; i < lines.size(); ++i)
-            if (!lines.at(i).trimmed().isEmpty())
-                ++dirty;
-        m_repoDirty = dirty;
-        Q_EMIT repoChanged();
+        auto *status = git({QStringLiteral("status"), QStringLiteral("--porcelain=v2"), QStringLiteral("--branch")});
+        status->setParent(this);
+        m_repoProc = status;
+        connect(status, &QProcess::finished, this, [this, status, forUrl, top](int statusCode) {
+            status->deleteLater();
+            if (m_repoProc == status)
+                m_repoProc = nullptr;
+            if (statusCode != 0 || forUrl != m_url)
+                return;
+            QString branch, oid;
+            int dirty = 0;
+            const QStringList lines = QString::fromUtf8(status->readAllStandardOutput()).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+            for (const QString &line : lines) {
+                if (line.startsWith(QLatin1String("# branch.head ")))
+                    branch = line.mid(14).trimmed();
+                else if (line.startsWith(QLatin1String("# branch.oid ")))
+                    oid = line.mid(13).trimmed();
+                else if (!line.startsWith(QLatin1Char('#')))
+                    ++dirty;
+            }
+            if (branch == QLatin1String("(detached)"))
+                branch = oid.left(7);
+            m_repoRoot = top;
+            m_repoBranch = branch;
+            m_repoDirty = dirty;
+            Q_EMIT repoChanged();
+        });
     });
-    p->start(QStringLiteral("sh"),
-             {QStringLiteral("-c"),
-              QStringLiteral("cd \"$1\" && git rev-parse --show-toplevel && (git symbolic-ref --short -q HEAD || git rev-parse --short HEAD) && "
-                             "git --no-optional-locks status --porcelain"),
-              QStringLiteral("sh"), m_url.toLocalFile()});
 }
