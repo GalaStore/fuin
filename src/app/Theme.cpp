@@ -73,7 +73,11 @@ Theme::Theme(QObject *parent)
     m_mono = pickFamily({QStringLiteral("CaskaydiaCove NF"), QStringLiteral("JetBrainsMono Nerd Font"), QStringLiteral("JetBrains Mono"),
                          QStringLiteral("Noto Sans Mono")},
                         QFontDatabase::systemFont(QFontDatabase::FixedFont).family());
-    m_icon = pickFamily({QStringLiteral("Material Symbols Rounded"), QStringLiteral("Material Symbols Outlined")}, QStringLiteral("Material Symbols Rounded"));
+    const int iconFont = QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/FuinIcons.ttf"));
+    const QStringList iconFamilies = iconFont >= 0 ? QFontDatabase::applicationFontFamilies(iconFont) : QStringList();
+    m_icon = !iconFamilies.isEmpty()
+        ? iconFamilies.first()
+        : pickFamily({QStringLiteral("Material Symbols Rounded"), QStringLiteral("Material Symbols Outlined")}, QStringLiteral("Material Symbols Rounded"));
 
     m_debounce.setSingleShot(true);
     m_debounce.setInterval(120);

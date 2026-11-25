@@ -20,6 +20,15 @@ add_executable(tst_terminal tst_terminal.cpp)
 target_link_libraries(tst_terminal PRIVATE fuin_foldermodel Qt6::Test)
 add_test(NAME tst_terminal COMMAND tst_terminal)
 
+add_executable(tst_icons tst_icons.cpp)
+target_link_libraries(tst_icons PRIVATE Qt6::Gui Qt6::Test)
+target_compile_definitions(tst_icons PRIVATE QT_NO_CAST_FROM_ASCII QT_NO_KEYWORDS
+    FUIN_ICON_FONT="${PROJECT_SOURCE_DIR}/assets/fonts/FuinIcons.ttf"
+    FUIN_ICON_LIST="${PROJECT_SOURCE_DIR}/assets/fonts/icons.txt"
+    FUIN_QML_DIR="${PROJECT_SOURCE_DIR}/qml")
+add_test(NAME tst_icons COMMAND tst_icons)
+set_tests_properties(tst_icons PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 add_executable(tst_config tst_config.cpp)
 target_link_libraries(tst_config PRIVATE fuin_foldermodel Qt6::Test)
 add_test(NAME tst_config COMMAND tst_config)

@@ -82,7 +82,7 @@ endif()
 file(GLOB FUIN_QML RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS qml/*.qml qml/*.js)
 qt_add_resources(fuin fuin_ui
   PREFIX "/"
-  FILES ${FUIN_QML} assets/tomoe.svg assets/konoha.svg assets/leaf.svg assets/fuin.svg)
+  FILES ${FUIN_QML} assets/tomoe.svg assets/konoha.svg assets/leaf.svg assets/fuin.svg assets/fonts/FuinIcons.ttf)
 
 # The QML lives in a plain resource, not a QML module, so lupdate is pointed at it explicitly.
 qt_add_translations(fuin
