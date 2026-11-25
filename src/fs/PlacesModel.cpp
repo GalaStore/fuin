@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 #include "PlacesModel.h"
 #include "../app/Config.h"
+#include "../app/Format.h"
 
-#include <KIO/Global>
 #include <Solid/Device>
 #include <Solid/DeviceNotifier>
 #include <Solid/StorageAccess>
@@ -107,7 +107,7 @@ void PlacesModel::reload()
         const QStorageInfo si(QStringLiteral("/"));
         if (si.bytesTotal() > 0) {
             root.usage = 1.0 - qreal(si.bytesAvailable()) / qreal(si.bytesTotal());
-            root.detail = tr("%1 free of %2").arg(KIO::convertSize(si.bytesAvailable()), KIO::convertSize(si.bytesTotal()));
+            root.detail = tr("%1 free of %2").arg(Format::dataSize(si.bytesAvailable()), Format::dataSize(si.bytesTotal()));
         }
         out << root;
     }
@@ -135,12 +135,12 @@ void PlacesModel::reload()
         }
         e.icon = e.removable ? QStringLiteral("usb") : QStringLiteral("storage");
         if (const auto *vol = d.as<Solid::StorageVolume>())
-            e.detail = KIO::convertSize(vol->size()) + QStringLiteral(" · ") + vol->fsType();
+            e.detail = Format::dataSize(vol->size()) + QStringLiteral(" · ") + vol->fsType();
         if (e.mounted) {
             const QStorageInfo si(mp);
             if (si.bytesTotal() > 0) {
                 e.usage = 1.0 - qreal(si.bytesAvailable()) / qreal(si.bytesTotal());
-                e.detail = tr("%1 free of %2").arg(KIO::convertSize(si.bytesAvailable()), KIO::convertSize(si.bytesTotal()));
+                e.detail = tr("%1 free of %2").arg(Format::dataSize(si.bytesAvailable()), Format::dataSize(si.bytesTotal()));
             }
         }
         out << e;

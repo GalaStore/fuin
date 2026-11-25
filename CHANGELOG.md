@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The *CLI* button of the AI panel copies `fuin --context <paths>` without `| wl-copy`, so it no longer depends on a
+  Wayland clipboard tool; pipe it to your own clipboard command if you want it on the clipboard.
+- Sizes below 1 KiB are shown as `1023 B` (not `1,023 B`) and larger ones through Qt's locale formatting instead of KIO.
+- The git branch and dirty count of a folder are read with plain `git` calls instead of through `sh`.
+- Terminal launching moved to a per-OS launcher (`src/platform/Terminal.cpp`); Linux behaviour is unchanged.
+- Part of the v1.0 portability work ([#15](https://github.com/GalaStore/fuin/issues/15)): MSVC gets `/W4` instead of the
+  GCC/Clang warning flags, the desktop file, icon and metainfo are installed on Linux only, and the IPC endpoint is a
+  named pipe (`fuin-<user>`) on Windows.
+
 ## [0.3.0] - 2026-11-21
 
 ### Added

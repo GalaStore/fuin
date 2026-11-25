@@ -39,9 +39,15 @@ add_executable(fuin
   src/preview/Inspector.cpp src/preview/Previewer.cpp src/preview/CodeHighlighter.cpp
   src/ai/SecretGuard.cpp src/ai/ContextPacker.cpp src/ai/McpServer.cpp
   src/ipc/Ipc.cpp
+  src/platform/Terminal.cpp
 )
 target_compile_definitions(fuin PRIVATE FUIN_VERSION="${PROJECT_VERSION}" QT_NO_CAST_FROM_ASCII QT_NO_URL_CAST_FROM_STRING QT_NO_KEYWORDS)
-target_compile_options(fuin PRIVATE -Wall -Wextra -Wpedantic)
+if(MSVC)
+  set(FUIN_WARNING_FLAGS /W4)
+else()
+  set(FUIN_WARNING_FLAGS -Wall -Wextra -Wpedantic)
+endif()
+target_compile_options(fuin PRIVATE ${FUIN_WARNING_FLAGS})
 target_link_libraries(fuin PRIVATE
   Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Concurrent Qt6::Network
   KF6::KIOCore KF6::KIOGui KF6::KIOWidgets KF6::Solid KF6::CoreAddons KF6::Service KF6::ConfigCore)
@@ -92,9 +98,11 @@ endif()
 
 include(GNUInstallDirs)
 install(TARGETS fuin RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES packaging/fuin.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
-install(FILES assets/fuin.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
-install(FILES packaging/io.github.galactuuus.fuin.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  install(FILES packaging/fuin.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+  install(FILES assets/fuin.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+  install(FILES packaging/io.github.galactuuus.fuin.metainfo.xml DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo)
+endif()
 if(FUIN_WITH_PORTAL)
   configure_file(packaging/org.freedesktop.impl.portal.desktop.fuin.service.in org.freedesktop.impl.portal.desktop.fuin.service @ONLY)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.freedesktop.impl.portal.desktop.fuin.service DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/services)
