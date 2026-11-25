@@ -30,6 +30,20 @@ function icon(kind, ext, name, isDir) {
   return "draft"
 }
 
+function mimeIcon(mimeType) {
+  const m = mimeType || ""
+  if (m.startsWith("image/")) return "image"
+  if (m.startsWith("video/")) return "movie"
+  if (m.startsWith("audio/")) return "music_note"
+  if (m === "application/pdf") return "picture_as_pdf"
+  if (m === "inode/directory") return "folder"
+  if (m === "application/json") return "data_object"
+  if (m === "text/markdown") return "article"
+  if (/zip|tar|compress|7z|rar/.test(m)) return "folder_zip"
+  if (m.startsWith("text/")) return "description"
+  return "draft"
+}
+
 // role name on Theme used for the glyph colour
 function tone(kind, isDir, isRepo) {
   if (isDir) return isRepo ? "tertiary" : "primary"
