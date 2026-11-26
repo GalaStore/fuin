@@ -378,7 +378,7 @@ FocusScope {
     z: -2
     keys: ["text/uri-list"]
     enabled: !fm.searching
-    onEntered: d => { if (d.source === pane) d.accepted = false }
+    onEntered: d => { if (d.source && d.source.pane === pane) d.accepted = false }
     onDropped: d => pane.handleDrop(d, fm.url)
   }
 }
