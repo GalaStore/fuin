@@ -173,13 +173,7 @@ Item {
   ToolTip.text: qsTr("Possible secret: it is not included in the AI context nor shared with agents")
 
   // ---- interaction
-  Item {
-    id: proxy
-    Drag.dragType: Drag.Automatic
-    Drag.supportedActions: Qt.CopyAction | Qt.MoveAction | Qt.LinkAction
-    Drag.proposedAction: Qt.MoveAction
-    Drag.source: it.pane
-  }
+  DragProxy { id: proxy; pane: it.pane }
   MouseArea {
     id: ma
     anchors.fill: parent
@@ -215,7 +209,7 @@ Item {
     anchors.fill: parent
     enabled: it.isDir
     keys: ["text/uri-list"]
-    onEntered: d => { if (it.isSelected && d.source === it.pane) d.accepted = false }
+    onEntered: d => { if (it.isSelected && d.source && d.source.pane === it.pane) d.accepted = false }
     onDropped: d => it.pane.handleDrop(d, it.url)
   }
 }

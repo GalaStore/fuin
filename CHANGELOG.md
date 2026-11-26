@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File types without a theme icon get a fallback glyph that matches their category (image, video, audio, PDF, archive,
   text…) instead of a generic one.
 
+### Fixed
+
+- Drag and drop works again: dragging files onto a folder, the sidebar or a path bar crumb moves or copies them. The pane was
+  the drag source and Qt ignores drops whose source contains the drop area, so no folder ever accepted a drop; each file
+  now has its own drag proxy as the source, and `tst_dragdrop` covers it
+  ([#57](https://github.com/GalaStore/fuin/issues/57)).
+
 ### Changed
 
 - The *CLI* button of the AI panel copies `fuin --context <paths>` without `| wl-copy`, so it no longer depends on a
