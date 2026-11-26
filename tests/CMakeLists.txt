@@ -29,6 +29,12 @@ target_compile_definitions(tst_icons PRIVATE QT_NO_CAST_FROM_ASCII QT_NO_KEYWORD
 add_test(NAME tst_icons COMMAND tst_icons)
 set_tests_properties(tst_icons PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+add_executable(tst_dragdrop tst_dragdrop.cpp)
+target_link_libraries(tst_dragdrop PRIVATE Qt6::Quick Qt6::Test)
+target_compile_definitions(tst_dragdrop PRIVATE QT_NO_KEYWORDS FUIN_DRAGDROP_QML="${CMAKE_CURRENT_SOURCE_DIR}/dragdrop.qml")
+add_test(NAME tst_dragdrop COMMAND tst_dragdrop)
+set_tests_properties(tst_dragdrop PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
 add_executable(tst_config tst_config.cpp)
 target_link_libraries(tst_config PRIVATE fuin_foldermodel Qt6::Test)
 add_test(NAME tst_config COMMAND tst_config)
